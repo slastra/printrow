@@ -4,8 +4,11 @@
 	import { data } from '$lib/template/data.svelte';
 	import { printer } from '$lib/printer/ble.svelte';
 	import { buildPrintStream } from '$lib/template/raster';
+	import { parseRowSpec, describeRows } from '$lib/template/rows';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import { cn } from '$lib/utils';
 	import BluetoothIcon from '@lucide/svelte/icons/bluetooth';
 	import BluetoothOffIcon from '@lucide/svelte/icons/bluetooth-off';
@@ -51,12 +54,21 @@
 		}
 	}
 
-	/** Print row N always uses the row's real values, whatever the preview toggle. */
-	const printOne = () =>
-		run([() => buildPrintStream(editor.template, data.valuesFor(data.previewRow))]);
+	const build = (row: Record<string, string> | undefined) => () =>
+		buildPrintStream(editor.template, data.valuesFor(row));
 
-	const printBatch = () =>
-		run(data.rows.map((row) => () => buildPrintStream(editor.template, data.valuesFor(row))));
+	/** Print row N always uses the row's real values, whatever the preview toggle. */
+	const printOne = () => run([build(data.previewRow)]);
+
+	const printBatch = () => run(data.rows.map((row) => build(row)));
+
+	// --- subset --------------------------------------------------------------
+
+	let spec = $state('');
+	const selection = $derived(parseRowSpec(spec, data.rows.length));
+	const count = $derived(selection.indices.length);
+
+	const printSubset = () => run(selection.indices.map((i) => build(data.rows[i])));
 </script>
 
 <Dialog.Root bind:open>
@@ -149,6 +161,43 @@
 								<LayersIcon />
 								Print all {data.rows.length} labels
 							</Button>
+
+							<div class="space-y-1.5 pt-1">
+								<Label for="row-spec" class="text-xs text-muted-foreground">Or a subset</Label>
+								<div class="flex gap-2">
+									<Input
+										id="row-spec"
+										bind:value={spec}
+										placeholder="1-5, 8, 12-20"
+										autocomplete="off"
+										spellcheck={false}
+										aria-invalid={Boolean(selection.error)}
+										class="font-mono text-xs"
+										onkeydown={(e) => {
+											if (e.key === 'Enter' && count && !printer.busy) printSubset();
+										}}
+									/>
+									<Button
+										variant="outline"
+										class="shrink-0"
+										disabled={printer.busy || !count}
+										onclick={printSubset}
+									>
+										<PrinterIcon />
+										Print{count ? ` ${count}` : ''}
+									</Button>
+								</div>
+								<p class="text-xs {selection.error ? 'text-destructive' : 'text-muted-foreground'}">
+									{#if selection.error}
+										{selection.error}
+									{:else if count}
+										{count === 1 ? 'Row' : 'Rows'}
+										{describeRows(selection.indices)}, in that order.
+									{:else}
+										Type row numbers to print only those, in document order.
+									{/if}
+								</p>
+							</div>
 						{/if}
 					</div>
 				{/if}
