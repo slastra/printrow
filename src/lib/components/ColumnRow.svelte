@@ -57,16 +57,16 @@
 		</span>
 	{/if}
 
-	<Button
-		variant="ghost"
-		size="icon"
-		class={cn(
-			'ml-auto size-6 shrink-0',
-			customized ? 'text-foreground' : 'opacity-0 group-hover:opacity-100 focus-visible:opacity-100'
-		)}
-		title="Formatting"
-		onclick={() => onformat(column)}
-	>
-		<SlidersHorizontalIcon class="size-3.5" />
-	</Button>
+	<!-- formatting only matters for columns the template actually prints -->
+	{#if inUse || customized}
+		<Button
+			variant="ghost"
+			size="icon"
+			class={cn('ml-auto size-6 shrink-0 cursor-pointer', customized && 'text-foreground')}
+			title="Formatting"
+			onclick={() => onformat(column)}
+		>
+			<SlidersHorizontalIcon class="size-3.5" />
+		</Button>
+	{/if}
 </div>
