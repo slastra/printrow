@@ -140,6 +140,7 @@
 		/>
 		<ToolButton label="Delete (Del)" icon={Trash2Icon} onclick={() => editor.remove()} />
 
-		<span class="ml-auto pr-1 text-xs text-muted-foreground">{n} selected</span>
+		<Separator orientation="vertical" class="mx-1 h-5" />
+		<span class="px-1.5 text-xs whitespace-nowrap text-muted-foreground">{n} selected</span>
 	{/if}
 </div>
