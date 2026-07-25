@@ -19,12 +19,21 @@
 </script>
 
 <div class="space-y-3">
-	<div class="flex items-center gap-2">
+	<div class="flex items-start gap-2">
 		<span class="min-w-0 flex-1">
-			<span class="block truncate text-sm font-medium">{data.fileName}</span>
-			<span class="block text-xs text-muted-foreground">{data.rows.length} rows</span>
+			<span class="block truncate text-sm leading-5 font-medium">{data.fileName}</span>
+			<span class="block text-xs text-muted-foreground">
+				{data.rows.length}
+				{data.rows.length === 1 ? 'row' : 'rows'} · {data.columns.length} columns
+			</span>
 		</span>
-		<Button variant="ghost" size="icon" class="ml-auto size-7" onclick={() => data.clear()}>
+		<Button
+			variant="ghost"
+			size="icon"
+			class="-mt-0.5 -mr-1 size-7 shrink-0 cursor-pointer text-muted-foreground hover:text-foreground"
+			title="Remove this CSV"
+			onclick={() => data.clear()}
+		>
 			<XIcon />
 		</Button>
 	</div>
