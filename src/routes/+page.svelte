@@ -27,10 +27,12 @@
 <Sidebar.Provider open={data.sidebarOpen}>
 	<Sidebar.Root variant="inset" class="border-none">
 		<Sidebar.Header class="gap-3 px-3 py-4">
-			<div class="flex items-baseline justify-between">
-				<span class="text-xl font-semibold tracking-tight">printrow</span>
-				<span class="text-xs text-muted-foreground">{editor.saved ? 'saved' : 'saving…'}</span>
-			</div>
+			<span
+				class="text-4xl font-black tracking-tight"
+				style="font-family: 'Doto Variable', sans-serif; font-variation-settings: 'ROND' 100;"
+			>
+				printrow
+			</span>
 			<div class="flex flex-col gap-2">
 				<CsvImportButton />
 				<PrintButton />

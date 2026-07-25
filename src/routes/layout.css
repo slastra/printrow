@@ -4,6 +4,8 @@
 @import '@fontsource-variable/inter';
 /* real italic face — without it, canvas italics are a synthesized slant */
 @import '@fontsource-variable/inter/wght-italic.css';
+/* dot-matrix display face for the wordmark — on theme for a thermal printer */
+@import '@fontsource-variable/doto';
 
 @custom-variant dark (&:is(.dark *));
 
