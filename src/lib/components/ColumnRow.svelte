@@ -41,7 +41,7 @@
 
 	<button
 		class={cn(
-			'min-w-16 flex-1 shrink-0 truncate text-left font-mono text-xs',
+			'shrink-0 truncate text-left font-mono text-xs',
 			inUse ? 'text-foreground' : 'text-muted-foreground'
 		)}
 		onclick={insert}
@@ -51,10 +51,8 @@
 	</button>
 
 	{#if sample}
-		<!-- the column name keeps priority; the sample gives up space first -->
-		<span
-			class="max-w-24 min-w-0 shrink truncate text-[11px] text-muted-foreground/70 tabular-nums"
-		>
+		<!-- sits right beside the name; gives up space before the name does -->
+		<span class="min-w-0 shrink truncate text-[11px] text-muted-foreground/70 tabular-nums">
 			{sample}
 		</span>
 	{/if}
@@ -62,7 +60,7 @@
 	<Button
 		variant="ghost"
 		size="icon"
-		class="size-6 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+		class="ml-auto size-6 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
 		onclick={insert}
 		title="Add to the selected element"
 	>
