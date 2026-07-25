@@ -46,15 +46,18 @@
 </script>
 
 <Select.Root type="single" value={isPreset ? current : 'custom'} onValueChange={onChange}>
-	<!-- explicit utilities (not the tool-surface class) so tailwind-merge
-	     reliably overrides the trigger's own border/bg/shadow defaults; the
-	     chevron flips up because the menu opens upward -->
-	<Select.Trigger
-		class="h-9 gap-2 rounded-lg border-border bg-(--surface-tool) shadow-(--shadow-tool) backdrop-blur-[10px] [&>svg:last-child]:rotate-180"
-	>
-		<RulerIcon class="size-4 text-muted-foreground" />
-		{currentLabel}
-	</Select.Trigger>
+	<!-- The surface lives on a wrapper: the trigger ships its own border, bg
+	     and shadow classes, and overriding all three (in both themes) drifts
+	     from the shared utility. Stripped bare, it inherits the real thing.
+	     The chevron flips up because the menu opens upward. -->
+	<div class="tool-surface w-fit">
+		<Select.Trigger
+			class="h-9 gap-2 rounded-lg border-0 bg-transparent shadow-none hover:bg-accent/60 dark:bg-transparent dark:hover:bg-accent/60 [&>svg:last-child]:rotate-180"
+		>
+			<RulerIcon class="size-4 text-muted-foreground" />
+			{currentLabel}
+		</Select.Trigger>
+	</div>
 	<Select.Content side="top">
 		{#each MEDIA_PRESETS as p (p.label)}
 			<Select.Item value={`${p.wMm}×${p.hMm}`}>{p.label}</Select.Item>
