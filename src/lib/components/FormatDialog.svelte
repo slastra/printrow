@@ -235,7 +235,8 @@
 			{#if samples.length}
 				<div class="space-y-1 rounded-md border bg-muted/40 p-2.5">
 					<p class="text-[11px] text-muted-foreground">Preview</p>
-					{#each samples as s (s.raw)}
+					<!-- keyed by position: consecutive rows can share a value -->
+					{#each samples as s, i (i)}
 						<div class="flex items-center gap-2 text-xs">
 							<span class="min-w-0 flex-1 truncate text-muted-foreground/70 line-through">
 								{s.raw || '(empty)'}
