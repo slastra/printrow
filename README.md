@@ -1,8 +1,6 @@
 # printrow
 
-[![live](https://img.shields.io/badge/live-printrow.lastra.us-black)](https://printrow.lastra.us)
 [![protocol](https://img.shields.io/badge/protocol-yplib-blue)](https://github.com/slastra/yplib)
-![printing](https://img.shields.io/badge/printing-Chromium%20only-orange)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 **[printrow.lastra.us](https://printrow.lastra.us)** is a label designer that prints against CSV data over Web Bluetooth. No drivers, no installs, no print server: design a label in the browser, bind `{{variables}}` to CSV columns, and batch-print to a KNAON Y50P thermal printer directly from the page.
