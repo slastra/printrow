@@ -45,7 +45,9 @@
 					)}
 				>
 					<IconMark class="size-4" />
-					<ChevronDownIcon class="size-3 text-muted-foreground" />
+					<!-- the picker opens upward from the bottom bar, so the chevron
+					     agrees with it -->
+					<ChevronDownIcon class="size-3 rotate-180 text-muted-foreground" />
 					<span class="sr-only">Icon</span>
 				</Tooltip.Trigger>
 				<Tooltip.Content side="top">Icon (browse)</Tooltip.Content>
