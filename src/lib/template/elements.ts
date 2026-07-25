@@ -3,6 +3,7 @@ import TypeIcon from '@lucide/svelte/icons/type';
 import BarcodeIcon from '@lucide/svelte/icons/barcode';
 import ImageIcon from '@lucide/svelte/icons/image';
 import SquareIcon from '@lucide/svelte/icons/square';
+import ShapesIcon from '@lucide/svelte/icons/shapes';
 import type { AnyElement } from './schema';
 
 export type ElementKind = AnyElement['type'];
@@ -54,6 +55,15 @@ export const ELEMENT_META: Record<ElementKind, ElementMeta> = {
 		name: 'Image',
 		icon: ImageIcon,
 		defaults: { type: 'image' },
+		reflowsOnAxisResize: false,
+		cornerScalesFont: false,
+		keepAspect: true
+	},
+	icon: {
+		name: 'Icon',
+		icon: ShapesIcon,
+		defaults: { type: 'icon', name: 'star', w: 96, h: 96 },
+		label: (el) => (el.type === 'icon' ? el.name : 'Icon'),
 		reflowsOnAxisResize: false,
 		cornerScalesFont: false,
 		keepAspect: true

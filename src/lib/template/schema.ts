@@ -40,6 +40,10 @@ export const STOCK_COLORS = [
 	{ value: '#e5e7eb', label: 'Silver' }
 ] as const;
 
+// Icon stroke weight, in the 24-unit lucide viewBox.
+export const MIN_STROKE = 1;
+export const MAX_STROKE = 6;
+
 // Box geometry bounds, shared by the schema and the inspector controls.
 export const MIN_THICKNESS = 1;
 export const MAX_THICKNESS = 50;
@@ -151,6 +155,14 @@ export const ImageElementSchema = z.object({
 	mode: z.enum(['threshold', 'dither']).default('threshold')
 });
 
+export const IconElementSchema = z.object({
+	...base,
+	type: z.literal('icon'),
+	// kebab-case lucide id, e.g. "triangle-alert"
+	name: z.string().min(1),
+	strokeWidth: z.number().min(MIN_STROKE).max(MAX_STROKE).default(2)
+});
+
 export const RectElementSchema = z.object({
 	...base,
 	type: z.literal('rect'),
@@ -165,6 +177,7 @@ export const ElementSchema = z.discriminatedUnion('type', [
 	TextElementSchema,
 	BarcodeElementSchema,
 	ImageElementSchema,
+	IconElementSchema,
 	RectElementSchema
 ]);
 
@@ -266,6 +279,7 @@ export const TemplateSchema = z.object({
 export type TextElement = z.infer<typeof TextElementSchema>;
 export type BarcodeElement = z.infer<typeof BarcodeElementSchema>;
 export type ImageElement = z.infer<typeof ImageElementSchema>;
+export type IconElement = z.infer<typeof IconElementSchema>;
 export type RectElement = z.infer<typeof RectElementSchema>;
 export type AnyElement = z.infer<typeof ElementSchema>;
 export type Template = z.infer<typeof TemplateSchema>;

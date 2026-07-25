@@ -1,10 +1,15 @@
 <script lang="ts">
 	import { editor } from '$lib/template/editor.svelte';
 	import { ELEMENT_META, type ElementKind } from '$lib/template/elements';
-	import { pickFile } from '$lib/utils';
+	import { pickFile, cn } from '$lib/utils';
+	import { buttonVariants } from '$lib/components/ui/button';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+	import IconPicker from './IconPicker.svelte';
 	import ToolButton from './ToolButton.svelte';
 
+	// icon is inserted from the picker, so it isn't a plain tool button
 	const kinds: ElementKind[] = ['text', 'barcode', 'image', 'rect'];
+	const IconMark = ELEMENT_META.icon.icon;
 
 	async function insert(kind: ElementKind) {
 		if (kind === 'image') {
@@ -25,4 +30,18 @@
 			size="size-9"
 		/>
 	{/each}
+	<IconPicker onselect={(name) => editor.add('icon', { name })}>
+		{#snippet trigger({ props })}
+			<Tooltip.Root>
+				<Tooltip.Trigger
+					{...props}
+					class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-9')}
+				>
+					<IconMark class="size-4" />
+					<span class="sr-only">Icon</span>
+				</Tooltip.Trigger>
+				<Tooltip.Content side="top">Icon</Tooltip.Content>
+			</Tooltip.Root>
+		{/snippet}
+	</IconPicker>
 </div>

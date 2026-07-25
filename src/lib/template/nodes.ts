@@ -4,9 +4,11 @@ import {
 	MIN_FONT_SIZE,
 	type AnyElement,
 	type BarcodeElement,
+	type IconElement,
 	type ImageElement
 } from './schema';
 import { barcodeCanvas } from './barcode';
+import { iconSvg, loadIcons, svgDataUrl } from './icons';
 import { interpolate } from './vars';
 
 export type KonvaNS = (typeof import('konva'))['default'];
@@ -168,6 +170,33 @@ async function imageSource(el: ImageElement): Promise<CanvasImageSource> {
 	return cv;
 }
 
+// Baked icons, keyed by everything that changes the pixels.
+const bakedIcons = new Map<string, HTMLCanvasElement>();
+
+/**
+ * Rasterize a lucide icon to 1-bit at its placed size. Stroke geometry is the
+ * best case for this printer — no dithering needed, just a clean threshold.
+ */
+async function iconSource(el: IconElement): Promise<CanvasImageSource> {
+	const key = `${el.name}|${el.strokeWidth}|${el.w}x${el.h}`;
+	const hit = bakedIcons.get(key);
+	if (hit) return hit;
+	const entry = (await loadIcons()).find((i) => i.name === el.name);
+	if (!entry) throw new Error(`unknown icon: ${el.name}`);
+	// square source at the larger edge keeps the glyph's aspect; the node then
+	// draws it into the element box
+	const size = Math.max(el.w, el.h);
+	const img = await loadImage(svgDataUrl(iconSvg(entry.svg, el.strokeWidth, size)));
+	const cv = document.createElement('canvas');
+	cv.width = el.w;
+	cv.height = el.h;
+	cv.getContext('2d')?.drawImage(img, 0, 0, el.w, el.h);
+	thresholdCanvas(cv);
+	bakedIcons.set(key, cv);
+	evict(bakedIcons, 32);
+	return cv;
+}
+
 const TWO_D = new Set<string>(['qrcode', 'datamatrix']);
 
 /**
@@ -285,6 +314,8 @@ export async function buildNode(
 		}
 		case 'image':
 			return new K.Image({ ...common, image: await imageSource(el), width: el.w, height: el.h });
+		case 'icon':
+			return new K.Image({ ...common, image: await iconSource(el), width: el.w, height: el.h });
 		case 'rect': {
 			// dash lengths scale with thickness so heavier borders keep the
 			// same visual rhythm at 1-bit

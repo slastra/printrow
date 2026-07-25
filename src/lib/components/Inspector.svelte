@@ -7,6 +7,8 @@
 		MIN_THICKNESS,
 		MAX_THICKNESS,
 		MAX_RADIUS,
+		MIN_STROKE,
+		MAX_STROKE,
 		BORDER_STYLES,
 		FONTS,
 		type FontKey,
@@ -15,7 +17,9 @@
 		type BorderStyle,
 		type BarcodeType
 	} from '$lib/template/schema';
-	import { rafThrottle } from '$lib/utils';
+	import { rafThrottle, cn } from '$lib/utils';
+	import IconPicker from './IconPicker.svelte';
+	import { buttonVariants } from '$lib/components/ui/button';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -50,6 +54,7 @@
 	const setThickness = rafThrottle((v: number) => editor.update({ thickness: v }));
 	const setRadius = rafThrottle((v: number) => editor.update({ radius: v }));
 	const setStockRadius = rafThrottle((v: number) => editor.setStockRadius(v));
+	const setStroke = rafThrottle((v: number) => editor.update({ strokeWidth: v }));
 
 	function int(value: string, fallback: number): number {
 		const n = Math.round(Number(value));
@@ -315,6 +320,40 @@
 					max={MAX_RADIUS}
 					step={1}
 				/>
+			</div>
+		{:else if el.type === 'icon'}
+			<div class="space-y-1.5">
+				<Label>Icon</Label>
+				<IconPicker selected={el.name} onselect={(name) => editor.update({ name })}>
+					{#snippet trigger({ props })}
+						<button
+							{...props}
+							class={cn(
+								buttonVariants({ variant: 'outline' }),
+								'w-full cursor-pointer justify-start font-mono text-xs'
+							)}
+						>
+							{el.name}
+						</button>
+					{/snippet}
+				</IconPicker>
+			</div>
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<Label>Stroke weight</Label>
+					<span class="text-xs text-muted-foreground tabular-nums">{el.strokeWidth}</span>
+				</div>
+				<Slider
+					type="single"
+					value={el.strokeWidth}
+					onValueChange={setStroke}
+					min={MIN_STROKE}
+					max={MAX_STROKE}
+					step={0.5}
+				/>
+				<p class="text-xs text-muted-foreground">
+					Heavier strokes hold up better at small sizes on thermal paper.
+				</p>
 			</div>
 		{:else if el.type === 'image'}
 			<div class="space-y-1.5">
