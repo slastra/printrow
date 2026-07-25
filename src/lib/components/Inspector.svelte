@@ -35,6 +35,7 @@
 	import AlignCenterIcon from '@lucide/svelte/icons/align-center';
 	import AlignRightIcon from '@lucide/svelte/icons/align-right';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	const el = $derived(editor.single);
 
@@ -330,10 +331,11 @@
 							{...props}
 							class={cn(
 								buttonVariants({ variant: 'outline' }),
-								'w-full cursor-pointer justify-start font-mono text-xs'
+								'w-full cursor-pointer justify-between text-sm font-normal'
 							)}
 						>
-							{el.name}
+							<span class="capitalize">{el.name.replace(/-/g, ' ')}</span>
+							<ChevronDownIcon class="size-3.5 text-muted-foreground" />
 						</button>
 					{/snippet}
 				</IconPicker>

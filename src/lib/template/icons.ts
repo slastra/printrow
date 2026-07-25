@@ -63,13 +63,22 @@ export function searchIcons(index: IconEntry[], query: string, limit = 60): Icon
  * Resize a lucide SVG and set its stroke weight. Stroke must be expressed in
  * the 24-unit viewBox, so a fixed CSS width would render hairline-thin once
  * the icon is placed at label scale.
+ *
+ * `colour` is black for the raster (the head only burns black) but
+ * `currentColor` for UI previews, so picker tiles follow the light/dark theme
+ * instead of disappearing into a dark popover.
  */
-export function iconSvg(raw: string, strokeWidth: number, px: number): string {
+export function iconSvg(
+	raw: string,
+	strokeWidth: number,
+	px: number,
+	colour: string = '#000000'
+): string {
 	return raw
 		.replace(/width="[^"]*"/, `width="${px}"`)
 		.replace(/height="[^"]*"/, `height="${px}"`)
 		.replace(/stroke-width="[^"]*"/, `stroke-width="${strokeWidth}"`)
-		.replace(/stroke="[^"]*"/, 'stroke="#000000"');
+		.replace(/stroke="[^"]*"/, `stroke="${colour}"`);
 }
 
 /** SVG string → data URL, for the same image path everything else uses. */

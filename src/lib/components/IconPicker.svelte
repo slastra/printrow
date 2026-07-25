@@ -29,7 +29,8 @@
 	});
 
 	const results = $derived(index.length ? searchIcons(index, query) : []);
-	const preview = (svg: string) => iconSvg(svg, 2, 20);
+	// currentColor, not black: tiles must follow the theme
+	const preview = (svg: string) => iconSvg(svg, 2, 20, 'currentColor');
 
 	function choose(name: string) {
 		onselect(name);

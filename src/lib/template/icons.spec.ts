@@ -60,8 +60,12 @@ describe('iconSvg', () => {
 		expect(out).toContain('viewBox="0 0 24 24"');
 	});
 
-	test('forces black, since currentColor has no meaning on the raster', () => {
+	test('forces black by default, since currentColor has no meaning on the raster', () => {
 		expect(iconSvg(raw, 2, 48)).toContain('stroke="#000000"');
+	});
+
+	test('keeps currentColor for UI previews so they follow the theme', () => {
+		expect(iconSvg(raw, 2, 20, 'currentColor')).toContain('stroke="currentColor"');
 	});
 });
 

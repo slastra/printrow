@@ -5,6 +5,7 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import IconPicker from './IconPicker.svelte';
+	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import ToolButton from './ToolButton.svelte';
 
 	// icon is inserted from the picker, so it isn't a plain tool button
@@ -35,12 +36,19 @@
 			<Tooltip.Root>
 				<Tooltip.Trigger
 					{...props}
-					class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), 'size-9')}
+					class={cn(
+						buttonVariants({ variant: 'ghost', size: 'icon' }),
+						// wider than the other tools: this one opens a picker
+						// rather than inserting straight away, and the chevron
+						// is what says so
+						'h-9 w-auto gap-0.5 px-2 transition-transform active:scale-90'
+					)}
 				>
 					<IconMark class="size-4" />
+					<ChevronDownIcon class="size-3 text-muted-foreground" />
 					<span class="sr-only">Icon</span>
 				</Tooltip.Trigger>
-				<Tooltip.Content side="top">Icon</Tooltip.Content>
+				<Tooltip.Content side="top">Icon (browse)</Tooltip.Content>
 			</Tooltip.Root>
 		{/snippet}
 	</IconPicker>

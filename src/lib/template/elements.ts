@@ -63,7 +63,7 @@ export const ELEMENT_META: Record<ElementKind, ElementMeta> = {
 		name: 'Icon',
 		icon: ShapesIcon,
 		defaults: { type: 'icon', name: 'star', w: 96, h: 96 },
-		label: (el) => (el.type === 'icon' ? el.name : 'Icon'),
+		label: (el) => (el.type === 'icon' ? el.name.replace(/-/g, ' ') : 'Icon'),
 		reflowsOnAxisResize: false,
 		cornerScalesFont: false,
 		keepAspect: true
