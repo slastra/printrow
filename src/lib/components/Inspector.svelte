@@ -19,6 +19,7 @@
 	} from '$lib/template/schema';
 	import { rafThrottle, cn } from '$lib/utils';
 	import IconPicker from './IconPicker.svelte';
+	import MediaSelect from './MediaSelect.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
@@ -125,11 +126,9 @@
 			same dots either way, so anything in a cut-away corner lands off the label.
 		</p>
 
-		<div class="flex items-center justify-between text-sm">
-			<span class="text-muted-foreground">Size</span>
-			<span class="tabular-nums">
-				{editor.template.width / DOTS_PER_MM} × {editor.template.height / DOTS_PER_MM} mm
-			</span>
+		<div class="space-y-1.5">
+			<Label>Size</Label>
+			<MediaSelect />
 		</div>
 	</div>
 {:else if editor.selectedIds.length > 1}

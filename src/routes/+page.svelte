@@ -9,9 +9,9 @@
 	import EditorToolbar from '$lib/components/EditorToolbar.svelte';
 	import LayersPanel from '$lib/components/LayersPanel.svelte';
 	import InsertBar from '$lib/components/InsertBar.svelte';
-	import MediaSelect from '$lib/components/MediaSelect.svelte';
 	import PrintButton from '$lib/components/PrintButton.svelte';
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
+	import LabelShortcut from '$lib/components/LabelShortcut.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
 	import SunIcon from '@lucide/svelte/icons/sun';
@@ -102,7 +102,7 @@
 				target="_blank"
 				rel="noreferrer"
 				title="Source on GitHub"
-				class="absolute top-3 right-3 z-10 flex size-9 float-in-down items-center justify-center rounded-lg border border-border bg-(--surface-tool) text-muted-foreground shadow-(--shadow-tool) backdrop-blur-[10px] transition-colors float-step-1 hover:text-foreground"
+				class="absolute top-3 right-3 z-10 hidden size-9 float-in-down items-center justify-center rounded-lg border border-border bg-(--surface-tool) text-muted-foreground shadow-(--shadow-tool) backdrop-blur-[10px] transition-colors float-step-1 hover:text-foreground lg:flex"
 			>
 				<!-- lucide dropped brand marks, so the GitHub glyph is inline -->
 				<svg viewBox="0 0 16 16" fill="currentColor" class="size-4" aria-hidden="true">
@@ -113,21 +113,25 @@
 				<span class="sr-only">Source on GitHub</span>
 			</a>
 
-			<!-- context toolbar, top center -->
+			<!-- Context toolbar. Mobile hugs the right, clear of the sidebar
+			     trigger; desktop centres. Centring an absolute box needs BOTH
+			     edges set, so the switch is mr-0 vs mr-auto — not right-auto,
+			     which would strand it on the left. -->
 			<div
-				class="absolute inset-x-14 top-3 z-10 mx-auto w-fit max-w-full float-in-down float-step-1"
+				class="absolute top-3 right-3 left-14 z-10 mr-0 ml-auto w-fit max-w-full float-in-down float-step-1 lg:right-14 lg:mr-auto"
 			>
 				<EditorToolbar />
+			</div>
+
+			<!-- label properties, bottom left (desktop only: the phone reaches the
+			     same panel through the sidebar sheet) -->
+			<div class="absolute bottom-3 left-3 z-10 hidden float-in-up float-step-3 lg:block">
+				<LabelShortcut />
 			</div>
 
 			<!-- insert bar, bottom center -->
 			<div class="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit float-in-up float-step-2">
 				<InsertBar />
-			</div>
-
-			<!-- media size, bottom left -->
-			<div class="absolute bottom-3 left-3 z-10 float-in-up float-step-3">
-				<MediaSelect />
 			</div>
 		</div>
 	</Sidebar.Inset>

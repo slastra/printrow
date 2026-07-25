@@ -60,7 +60,8 @@
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={menuTrigger}>
-					<AlignStartVerticalIcon class="size-4" /> Align
+					<AlignStartVerticalIcon class="size-4" />
+					<span class="hidden sm:inline">Align</span>
 					<ChevronDownIcon class="size-3 text-muted-foreground" />
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="start" class="min-w-56">
@@ -85,7 +86,8 @@
 
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger class={menuTrigger}>
-					<GroupIcon class="size-4" /> Group
+					<GroupIcon class="size-4" />
+					<span class="hidden sm:inline">Group</span>
 					<ChevronDownIcon class="size-3 text-muted-foreground" />
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="start" class="min-w-56">
@@ -118,7 +120,9 @@
 
 	<!-- the count is status, not a control: its own smaller pill below -->
 	{#if n > 0}
-		<div class="tool-surface px-2 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+		<div
+			class="hidden tool-surface px-2 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground lg:block"
+		>
 			{n}
 			{n === 1 ? 'element' : 'elements'} selected
 		</div>

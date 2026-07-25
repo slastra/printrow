@@ -16,6 +16,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
+	import ScanIcon from '@lucide/svelte/icons/scan';
 
 	const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 6];
 
@@ -191,8 +192,11 @@
 	// headroom for the floating toolbar (top) and insert bar (bottom)
 	function refit() {
 		if (!root) return;
+		// mobile stacks the bottom controls into two rows, so it needs more
+		// headroom reserved than the desktop single row
+		const chrome = window.innerWidth >= 1024 ? 140 : 200;
 		const w = root.clientWidth - 48;
-		const h = root.clientHeight - 140;
+		const h = root.clientHeight - chrome;
 		fitZoom = clamp(Math.min(w / editor.template.width, h / editor.template.height), 0.25, 6);
 	}
 
@@ -544,18 +548,22 @@
 		</div>
 	</div>
 	<div
-		class="absolute right-3 bottom-3 z-10 flex float-in-up items-center gap-1 tool-surface p-1"
+		class="absolute right-3 bottom-16 z-10 flex float-in-up flex-col-reverse items-center gap-0.5 tool-surface p-1 lg:bottom-3 lg:flex-row lg:gap-1"
 		style="animation-delay: 240ms"
 	>
 		<Button variant="ghost" size="icon" class="size-7" onclick={() => stepZoom(-1)}>
 			<MinusIcon />
 		</Button>
+		<!-- vertical rail has no room for the percentage; the fit action stays,
+		     as an icon, so zoom is still resettable on a phone -->
 		<button
-			class="w-12 text-center text-xs text-muted-foreground tabular-nums hover:text-foreground"
+			class="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground lg:size-auto lg:w-12 lg:text-xs lg:tabular-nums"
 			onclick={() => (zoomChoice = 'fit')}
 			title="Fit to window"
 		>
-			{Math.round(zoom * 100)}%
+			<ScanIcon class="size-3.5 lg:hidden" />
+			<span class="hidden lg:inline">{Math.round(zoom * 100)}%</span>
+			<span class="sr-only">Fit to window</span>
 		</button>
 		<Button variant="ghost" size="icon" class="size-7" onclick={() => stepZoom(1)}>
 			<PlusIcon />

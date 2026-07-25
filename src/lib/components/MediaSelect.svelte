@@ -46,19 +46,11 @@
 </script>
 
 <Select.Root type="single" value={isPreset ? current : 'custom'} onValueChange={onChange}>
-	<!-- The surface lives on a wrapper: the trigger ships its own border, bg
-	     and shadow classes, and overriding all three (in both themes) drifts
-	     from the shared utility. Stripped bare, it inherits the real thing.
-	     The chevron flips up because the menu opens upward. -->
-	<div class="w-fit tool-surface">
-		<Select.Trigger
-			class="h-9 gap-2 rounded-lg border-0 bg-transparent shadow-none hover:bg-accent/60 dark:bg-transparent dark:hover:bg-accent/60 [&>svg:last-child]:rotate-180"
-		>
-			<RulerIcon class="size-4 text-muted-foreground" />
-			{currentLabel}
-		</Select.Trigger>
-	</div>
-	<Select.Content side="top">
+	<Select.Trigger class="w-full">
+		<RulerIcon class="size-4 text-muted-foreground" />
+		{currentLabel}
+	</Select.Trigger>
+	<Select.Content>
 		{#each MEDIA_PRESETS as p (p.label)}
 			<Select.Item value={`${p.wMm}×${p.hMm}`}>{p.label}</Select.Item>
 		{/each}
