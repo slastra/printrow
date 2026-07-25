@@ -60,7 +60,9 @@ Verified on a **Y50P** (FlashLabel), 50 × 30 mm stock at 8 dots/mm. Other media
 
 ## Credits
 
-The protocol was reverse-engineered independently, from HCI snoops of the vendor's FlashLabel Pro app: the framing, the non-standard CRC-32 init, the payload structure, and the RLE raster were recovered from those captures and verified by rebuilding whole print sessions byte for byte. [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT) was found afterwards, by searching GitHub for that CRC constant. It targets a sibling printer, the FlashToy U8, and names the protocol YPL. Two derivations arriving separately at the same odd CRC init is about as strong as protocol evidence gets, and it supplied command names, three further status bits, and a compressed raster path the captures here never exercised.
+The protocol was reverse-engineered from HCI snoops of the vendor's FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte.
+
+[Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT) turned up afterwards, in a GitHub search for that CRC constant. It targets a sibling printer, the FlashToy U8, and calls the protocol YPL. Working separately, they landed on the same framing, the same status bits, and the same non-standard CRC init, which is about as strong as protocol evidence gets. Their write-up also documents command names and a compressed raster path these captures never exercised.
 
 Bundled and redistributed by this app:
 
