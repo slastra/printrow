@@ -12,6 +12,7 @@
 	import PrintButton from '$lib/components/PrintButton.svelte';
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import LabelShortcut from '$lib/components/LabelShortcut.svelte';
+	import AboutDialog from '$lib/components/AboutDialog.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
 	import SunIcon from '@lucide/svelte/icons/sun';
@@ -80,6 +81,7 @@
 				<MoonIcon class="hidden size-4 dark:block" />
 				<span>Toggle theme</span>
 			</Button>
+			<AboutDialog />
 		</Sidebar.Footer>
 	</Sidebar.Root>
 

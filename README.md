@@ -57,7 +57,7 @@ Discovery deliberately filters by device name, never by service UUID: a service-
 ## Hardware
 
 <p align="center">
-  <img src="docs/printer.png" alt="A KNAON Y50P thermal printer, lid closed, presenting a freshly printed label that reads PRINTROW above a barcode" width="440">
+  <img src="src/lib/assets/printer.png" alt="A KNAON Y50P thermal printer, lid closed, presenting a freshly printed label that reads PRINTROW above a barcode" width="440">
 </p>
 
 Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.

@@ -34,8 +34,19 @@ class PrinterState {
 	private inbox: number[] = [];
 	private statusWaiter: ((status: number) => void) | null = null;
 
+	// Split, because the two failure modes need different fixes: a missing API
+	// means wrong browser (or a Linux flag), an insecure context means the
+	// origin is plain http. The About dialog reports them separately.
+	get hasBluetooth(): boolean {
+		return typeof navigator !== 'undefined' && 'bluetooth' in navigator;
+	}
+
+	get isSecure(): boolean {
+		return typeof window !== 'undefined' && window.isSecureContext;
+	}
+
 	get supported(): boolean {
-		return typeof navigator !== 'undefined' && 'bluetooth' in navigator && window.isSecureContext;
+		return this.hasBluetooth && this.isSecure;
 	}
 
 	get statusText(): string {
