@@ -20,8 +20,9 @@
 
 <div class="space-y-3">
 	<div class="flex items-center gap-2">
-		<span class="truncate text-xs text-muted-foreground">
-			{data.fileName} · {data.rows.length} rows
+		<span class="min-w-0 flex-1">
+			<span class="block truncate text-sm font-medium">{data.fileName}</span>
+			<span class="block text-xs text-muted-foreground">{data.rows.length} rows</span>
 		</span>
 		<Button variant="ghost" size="icon" class="ml-auto size-7" onclick={() => data.clear()}>
 			<XIcon />
