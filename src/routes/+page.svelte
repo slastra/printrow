@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { toggleMode } from 'mode-watcher';
 	import { editor } from '$lib/template/editor.svelte';
+	import { data } from '$lib/template/data.svelte';
 	import LabelEditor from '$lib/components/LabelEditor.svelte';
 	import Inspector from '$lib/components/Inspector.svelte';
 	import DataPanel from '$lib/components/DataPanel.svelte';
@@ -55,13 +56,15 @@
 					<Inspector />
 				</Sidebar.GroupContent>
 			</Sidebar.Group>
-			<Sidebar.Separator />
-			<Sidebar.Group>
-				<Sidebar.GroupLabel>Data</Sidebar.GroupLabel>
-				<Sidebar.GroupContent class="px-2">
-					<DataPanel />
-				</Sidebar.GroupContent>
-			</Sidebar.Group>
+			{#if data.loaded}
+				<Sidebar.Separator />
+				<Sidebar.Group>
+					<Sidebar.GroupLabel>Data</Sidebar.GroupLabel>
+					<Sidebar.GroupContent class="px-2">
+						<DataPanel />
+					</Sidebar.GroupContent>
+				</Sidebar.Group>
+			{/if}
 			<Sidebar.Separator />
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Layers</Sidebar.GroupLabel>

@@ -54,11 +54,7 @@
 		</div>
 	{/if}
 
-	{#if vars.length === 0}
-		<p class="text-sm text-muted-foreground">
-			Use {'{{var}}'} in text or barcode data to bind CSV columns.
-		</p>
-	{:else}
+	{#if vars.length > 0}
 		<div class="space-y-2">
 			{#each vars as v (v)}
 				<div class="flex items-center gap-2">
