@@ -58,6 +58,17 @@ Discovery deliberately filters by device name, never by service UUID: a service-
 
 Verified on a **Y50P** (FlashLabel), 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
 
+## Credits
+
+The protocol port began from [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), which reverse-engineered the same family on a FlashToy U8 and names it YPL. Two independent derivations agreeing on a non-standard CRC-32 init is about as strong as protocol evidence gets; their work also supplied command names and status bits beyond what the captures here proved.
+
+Bundled and redistributed by this app:
+
+- **[Lucide](https://lucide.dev)** (ISC) for the icon set, ~1,750 marks embedded in the bundle.
+- **[bwip-js](https://github.com/metafloor/bwip-js)** (MIT) for barcode and QR generation.
+- **[Konva](https://konvajs.org)** (MIT) for canvas rendering, **[zod](https://zod.dev)** (MIT) for the template schema, **[svelte-dnd-action](https://github.com/isaacHagoel/svelte-dnd-action)** (MIT) for layer reordering, and **[shadcn-svelte](https://shadcn-svelte.com)** / **[bits-ui](https://bits-ui.com)** (MIT) for the interface components.
+- **Typefaces**, all under the [SIL Open Font Licence 1.1](https://openfontlicense.org), served from [Fontsource](https://fontsource.org): Inter, Pacifico, Oswald, Source Serif 4, JetBrains Mono, Bebas Neue, Archivo Black, Playfair Display, Space Grotesk, and Bricolage Grotesque for the wordmark.
+
 ## Licence
 
 MIT
