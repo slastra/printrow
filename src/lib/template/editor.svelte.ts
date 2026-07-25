@@ -415,6 +415,20 @@ class EditorState {
 		);
 	}
 
+	/** Layers-panel drag reorder: ids arrive frontmost-first (list order). */
+	setOrder(idsFrontToBack: string[]) {
+		const byId = new Map(this.template.elements.map((e) => [e.id, e]));
+		const ordered = idsFrontToBack
+			.map((id) => byId.get(id))
+			.filter((e): e is AnyElement => Boolean(e))
+			.reverse();
+		// safety: anything the list didn't mention stays at the back
+		const missing = this.template.elements.filter((e) => !idsFrontToBack.includes(e.id));
+		this.commit(() => {
+			this.template.elements = [...missing, ...ordered];
+		});
+	}
+
 	raise(ids?: string[]) {
 		this.reorder((arr, sel) => {
 			for (let i = arr.length - 2; i >= 0; i--)

@@ -66,7 +66,7 @@
 				<AlignStartVerticalIcon class="size-4" /> Align
 				<ChevronDownIcon class="size-3 text-muted-foreground" />
 			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start">
+			<DropdownMenu.Content align="start" class="min-w-56">
 				<DropdownMenu.Label class="text-xs">
 					{n === 1 ? 'Align to label' : 'Align to selection'}
 				</DropdownMenu.Label>
@@ -91,7 +91,7 @@
 				<LayersIcon class="size-4" /> Layer
 				<ChevronDownIcon class="size-3 text-muted-foreground" />
 			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start">
+			<DropdownMenu.Content align="start" class="min-w-56">
 				<DropdownMenu.Item onclick={() => editor.bringToFront()}>
 					<BringToFrontIcon class="size-4" /> Bring to front
 				</DropdownMenu.Item>
@@ -114,7 +114,7 @@
 				<GroupIcon class="size-4" /> Group
 				<ChevronDownIcon class="size-3 text-muted-foreground" />
 			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start">
+			<DropdownMenu.Content align="start" class="min-w-56">
 				<DropdownMenu.Item
 					disabled={n < 2 || editor.selectionGrouped}
 					onclick={() => editor.groupSelection()}

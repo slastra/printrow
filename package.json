@@ -44,6 +44,7 @@
 	"dependencies": {
 		"bwip-js": "^4.11.2",
 		"konva": "^10.3.0",
+		"svelte-dnd-action": "^0.9.74",
 		"zod": "^4.4.3"
 	}
 }
