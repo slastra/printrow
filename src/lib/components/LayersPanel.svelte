@@ -39,7 +39,7 @@
 </script>
 
 {#if items.length === 0}
-	<p class="px-2 py-1.5 text-xs text-muted-foreground">No elements yet — add one below.</p>
+	<p class="px-2 py-1.5 text-xs text-muted-foreground">No elements yet. Add one below.</p>
 {:else}
 	<div
 		class="space-y-0.5"

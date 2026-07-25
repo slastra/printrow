@@ -37,7 +37,7 @@
 
 		<!-- what the CSV offers — click a column to copy its placeholder -->
 		<div class="space-y-1.5">
-			<p class="text-xs text-muted-foreground">Available columns — click to copy:</p>
+			<p class="text-xs text-muted-foreground">Available columns (click to copy):</p>
 			<div class="flex flex-wrap gap-1">
 				{#each data.columns as col (col)}
 					<button

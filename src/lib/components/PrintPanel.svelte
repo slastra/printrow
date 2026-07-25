@@ -59,7 +59,7 @@
 
 	{#if unmapped.length}
 		<p class="text-xs text-red-500">
-			Unmapped: {unmapped.map((v) => `{{${v}}}`).join(', ')} — these print as placeholders.
+			Unmapped: {unmapped.map((v) => `{{${v}}}`).join(', ')} will print as placeholders.
 		</p>
 	{/if}
 
