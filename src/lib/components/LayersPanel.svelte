@@ -82,7 +82,10 @@
 								/>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
 					</span>
 				{:else}
-					<span class="truncate">{meta.label?.(item.el) ?? meta.name}</span>
+					<!-- first-letter caps: names come from ids like "circle-alert" -->
+					<span class="truncate first-letter:uppercase">
+						{meta.label?.(item.el) ?? meta.name}
+					</span>
 				{/if}
 			</div>
 		{/each}
