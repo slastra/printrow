@@ -4,6 +4,8 @@
 	import { editor } from '$lib/template/editor.svelte';
 	import { ELEMENT_META } from '$lib/template/elements';
 	import { splitVars } from '$lib/template/vars';
+	import { data } from '$lib/template/data.svelte';
+	import { cn } from '$lib/utils';
 	import type { AnyElement } from '$lib/template/schema';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
 
@@ -76,8 +78,14 @@
 					<span class="flex min-w-0 items-center gap-0.5 truncate">
 						{#each splitVars(content) as part, i (i)}
 							{#if part.isVar}
+								<!-- green only when the loaded CSV actually has this column -->
 								<span
-									class="shrink-0 rounded bg-emerald-500/15 px-1 font-mono text-[10px] text-emerald-700 dark:text-emerald-400"
+									class={cn(
+										'shrink-0 rounded px-1 font-mono text-[10px]',
+										data.columns.includes(part.text)
+											? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+											: 'bg-muted-foreground/15 text-muted-foreground'
+									)}
 								>
 									{part.text}
 								</span>
