@@ -1,0 +1,20 @@
+# Coolify / Nixpacks build — Bun + SvelteKit (adapter-node).
+#
+# No database, no persistent storage: templates live in the browser's
+# localStorage and the printer is reached from the browser over Web Bluetooth,
+# so the server only ever serves static assets and the SSR shell.
+#
+# Serve it over HTTPS. Web Bluetooth requires a secure context, so the Connect
+# button is inert on a plain-http origin (localhost excepted).
+
+[phases.setup]
+nixPkgs = ["bun", "nodejs"]
+
+[phases.install]
+cmds = ["bun install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["bun run build"]
+
+[start]
+cmd = "node build"

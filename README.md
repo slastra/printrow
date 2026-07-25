@@ -7,7 +7,7 @@ A label template designer that prints against CSV data over Web Bluetooth — no
 The Y50P speaks a proprietary framed binary protocol (reverse-engineered against hardware captures; independently confirmed on a sibling device by [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter)). The printer has no fonts or barcode symbologies — it accepts nothing but a 400×240 1-bit bitmap, so **everything renders host-side and the editor preview is bit-identical to what prints**:
 
 - A zod model is the single source of truth; Konva renders it — the same node builder drives the editor canvas and the print rasterizer.
-- Text, images, and barcodes render at the printer's true 203 dpi with a hard 1-bit threshold (Atkinson dithering for photos), so the on-screen dot grid *is* the label.
+- Text, images, and barcodes render at the printer's true 203 dpi with a hard 1-bit threshold (Atkinson dithering for photos), so the on-screen dot grid _is_ the label.
 - Barcodes (bwip-js) snap their module grid to whole printer dots at any element size — crisp on screen, scanner-accurate on paper.
 - Transport: BLE GATT writes in 20-byte chunks with pacing, bidirectional status (cover open / out of paper) between batch labels.
 
@@ -23,6 +23,18 @@ bun run dev        # http://localhost:5173
 bun test src       # unit tests (protocol vectors, CSV, geometry, schema)
 bun run check      # svelte-check
 ```
+
+## Deploying (Coolify)
+
+`nixpacks.toml` builds with Bun and starts the adapter-node server, so Coolify needs no extra configuration:
+
+```
+bun install --frozen-lockfile  →  bun run build  →  node build
+```
+
+There is no database and nothing to persist server-side — templates live in the browser's localStorage and the printer is reached from the browser, so the server only serves assets and the SSR shell. It listens on `PORT` (Coolify sets this; the adapter defaults to 3000 on 0.0.0.0).
+
+**Serve it over HTTPS.** Web Bluetooth only works in a secure context, so on a plain-http origin the Connect button can't do anything. Give the app a domain in Coolify and let it issue a certificate.
 
 ## Web Bluetooth notes
 
