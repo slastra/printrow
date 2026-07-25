@@ -20,7 +20,10 @@
 	const ZOOM_STEPS = [0.5, 0.75, 1, 1.5, 2, 3, 4, 5, 6];
 
 	let root = $state<HTMLDivElement>();
+	let viewport = $state<HTMLDivElement>();
 	let container: HTMLDivElement;
+	let panning = $state(false);
+	let spaceHeld = false;
 	let K = $state<KonvaNS>();
 	let stage: Konva.Stage | undefined;
 	let layer: Konva.Layer | undefined;
@@ -428,6 +431,35 @@
 		if (next !== undefined) zoomChoice = next;
 	}
 
+	/**
+	 * Pan the workspace with the middle button, or space + drag. Left-drag is
+	 * reserved for marquee selection, so panning takes the gestures design
+	 * tools reserve for it.
+	 */
+	function startPan(e: PointerEvent) {
+		if (!viewport) return;
+		if (e.button !== 1 && !(e.button === 0 && spaceHeld)) return;
+		e.preventDefault();
+		panning = true;
+		const startX = e.clientX,
+			startY = e.clientY;
+		const fromLeft = viewport.scrollLeft,
+			fromTop = viewport.scrollTop;
+		const move = (m: PointerEvent) => {
+			viewport?.scrollTo({
+				left: fromLeft - (m.clientX - startX),
+				top: fromTop - (m.clientY - startY)
+			});
+		};
+		const up = () => {
+			panning = false;
+			window.removeEventListener('pointermove', move);
+			window.removeEventListener('pointerup', up);
+		};
+		window.addEventListener('pointermove', move);
+		window.addEventListener('pointerup', up);
+	}
+
 	function onKeydown(e: KeyboardEvent) {
 		const t = e.target as HTMLElement;
 		if (
@@ -478,12 +510,39 @@
 	}
 </script>
 
-<svelte:window onkeydown={onKeydown} />
+<svelte:window
+	onkeydown={(e) => {
+		if (e.code === 'Space') spaceHeld = true;
+		onKeydown(e);
+	}}
+	onkeyup={(e) => {
+		if (e.code === 'Space') spaceHeld = false;
+	}}
+	onblur={() => (spaceHeld = false)}
+/>
 
 <div bind:this={root} class="absolute inset-0">
-	<div class="absolute inset-0 flex overflow-auto p-6">
-		<!-- the label is paper, not UI: no border, a real object's shadow -->
-		<div class="m-auto overflow-hidden rounded-sm paper-surface">
+	<!--
+		grid + *-safe centering: plain centering (m-auto / place-content-center)
+		pushes overflow past the scroll container's start edge, so a zoomed-in
+		label can't be scrolled back to its top-left. `safe` falls back to
+		start alignment exactly when the content stops fitting.
+		Middle-drag or space-drag pans; the wheel scrolls as usual.
+	-->
+	<!-- svelte-ignore a11y_no_static_element_interactions -- panning is a
+	     pointer-only affordance; the canvas is reachable by keyboard already -->
+	<div
+		bind:this={viewport}
+		class="absolute inset-0 grid content-center-safe justify-center-safe overflow-auto p-6 {panning
+			? 'cursor-grabbing select-none'
+			: ''}"
+		onpointerdown={startPan}
+	>
+		<!-- the label is paper, not UI: no border, a real object's shadow.
+		     w-fit/h-fit matter: as a stretched grid item this box would be sized
+		     to the viewport and its overflow-hidden would clip the zoomed canvas
+		     instead of letting the scroll container see it. -->
+		<div class="h-fit w-fit overflow-hidden rounded-sm paper-surface">
 			<div bind:this={container}></div>
 		</div>
 	</div>
