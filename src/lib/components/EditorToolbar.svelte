@@ -44,7 +44,7 @@
 	);
 </script>
 
-<div class="flex flex-wrap items-center gap-0.5 rounded-md border bg-card p-1 shadow-md">
+<div class="flex flex-wrap items-center gap-0.5 tool-surface p-1">
 	<ToolButton
 		label="Undo (Ctrl+Z)"
 		icon={Undo2Icon}

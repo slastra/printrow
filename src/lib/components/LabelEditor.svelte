@@ -482,12 +482,16 @@
 
 <div bind:this={root} class="absolute inset-0">
 	<div class="absolute inset-0 flex overflow-auto p-6">
-		<div class="m-auto overflow-hidden rounded-md border bg-white shadow-md">
+		<!-- the label is paper, not UI: no border, a real object's shadow -->
+		<div
+			class="m-auto overflow-hidden rounded-sm bg-white shadow-[0_1px_2px_rgb(0_0_0/0.1),0_12px_32px_-8px_rgb(0_0_0/0.3)] ring-1 ring-black/10"
+		>
 			<div bind:this={container}></div>
 		</div>
 	</div>
 	<div
-		class="absolute right-3 bottom-3 z-10 flex items-center gap-1 rounded-md border bg-card p-1 shadow-md"
+		class="absolute right-3 bottom-3 z-10 flex float-in-up items-center gap-1 tool-surface p-1"
+		style="animation-delay: 240ms"
 	>
 		<Button variant="ghost" size="icon" class="size-7" onclick={() => stepZoom(-1)}>
 			<MinusIcon />

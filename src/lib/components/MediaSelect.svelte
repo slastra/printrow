@@ -19,7 +19,7 @@
 </script>
 
 <Select.Root type="single" value={current} onValueChange={onChange}>
-	<Select.Trigger class="h-9 gap-2 border bg-card shadow-md">
+	<Select.Trigger class="h-9 gap-2 tool-surface">
 		<RulerIcon class="size-4 text-muted-foreground" />
 		{currentLabel}
 	</Select.Trigger>

@@ -16,7 +16,7 @@
 	}
 </script>
 
-<div class="flex items-center gap-0.5 rounded-md border bg-card p-1 shadow-md">
+<div class="flex items-center gap-0.5 tool-surface p-1">
 	{#each kinds as kind (kind)}
 		<ToolButton
 			label={ELEMENT_META[kind].name}

@@ -131,3 +131,48 @@
 		@apply font-sans;
 	}
 }
+
+/* ---------------------------------------------------------------------------
+   printrow design layer: the workspace is a print instrument.
+--------------------------------------------------------------------------- */
+
+/* Workspace dot grid — the printer's dot raster, writ large. Foreground-mixed
+   so it adapts to both themes. */
+@utility workspace-dots {
+	background-image: radial-gradient(
+		color-mix(in oklch, var(--foreground) 14%, transparent) 1px,
+		transparent 1px
+	);
+	background-size: 16px 16px;
+}
+
+/* Every floating tool shares one surface: frosted card, soft lifted shadow. */
+@utility tool-surface {
+	border-radius: var(--radius-lg);
+	border: 1px solid var(--border);
+	background: color-mix(in oklch, var(--card) 86%, transparent);
+	backdrop-filter: blur(10px);
+	box-shadow:
+		0 1px 2px rgb(0 0 0 / 0.06),
+		0 8px 24px -8px rgb(0 0 0 / 0.18);
+}
+
+/* One orchestrated load: tools drift in from their own edges. */
+@keyframes float-in-down {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+}
+@keyframes float-in-up {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+}
+@utility float-in-down {
+	animation: float-in-down 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility float-in-up {
+	animation: float-in-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}

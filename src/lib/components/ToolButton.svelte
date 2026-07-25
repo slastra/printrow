@@ -21,7 +21,11 @@
 
 <Tooltip.Root>
 	<Tooltip.Trigger
-		class={cn(buttonVariants({ variant: 'ghost', size: 'icon' }), size)}
+		class={cn(
+			buttonVariants({ variant: 'ghost', size: 'icon' }),
+			'transition-transform active:scale-90',
+			size
+		)}
 		{disabled}
 		{onclick}
 	>

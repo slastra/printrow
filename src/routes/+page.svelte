@@ -26,12 +26,21 @@
 
 <Sidebar.Provider open={data.sidebarOpen}>
 	<Sidebar.Root variant="inset" class="border-none">
-		<Sidebar.Header class="gap-3 px-3 py-4">
-			<span
-				class="text-4xl font-extrabold tracking-tight"
-				style="font-family: 'Bricolage Grotesque Variable', sans-serif;"
-			>
-				printrow
+		<Sidebar.Header class="gap-4 px-4 pt-7 pb-4">
+			<span class="flex items-end gap-2">
+				<span
+					class="text-4xl leading-none font-extrabold tracking-tight"
+					style="font-family: 'Bricolage Grotesque Variable', sans-serif;"
+				>
+					printrow
+				</span>
+				<!-- 2×2 dot-matrix mark, one dot deliberately unprinted -->
+				<span class="mb-1 grid grid-cols-2 gap-[3px]" aria-hidden="true">
+					<span class="size-1.5 bg-primary"></span>
+					<span class="size-1.5 bg-primary"></span>
+					<span class="size-1.5 bg-primary/25"></span>
+					<span class="size-1.5 bg-primary"></span>
+				</span>
 			</span>
 			<div class="flex flex-col gap-2">
 				<CsvImportButton />
@@ -39,18 +48,21 @@
 			</div>
 		</Sidebar.Header>
 		<Sidebar.Content>
+			<Sidebar.Separator />
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Element</Sidebar.GroupLabel>
 				<Sidebar.GroupContent class="px-2">
 					<Inspector />
 				</Sidebar.GroupContent>
 			</Sidebar.Group>
+			<Sidebar.Separator />
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Data</Sidebar.GroupLabel>
 				<Sidebar.GroupContent class="px-2">
 					<DataPanel />
 				</Sidebar.GroupContent>
 			</Sidebar.Group>
+			<Sidebar.Separator />
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Layers</Sidebar.GroupLabel>
 				<Sidebar.GroupContent class="px-2">
@@ -68,31 +80,37 @@
 	</Sidebar.Root>
 
 	<Sidebar.Inset class="border">
-		<div class="relative flex-1 overflow-hidden rounded-[inherit] bg-muted/30">
+		<div class="relative flex-1 overflow-hidden rounded-[inherit] bg-muted/30 workspace-dots">
 			<!-- the canvas fills the inset; everything else floats above it -->
 			<LabelEditor />
 
 			<!-- sidebar toggle, top left -->
-			<div class="absolute top-3 left-3 z-10">
-				<Sidebar.Trigger class="size-9 rounded-md border bg-card shadow-md hover:bg-accent" />
+			<div class="absolute top-3 left-3 z-10 float-in-down">
+				<Sidebar.Trigger class="size-9 tool-surface hover:bg-accent" />
 			</div>
 
 			<!-- context toolbar, top center -->
-			<div class="pointer-events-none absolute inset-x-14 top-3 z-10 flex justify-center">
+			<div
+				class="pointer-events-none absolute inset-x-14 top-3 z-10 flex float-in-down justify-center"
+				style="animation-delay: 60ms"
+			>
 				<div class="pointer-events-auto max-w-full">
 					<EditorToolbar />
 				</div>
 			</div>
 
 			<!-- insert bar, bottom center -->
-			<div class="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex justify-center">
+			<div
+				class="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex float-in-up justify-center"
+				style="animation-delay: 120ms"
+			>
 				<div class="pointer-events-auto">
 					<InsertBar />
 				</div>
 			</div>
 
 			<!-- media size, bottom left -->
-			<div class="absolute bottom-3 left-3 z-10">
+			<div class="absolute bottom-3 left-3 z-10 float-in-up" style="animation-delay: 180ms">
 				<MediaSelect />
 			</div>
 		</div>
