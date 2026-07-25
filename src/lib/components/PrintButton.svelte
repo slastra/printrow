@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import * as Popover from '$lib/components/ui/popover';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
+	import { Button } from '$lib/components/ui/button';
 	import BluetoothIcon from '@lucide/svelte/icons/bluetooth';
 	import BluetoothOffIcon from '@lucide/svelte/icons/bluetooth-off';
-	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import { printer } from '$lib/printer/ble.svelte';
-	import PrintPanel from './PrintPanel.svelte';
 
 	let connecting = $state(false);
 
@@ -38,18 +34,16 @@
 	</Button>
 {:else}
 	<div class="flex w-full">
-		<Popover.Root>
-			<Popover.Trigger
-				class={cn(buttonVariants({ variant: 'default', size: 'sm' }), 'flex-1 rounded-r-none')}
-			>
-				<span class="size-2 rounded-full {printer.statusColor}"></span>
-				<PrinterIcon />
-				Print
-			</Popover.Trigger>
-			<Popover.Content class="w-80" align="start">
-				<PrintPanel />
-			</Popover.Content>
-		</Popover.Root>
+		<Button
+			size="sm"
+			class="flex-1 justify-start truncate rounded-r-none font-mono"
+			disabled={printer.busy}
+			title="Refresh printer status"
+			onclick={() => printer.readStatus()}
+		>
+			<BluetoothIcon />
+			{printer.deviceName}
+		</Button>
 		<Button
 			size="sm"
 			class="rounded-l-none border-l border-primary-foreground/25 px-2.5"

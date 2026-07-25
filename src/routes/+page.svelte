@@ -11,6 +11,8 @@
 	import InsertBar from '$lib/components/InsertBar.svelte';
 	import MediaSelect from '$lib/components/MediaSelect.svelte';
 	import PrintButton from '$lib/components/PrintButton.svelte';
+	import PrintPanel from '$lib/components/PrintPanel.svelte';
+	import { printer } from '$lib/printer/ble.svelte';
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
@@ -62,6 +64,16 @@
 					<Sidebar.GroupLabel>Data</Sidebar.GroupLabel>
 					<Sidebar.GroupContent class="px-2">
 						<DataPanel />
+					</Sidebar.GroupContent>
+				</Sidebar.Group>
+			{/if}
+
+			{#if printer.connected}
+				<Sidebar.Separator />
+				<Sidebar.Group>
+					<Sidebar.GroupLabel>Printer</Sidebar.GroupLabel>
+					<Sidebar.GroupContent class="px-2">
+						<PrintPanel />
 					</Sidebar.GroupContent>
 				</Sidebar.Group>
 			{/if}
