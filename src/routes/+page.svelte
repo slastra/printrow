@@ -13,7 +13,6 @@
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import type { PageData } from './$types.js';
@@ -32,11 +31,6 @@
 				<span class="text-xl font-semibold tracking-tight">printrow</span>
 				<span class="text-xs text-muted-foreground">{editor.saved ? 'saved' : 'saving…'}</span>
 			</div>
-			<Input
-				class="h-8"
-				value={editor.template.name}
-				oninput={(e) => editor.rename(e.currentTarget.value)}
-			/>
 			<div class="flex flex-col gap-2">
 				<CsvImportButton />
 				<PrintButton />

@@ -201,10 +201,6 @@ class EditorState {
 
 	// --- template ------------------------------------------------------------
 
-	rename(name: string) {
-		this.commit(() => (this.template.name = name || 'Untitled label'));
-	}
-
 	setMapping(variable: string, column: string) {
 		this.commit(() => (this.template.mapping = { ...this.template.mapping, [variable]: column }));
 	}
