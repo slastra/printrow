@@ -17,6 +17,10 @@ export const MIN_FONT_SIZE = 6;
 export const MAX_FONT_SIZE = 200;
 
 export const BORDER_STYLES = ['solid', 'dashed', 'dotted'] as const;
+
+/** Burn ink, or knock it back out of whatever sits behind. */
+export const INKS = ['black', 'clear'] as const;
+export type Ink = (typeof INKS)[number];
 export type BorderStyle = (typeof BORDER_STYLES)[number];
 
 // Media bounds in mm, derived from the print head so one protocol change
@@ -118,7 +122,13 @@ const base = {
 	// honest result.
 	rotation: z.number().min(0).max(360).default(0),
 	// Elements sharing a groupId select and move as one (flat groups, no nesting).
-	groupId: z.string().optional()
+	groupId: z.string().optional(),
+	// The head can only burn or not burn, so there is no light-coloured ink: a
+	// clear element KNOCKS OUT the ink behind it, letting the stock show
+	// through. That is what makes text legible inside a solid rectangle, and
+	// why it reads as the stock colour rather than white. Nothing behind it
+	// means nothing to remove, so it prints as blank.
+	ink: z.enum(INKS).default('black')
 };
 
 export const TextElementSchema = z.object({

@@ -240,7 +240,21 @@ export async function buildNode(
 	el: AnyElement,
 	values: Record<string, string | undefined>
 ): Promise<Konva.Shape> {
-	const common = { id: el.id, x: el.x, y: el.y, rotation: el.rotation };
+	// Every bake below emits black-on-transparent, so a node's alpha already IS
+	// its ink mask. Feeding that mask to destination-out subtracts exactly the
+	// shape from whatever was drawn beneath, which is the only way a light
+	// mark can exist on a printer that owns one colour. It composites against earlier
+	// siblings only, so z-order is what decides which rectangle a knockout
+	// punches through.
+	const common = {
+		id: el.id,
+		x: el.x,
+		y: el.y,
+		rotation: el.rotation,
+		globalCompositeOperation: (el.ink === 'clear'
+			? 'destination-out'
+			: 'source-over') as GlobalCompositeOperation
+	};
 	switch (el.type) {
 		case 'text': {
 			// measure and wrap against the real face, never a fallback

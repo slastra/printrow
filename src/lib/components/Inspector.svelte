@@ -15,7 +15,8 @@
 		STOCK_COLORS,
 		DOTS_PER_MM,
 		type BorderStyle,
-		type BarcodeType
+		type BarcodeType,
+		type Ink
 	} from '$lib/template/schema';
 	import { rafThrottle, cn } from '$lib/utils';
 	import IconPicker from './IconPicker.svelte';
@@ -376,6 +377,40 @@
 				</Select.Root>
 			</div>
 		{/if}
+
+		<div class="space-y-1.5">
+			<Label>Ink</Label>
+			<ToggleGroup.Root
+				type="single"
+				variant="outline"
+				value={el.ink}
+				onValueChange={(v) => v && editor.update({ ink: v as Ink })}
+				class="w-full"
+			>
+				<!-- literal ink black, never a theme token: the swatch describes
+				     what the head burns, which does not follow the UI theme.
+				     Clear shows the loaded stock, because that is exactly what a
+				     knockout reveals. -->
+				<ToggleGroup.Item value="black" class="flex-1 gap-1.5 text-xs">
+					<span class="size-3 rounded-full border border-border" style="background: #000"></span>
+					Black
+				</ToggleGroup.Item>
+				<ToggleGroup.Item value="clear" class="flex-1 gap-1.5 text-xs">
+					<span
+						class="size-3 rounded-full border border-border"
+						style="background: {editor.template.stockColor}"
+					></span>
+					Clear
+				</ToggleGroup.Item>
+			</ToggleGroup.Root>
+			{#if el.ink === 'clear'}
+				<p class="text-xs text-muted-foreground">
+					Leaves the stock unburned, so keep it above a solid shape in the layer order. With nothing
+					behind, it prints blank.
+				</p>
+			{/if}
+		</div>
+
 		<Button variant="destructive" class="w-full" onclick={() => editor.remove()}>
 			<Trash2Icon /> Delete element
 		</Button>

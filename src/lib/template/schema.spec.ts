@@ -41,6 +41,26 @@ describe('TemplateSchema', () => {
 		expect(el.rotation).toBe(0);
 	});
 
+	test('ink defaults to black on every element type', () => {
+		// every template saved before ink existed omits the field, so the default
+		// is what stops an old autosave from failing to parse
+		const box = { id: 'a', x: 0, y: 0, w: 100, h: 40 };
+		const els = [
+			{ ...box, type: 'text', text: '' },
+			{ ...box, type: 'barcode', data: '1' },
+			{ ...box, type: 'image', dataUrl: 'data:,' },
+			{ ...box, type: 'icon', name: 'star' },
+			{ ...box, type: 'rect' }
+		];
+		for (const raw of els) expect(ElementSchema.parse(raw).ink).toBe('black');
+	});
+
+	test('ink accepts clear and rejects anything else', () => {
+		const box = { id: 'a', type: 'rect', x: 0, y: 0, w: 100, h: 40 };
+		expect(ElementSchema.parse({ ...box, ink: 'clear' }).ink).toBe('clear');
+		expect(ElementSchema.safeParse({ ...box, ink: 'white' }).success).toBe(false);
+	});
+
 	test('round-trips through JSON unchanged', () => {
 		const t = TemplateSchema.parse({
 			id: 't',
