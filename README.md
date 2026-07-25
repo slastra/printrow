@@ -13,7 +13,7 @@
 
 ## How it works
 
-The Y50P speaks a proprietary framed binary protocol, reverse-engineered against hardware captures and independently confirmed on a sibling device by [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter). The printer has no fonts and no barcode symbologies. It accepts nothing but a 400×240 1-bit bitmap. Everything is rendered host-side, which is what makes the preview trustworthy:
+The Y50P speaks a proprietary framed binary protocol, reverse-engineered against hardware captures. The printer has no fonts and no barcode symbologies. It accepts nothing but a 400×240 1-bit bitmap. Everything is rendered host-side, which is what makes the preview trustworthy:
 
 - **A zod model is the single source of truth**; Konva is a view of it. The same node builder feeds the editor canvas and the print rasterizer, so they cannot drift.
 - **The preview renders at the printer's real resolution**: 203 dpi, hard 1-bit threshold, Atkinson dithering for photos. The dot grid on screen _is_ the label, stair-steps and all.
@@ -60,9 +60,9 @@ Verified on a **Y50P** (FlashLabel), 50 × 30 mm stock at 8 dots/mm. Other media
 
 ## Credits
 
-The protocol was reverse-engineered from HCI snoops of the vendor's FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte.
+The protocol here was reverse-engineered from HCI snoops of the vendor's FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
 
-[Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT) turned up afterwards, in a GitHub search for that CRC constant. It targets a sibling printer, the FlashToy U8, and calls the protocol YPL. Working separately, they landed on the same framing, the same status bits, and the same non-standard CRC init, which is about as strong as protocol evidence gets. Their write-up also documents command names and a compressed raster path these captures never exercised.
+**Have a FlashToy U8?** Go to [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), a separate derivation of the same protocol (they call it YPL) that targets that printer directly. Three status bits in `protocol.ts` come from their work and are credited there.
 
 Bundled and redistributed by this app:
 
