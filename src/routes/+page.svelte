@@ -26,7 +26,7 @@
 
 <Sidebar.Provider open={data.sidebarOpen}>
 	<Sidebar.Root variant="inset" class="border-none">
-		<Sidebar.Header class="gap-3 px-4 pt-4 pb-4">
+		<Sidebar.Header class="gap-3 px-4 pt-2.5 pb-4">
 			<span class="mb-3 flex items-end gap-2">
 				<span
 					class="text-4xl leading-none font-extrabold tracking-tight"
