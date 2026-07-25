@@ -74,25 +74,17 @@
 				{/if}
 				<Icon class="size-3.5 shrink-0 text-muted-foreground" />
 				{#if content}
-					<!-- show the authored string, with {{vars}} called out as chips -->
-					<span class="flex min-w-0 items-center gap-0.5 truncate">
-						{#each splitVars(content) as part, i (i)}
-							{#if part.isVar}
-								<!-- green only when the loaded CSV actually has this column -->
-								<span
+					<!-- Inline flow, not flex: the authored string's own spaces do the
+					     spacing, and chips ride the text baseline via align-middle. -->
+					<span class="min-w-0 truncate">
+						{#each splitVars(content) as part, i (i)}{#if part.isVar}<span
 									class={cn(
-										'shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] leading-4',
+										'mx-px inline-block rounded px-1.5 py-[3px] align-middle font-mono text-[11px] leading-none',
 										data.columns.includes(part.text)
 											? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
 											: 'bg-muted-foreground/15 text-muted-foreground'
-									)}
-								>
-									{part.text}
-								</span>
-							{:else}
-								<span class="truncate whitespace-pre">{part.text}</span>
-							{/if}
-						{/each}
+									)}>{part.text}</span
+								>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
 					</span>
 				{:else}
 					<span class="truncate">{meta.label(item.el)}</span>
