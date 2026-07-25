@@ -11,6 +11,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
 	import { Textarea } from '$lib/components/ui/textarea';
+	import { Slider } from '$lib/components/ui/slider';
 	import * as Select from '$lib/components/ui/select';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group';
 	import BoldIcon from '@lucide/svelte/icons/bold';
@@ -71,15 +72,26 @@
 				/>
 				<p class="text-xs text-muted-foreground">Supports {'{{var}}'} placeholders.</p>
 			</div>
-			<div class="space-y-1.5">
-				<Label for="font-size">Font size</Label>
-				<Input
-					id="font-size"
-					type="number"
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<Label for="font-size">Font size</Label>
+					<Input
+						id="font-size"
+						type="number"
+						class="h-7 w-16 text-right text-xs"
+						min={MIN_FONT_SIZE}
+						max={MAX_FONT_SIZE}
+						value={el.fontSize}
+						oninput={(e) => editor.update({ fontSize: int(e.currentTarget.value, el.fontSize) })}
+					/>
+				</div>
+				<Slider
+					type="single"
+					value={el.fontSize}
+					onValueChange={(v) => editor.update({ fontSize: v })}
 					min={MIN_FONT_SIZE}
 					max={MAX_FONT_SIZE}
-					value={el.fontSize}
-					oninput={(e) => editor.update({ fontSize: int(e.currentTarget.value, el.fontSize) })}
+					step={1}
 				/>
 			</div>
 			<div class="space-y-1.5">
@@ -162,15 +174,18 @@
 				/>
 			</div>
 			{#if !el.solid}
-				<div class="space-y-1.5">
-					<Label for="thickness">Border thickness</Label>
-					<Input
-						id="thickness"
-						type="number"
-						min="1"
-						max="50"
+				<div class="space-y-2">
+					<div class="flex items-center justify-between">
+						<Label>Border thickness</Label>
+						<span class="text-xs text-muted-foreground tabular-nums">{el.thickness}</span>
+					</div>
+					<Slider
+						type="single"
 						value={el.thickness}
-						oninput={(e) => editor.update({ thickness: int(e.currentTarget.value, el.thickness) })}
+						onValueChange={(v) => editor.update({ thickness: v })}
+						min={1}
+						max={50}
+						step={1}
 					/>
 				</div>
 				<div class="space-y-1.5">
@@ -190,15 +205,18 @@
 					</Select.Root>
 				</div>
 			{/if}
-			<div class="space-y-1.5">
-				<Label for="radius">Corner radius</Label>
-				<Input
-					id="radius"
-					type="number"
-					min="0"
-					max="120"
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<Label>Corner radius</Label>
+					<span class="text-xs text-muted-foreground tabular-nums">{el.radius}</span>
+				</div>
+				<Slider
+					type="single"
 					value={el.radius}
-					oninput={(e) => editor.update({ radius: int(e.currentTarget.value, el.radius) })}
+					onValueChange={(v) => editor.update({ radius: v })}
+					min={0}
+					max={120}
+					step={1}
 				/>
 			</div>
 		{:else if el.type === 'image'}
