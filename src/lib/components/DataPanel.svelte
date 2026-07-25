@@ -38,7 +38,9 @@
 	{#if unknown.length}
 		<p class="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-500">
 			<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
-			<span>{unknown.map((v) => `{{${v}}}`).join(', ')} has no match.</span>
+			<span>
+				Bad variable {unknown.length > 1 ? 'names' : 'name'}: {unknown.join(', ')}
+			</span>
 		</p>
 	{/if}
 

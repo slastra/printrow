@@ -58,7 +58,7 @@
 
 	{#if unknown.length}
 		<p class="text-xs text-amber-600 dark:text-amber-500">
-			{unknown.map((v) => `{{${v}}}`).join(', ')} has no match.
+			Bad variable {unknown.length > 1 ? 'names' : 'name'}: {unknown.join(', ')}
 		</p>
 	{/if}
 
