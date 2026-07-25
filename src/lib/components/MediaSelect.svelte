@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { editor } from '$lib/template/editor.svelte';
-	import { DOTS_PER_MM, MEDIA_PRESETS } from '$lib/template/schema';
-	import { clamp } from '$lib/utils';
+	import {
+		DOTS_PER_MM,
+		MEDIA_PRESETS,
+		MEDIA_MIN_MM,
+		MEDIA_MAX_W_MM,
+		MEDIA_MAX_H_MM
+	} from '$lib/template/schema';
 	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -34,10 +39,8 @@
 	}
 
 	function applyCustom() {
-		editor.setMedia(
-			clamp(Math.round(Number(wMm) || 0), 10, 50),
-			clamp(Math.round(Number(hMm) || 0), 10, 200)
-		);
+		// editor.setMedia clamps to the print head's limits
+		editor.setMedia(Number(wMm) || 0, Number(hMm) || 0);
 		customOpen = false;
 	}
 </script>
@@ -47,7 +50,7 @@
 	     reliably overrides the trigger's own border/bg/shadow defaults; the
 	     chevron flips up because the menu opens upward -->
 	<Select.Trigger
-		class="h-9 gap-2 rounded-lg border-border bg-card/85 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-8px_rgb(0_0_0/0.18)] backdrop-blur-[10px] dark:bg-card/85 dark:hover:bg-card [&>svg:last-child]:rotate-180"
+		class="h-9 gap-2 rounded-lg border-border bg-(--surface-tool) shadow-(--shadow-tool) backdrop-blur-[10px] [&>svg:last-child]:rotate-180"
 	>
 		<RulerIcon class="size-4 text-muted-foreground" />
 		{currentLabel}
@@ -76,16 +79,28 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1.5">
 					<Label for="media-w">Width (mm)</Label>
-					<Input id="media-w" type="number" min="10" max="50" bind:value={wMm} />
+					<Input
+						id="media-w"
+						type="number"
+						min={MEDIA_MIN_MM}
+						max={MEDIA_MAX_W_MM}
+						bind:value={wMm}
+					/>
 				</div>
 				<div class="space-y-1.5">
 					<Label for="media-h">Height (mm)</Label>
-					<Input id="media-h" type="number" min="10" max="200" bind:value={hMm} />
+					<Input
+						id="media-h"
+						type="number"
+						min={MEDIA_MIN_MM}
+						max={MEDIA_MAX_H_MM}
+						bind:value={hMm}
+					/>
 				</div>
 			</div>
 			<p class="text-xs text-muted-foreground">
-				Width is limited to 50 mm by the print head. 50 mm-wide stock is hardware-verified; other
-				widths follow the protocol spec.
+				Width is limited to {MEDIA_MAX_W_MM} mm by the print head. {MEDIA_MAX_W_MM} mm-wide stock is hardware-verified;
+				other widths follow the protocol spec.
 			</p>
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={() => (customOpen = false)}>Cancel</Button>

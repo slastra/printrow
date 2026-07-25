@@ -6,6 +6,11 @@ import {
 	LABEL_W,
 	LABEL_H,
 	MIN_SIZE,
+	MEDIA_MIN_MM,
+	MEDIA_MAX_W_MM,
+	MEDIA_MAX_H_MM,
+	FORMAT_OPTIONS,
+	DEFAULT_FORMAT,
 	ColumnFormatSchema,
 	type AnyElement,
 	type ColumnFormat,
@@ -33,7 +38,6 @@ const INTERN_PREFIX = '@interned:';
 class EditorState {
 	template = $state<Template>(blankTemplate());
 	selectedIds = $state<string[]>([]);
-	saved = $state(true);
 	/** Set by the canvas double-click; the Inspector focuses its text field and clears it. */
 	textEditRequest = $state<string | null>(null);
 
@@ -202,23 +206,38 @@ class EditorState {
 
 	// --- template ------------------------------------------------------------
 
+	formatFor(column: string): ColumnFormat {
+		return this.template.formats[column] ?? DEFAULT_FORMAT;
+	}
+
+	isFormatted(column: string): boolean {
+		return this.template.formats[column] !== undefined;
+	}
+
 	/** Per-column display formatting. Merges over the column's current format. */
 	setFormat(column: string, patch: Partial<ColumnFormat>) {
-		const merged = ColumnFormatSchema.safeParse({
-			...(this.template.formats[column] ?? {}),
-			...patch
-		});
+		const next = { ...(this.template.formats[column] ?? {}), ...patch };
+		// Switching kind must drop options that kind doesn't expose, or an
+		// invisible setting (say uppercase, chosen while it was a text column)
+		// keeps applying with no control to turn it off.
+		if (patch.kind !== undefined) {
+			for (const key of Object.keys(next) as (keyof ColumnFormat)[]) {
+				if (key !== 'kind' && !FORMAT_OPTIONS[patch.kind].has(key)) delete next[key];
+			}
+		}
+		const merged = ColumnFormatSchema.safeParse(next);
 		if (!merged.success) return;
 		this.commit(() => {
-			this.template.formats = { ...this.template.formats, [column]: merged.data };
+			const { [column]: _prev, ...rest } = this.template.formats;
+			// a format equal to the default is no format at all: keeping it would
+			// leave the column flagged as customized forever
+			const isDefault = JSON.stringify(merged.data) === JSON.stringify(DEFAULT_FORMAT);
+			this.template.formats = isDefault ? rest : { ...rest, [column]: merged.data };
 		});
 	}
 
 	resetFormat(column: string) {
-		this.commit(() => {
-			const { [column]: _dropped, ...rest } = this.template.formats;
-			this.template.formats = rest;
-		});
+		this.setFormat(column, DEFAULT_FORMAT);
 	}
 
 	/** Insert a {{column}} placeholder into the selected text or barcode element. */
@@ -234,9 +253,13 @@ class EditorState {
 
 	/** Change label stock. Elements keep their positions; re-clamp to the new bounds. */
 	setMedia(wMm: number, hMm: number) {
+		// clamp here, not at the call site: an out-of-range size would fail
+		// TemplateSchema on the next load and discard the whole template
+		const w = clamp(Math.round(wMm), MEDIA_MIN_MM, MEDIA_MAX_W_MM);
+		const h = clamp(Math.round(hMm), MEDIA_MIN_MM, MEDIA_MAX_H_MM);
 		this.commit(() => {
-			this.template.width = wMm * DOTS_PER_MM;
-			this.template.height = hMm * DOTS_PER_MM;
+			this.template.width = w * DOTS_PER_MM;
+			this.template.height = h * DOTS_PER_MM;
 			for (const el of this.template.elements) {
 				el.x = this.clampX(el.x, el.w);
 				el.y = this.clampY(el.y, el.h);
@@ -436,7 +459,8 @@ class EditorState {
 			.filter((e): e is AnyElement => Boolean(e))
 			.reverse();
 		// safety: anything the list didn't mention stays at the back
-		const missing = this.template.elements.filter((e) => !idsFrontToBack.includes(e.id));
+		const listed = new Set(idsFrontToBack);
+		const missing = this.template.elements.filter((e) => !listed.has(e.id));
 		this.commit(() => {
 			this.template.elements = [...missing, ...ordered];
 		});
@@ -463,7 +487,6 @@ class EditorState {
 	// --- persistence ---------------------------------------------------------
 
 	private scheduleSave() {
-		this.saved = false;
 		clearTimeout(this.saveTimer);
 		this.saveTimer = setTimeout(() => {
 			const json = JSON.stringify(this.template);
@@ -471,7 +494,6 @@ class EditorState {
 				localStorage.setItem(STORAGE_KEY, json);
 				this.lastSavedJson = json;
 			}
-			this.saved = true;
 		}, 400);
 	}
 }

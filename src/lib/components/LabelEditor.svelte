@@ -483,9 +483,7 @@
 <div bind:this={root} class="absolute inset-0">
 	<div class="absolute inset-0 flex overflow-auto p-6">
 		<!-- the label is paper, not UI: no border, a real object's shadow -->
-		<div
-			class="m-auto overflow-hidden rounded-sm bg-white shadow-[0_1px_2px_rgb(0_0_0/0.1),0_12px_32px_-8px_rgb(0_0_0/0.3)] ring-1 ring-black/10"
-		>
+		<div class="m-auto overflow-hidden rounded-sm paper-surface">
 			<div bind:this={container}></div>
 		</div>
 	</div>

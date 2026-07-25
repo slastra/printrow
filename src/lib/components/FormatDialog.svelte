@@ -5,6 +5,7 @@
 	import {
 		CURRENCIES,
 		DATE_PATTERNS,
+		FORMAT_OPTIONS,
 		type ColumnFormat,
 		type Currency,
 		type DatePattern
@@ -26,8 +27,11 @@
 	let { column = $bindable(null) }: { column?: string | null } = $props();
 
 	const open = $derived(column !== null);
-	const fmt = $derived<ColumnFormat>((column && editor.template.formats[column]) || DEFAULT_FORMAT);
-	const customized = $derived(Boolean(column && editor.template.formats[column]));
+	const fmt = $derived<ColumnFormat>(column ? editor.formatFor(column) : DEFAULT_FORMAT);
+	const customized = $derived(Boolean(column && editor.isFormatted(column)));
+	// controls come from the kind's option set, so the dialog and the model
+	// can never disagree about what applies
+	const opts = $derived(FORMAT_OPTIONS[fmt.kind]);
 
 	// live sample across a few rows so the effect is obvious, not a single guess
 	const samples = $derived.by(() => {
@@ -86,7 +90,7 @@
 				</ToggleGroup.Root>
 			</div>
 
-			{#if fmt.kind === 'currency'}
+			{#if opts.has('currency')}
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1.5">
 						<Label class="text-xs">Currency</Label>
@@ -127,7 +131,7 @@
 				</div>
 			{/if}
 
-			{#if fmt.kind === 'number'}
+			{#if opts.has('padDigits')}
 				<div class="grid grid-cols-2 gap-3">
 					<div class="space-y-1.5">
 						<Label for="fmt-dec-n" class="text-xs">Decimals</Label>
@@ -157,7 +161,7 @@
 				</div>
 			{/if}
 
-			{#if fmt.kind === 'number' || fmt.kind === 'currency'}
+			{#if opts.has('thousands')}
 				<div class="flex items-center justify-between">
 					<Label for="fmt-thou" class="text-xs">Thousands separator</Label>
 					<Switch
@@ -168,7 +172,7 @@
 				</div>
 			{/if}
 
-			{#if fmt.kind === 'date'}
+			{#if opts.has('datePattern')}
 				<div class="space-y-1.5">
 					<Label class="text-xs">Pattern</Label>
 					<Select.Root
@@ -193,7 +197,7 @@
 				</div>
 			{/if}
 
-			{#if fmt.kind === 'text'}
+			{#if opts.has('transform')}
 				<div class="space-y-1.5">
 					<Label class="text-xs">Case</Label>
 					<ToggleGroup.Root

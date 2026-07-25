@@ -5,7 +5,7 @@
 	import { ELEMENT_META } from '$lib/template/elements';
 	import { splitVars } from '$lib/template/vars';
 	import { data } from '$lib/template/data.svelte';
-	import { badgeVariants } from '$lib/components/ui/badge';
+	import VarChip from './VarChip.svelte';
 	import { cn } from '$lib/utils';
 	import type { AnyElement } from '$lib/template/schema';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
@@ -17,25 +17,20 @@
 
 	const FLIP_MS = 150;
 
-	// local copy for the dnd zone; top of the list = frontmost, Canva-style
-	let items = $state<Item[]>([]);
-	let dragging = false;
-
-	$effect(() => {
-		const next = [...editor.template.elements].reverse().map((el) => ({ id: el.id, el }));
-		// the zone owns item order mid-drag; syncing then would fight the gesture
-		if (!dragging) items = next;
-	});
+	// The dnd zone owns the order mid-gesture; the model owns it otherwise.
+	// Non-null only while a drag is in flight.
+	let dragItems = $state<Item[] | null>(null);
+	const items = $derived(
+		dragItems ?? [...editor.template.elements].reverse().map((el) => ({ id: el.id, el }))
+	);
 
 	function onConsider(e: CustomEvent<DndEvent<Item>>) {
-		dragging = true;
-		items = e.detail.items;
+		dragItems = e.detail.items;
 	}
 
 	function onFinalize(e: CustomEvent<DndEvent<Item>>) {
-		dragging = false;
-		items = e.detail.items;
-		editor.setOrder(items.map((i) => i.id));
+		editor.setOrder(e.detail.items.map((i) => i.id));
+		dragItems = null;
 	}
 
 	// same modifier semantics as canvas clicks
@@ -78,24 +73,14 @@
 					<!-- Inline flow, not flex: the authored string's own spaces do the
 					     spacing, and chips ride the text baseline via align-middle. -->
 					<span class="min-w-0 truncate">
-						{#each splitVars(content) as part, i (i)}{#if part.isVar}{@const detected =
-									data.columns.includes(part.text)}{@const bad = data.loaded && !detected}<span
-									class={cn(
-										badgeVariants({ variant: detected ? 'secondary' : 'outline' }),
-										'mx-px gap-1 py-0 align-middle font-mono text-[11px]',
-										!detected && 'text-muted-foreground'
-									)}
-									title={bad ? 'No column with this name' : undefined}
-									><span
-										class={cn(
-											'size-1.5 shrink-0 rounded-full',
-											detected ? 'bg-emerald-500' : bad ? 'bg-amber-500' : 'bg-muted-foreground/40'
-										)}
-									></span>{part.text}</span
-								>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
+						{#each splitVars(content) as part, i (i)}{#if part.isVar}<VarChip
+									name={part.text}
+									status={data.varStatus(part.text)}
+									inline
+								/>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
 					</span>
 				{:else}
-					<span class="truncate">{meta.label(item.el)}</span>
+					<span class="truncate">{meta.label?.(item.el) ?? meta.name}</span>
 				{/if}
 			</div>
 		{/each}

@@ -146,15 +146,30 @@
 	background-size: 16px 16px;
 }
 
-/* Every floating tool shares one surface: frosted card, soft lifted shadow. */
+/* One definition of the floating-tool look. Some shadcn triggers ship their
+   own border/bg/shadow classes that beat a utility through tailwind-merge, so
+   those apply these variables directly instead of copying the values. */
+:root {
+	--surface-tool: color-mix(in oklch, var(--card) 86%, transparent);
+	--shadow-tool: 0 1px 2px rgb(0 0 0 / 0.06), 0 8px 24px -8px rgb(0 0 0 / 0.18);
+	/* the label itself reads as paper: tighter contact shadow, deeper ambient */
+	--shadow-paper: 0 1px 2px rgb(0 0 0 / 0.1), 0 12px 32px -8px rgb(0 0 0 / 0.3);
+}
+
 @utility tool-surface {
 	border-radius: var(--radius-lg);
 	border: 1px solid var(--border);
-	background: color-mix(in oklch, var(--card) 86%, transparent);
+	background: var(--surface-tool);
 	backdrop-filter: blur(10px);
-	box-shadow:
-		0 1px 2px rgb(0 0 0 / 0.06),
-		0 8px 24px -8px rgb(0 0 0 / 0.18);
+	box-shadow: var(--shadow-tool);
+}
+
+/* The label is an object on the workspace, not a panel. */
+@utility paper-surface {
+	background: #fff;
+	box-shadow: var(--shadow-paper);
+	outline: 1px solid rgb(0 0 0 / 0.1);
+	outline-offset: -1px;
 }
 
 /* One orchestrated load: tools drift in from their own edges. */
@@ -171,8 +186,12 @@
 	}
 }
 @utility float-in-down {
-	animation: float-in-down 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: float-in-down 0.45s cubic-bezier(0.16, 1, 0.3, 1) var(--float-delay, 0ms) both;
 }
 @utility float-in-up {
-	animation: float-in-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: float-in-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) var(--float-delay, 0ms) both;
+}
+/* the stagger that makes the entrance one choreography */
+@utility float-step-* {
+	--float-delay: calc(--value(integer) * 60ms);
 }

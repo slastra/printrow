@@ -1,13 +1,19 @@
-import { ColumnFormatSchema, type ColumnFormat, type Template } from './schema';
+import { DEFAULT_FORMAT, type ColumnFormat, type Template } from './schema';
+
+export { DEFAULT_FORMAT };
 
 // {{sku}}, {{ product.name }}, {{lot-no}} — first char must be a word char so
 // stray braces in label copy don't register as variables.
 const VAR_RE = /\{\{\s*([A-Za-z0-9_][\w.-]*)\s*\}\}/g;
 
 export function varsInString(s: string): string[] {
-	const out: string[] = [];
-	for (const m of s.matchAll(VAR_RE)) if (!out.includes(m[1])) out.push(m[1]);
-	return out;
+	return [
+		...new Set(
+			splitVars(s)
+				.filter((p) => p.isVar)
+				.map((p) => p.text)
+		)
+	];
 }
 
 /**
@@ -16,36 +22,20 @@ export function varsInString(s: string): string[] {
  * actually renders. A variable IS a CSV column name — there is no mapping step.
  */
 export function extractVars(template: Template): string[] {
-	const out: string[] = [];
-	const add = (s: string) => {
-		for (const v of varsInString(s)) if (!out.includes(v)) out.push(v);
-	};
-	for (const el of template.elements) {
-		if (el.type === 'text') add(el.text);
-		else if (el.type === 'barcode') add(el.data);
-	}
-	return out;
+	return varsInString(
+		template.elements
+			.map((el) => (el.type === 'text' ? el.text : el.type === 'barcode' ? el.data : ''))
+			.join('\n')
+	);
 }
-
-export const DEFAULT_FORMAT: ColumnFormat = ColumnFormatSchema.parse({});
 
 const titleCase = (s: string) =>
 	s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 
-const MONTHS = [
-	'January',
-	'February',
-	'March',
-	'April',
-	'May',
-	'June',
-	'July',
-	'August',
-	'September',
-	'October',
-	'November',
-	'December'
-];
+const MONTHS =
+	'January February March April May June July August September October November December'.split(
+		' '
+	);
 
 /** Numeric value of a CSV cell, tolerating thousands separators and currency symbols. */
 function toNumber(raw: string): number | null {

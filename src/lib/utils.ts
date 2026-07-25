@@ -9,6 +9,24 @@ export function clamp(n: number, lo: number, hi: number): number {
 	return Math.min(hi, Math.max(lo, n));
 }
 
+/**
+ * Run at most once per animation frame, with the latest arguments. Slider
+ * drags fire on every pointermove; each model write rebuilds the whole canvas,
+ * so an unthrottled drag costs ~100 rebuilds a second.
+ */
+export function rafThrottle<A extends unknown[]>(fn: (...args: A) => void): (...args: A) => void {
+	let frame = 0;
+	let latest: A;
+	return (...args: A) => {
+		latest = args;
+		if (frame) return;
+		frame = requestAnimationFrame(() => {
+			frame = 0;
+			fn(...latest);
+		});
+	};
+}
+
 /** Open the native file picker; resolves null if the user cancels. */
 export function pickFile(accept: string): Promise<File | null> {
 	return new Promise((resolve) => {

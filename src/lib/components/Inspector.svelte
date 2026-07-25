@@ -4,8 +4,14 @@
 		BARCODE_TYPES,
 		MIN_FONT_SIZE,
 		MAX_FONT_SIZE,
+		MIN_THICKNESS,
+		MAX_THICKNESS,
+		MAX_RADIUS,
+		BORDER_STYLES,
+		type BorderStyle,
 		type BarcodeType
 	} from '$lib/template/schema';
+	import { rafThrottle } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
@@ -34,6 +40,11 @@
 			editor.textEditRequest = null;
 		}
 	});
+
+	// sliders stream values while dragging; one model commit per frame is plenty
+	const setFontSize = rafThrottle((v: number) => editor.update({ fontSize: v }));
+	const setThickness = rafThrottle((v: number) => editor.update({ thickness: v }));
+	const setRadius = rafThrottle((v: number) => editor.update({ radius: v }));
 
 	function int(value: string, fallback: number): number {
 		const n = Math.round(Number(value));
@@ -88,7 +99,7 @@
 				<Slider
 					type="single"
 					value={el.fontSize}
-					onValueChange={(v) => editor.update({ fontSize: v })}
+					onValueChange={setFontSize}
 					min={MIN_FONT_SIZE}
 					max={MAX_FONT_SIZE}
 					step={1}
@@ -182,9 +193,9 @@
 					<Slider
 						type="single"
 						value={el.thickness}
-						onValueChange={(v) => editor.update({ thickness: v })}
-						min={1}
-						max={50}
+						onValueChange={setThickness}
+						min={MIN_THICKNESS}
+						max={MAX_THICKNESS}
 						step={1}
 					/>
 				</div>
@@ -193,14 +204,13 @@
 					<Select.Root
 						type="single"
 						value={el.borderStyle}
-						onValueChange={(v) =>
-							editor.update({ borderStyle: v as 'solid' | 'dashed' | 'dotted' })}
+						onValueChange={(v) => editor.update({ borderStyle: v as BorderStyle })}
 					>
 						<Select.Trigger class="w-full capitalize">{el.borderStyle}</Select.Trigger>
 						<Select.Content>
-							<Select.Item value="solid">Solid</Select.Item>
-							<Select.Item value="dashed">Dashed</Select.Item>
-							<Select.Item value="dotted">Dotted</Select.Item>
+							{#each BORDER_STYLES as style (style)}
+								<Select.Item value={style} class="capitalize">{style}</Select.Item>
+							{/each}
 						</Select.Content>
 					</Select.Root>
 				</div>
@@ -213,9 +223,9 @@
 				<Slider
 					type="single"
 					value={el.radius}
-					onValueChange={(v) => editor.update({ radius: v })}
+					onValueChange={setRadius}
 					min={0}
-					max={120}
+					max={MAX_RADIUS}
 					step={1}
 				/>
 			</div>

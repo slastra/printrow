@@ -11,8 +11,6 @@
 	import InsertBar from '$lib/components/InsertBar.svelte';
 	import MediaSelect from '$lib/components/MediaSelect.svelte';
 	import PrintButton from '$lib/components/PrintButton.svelte';
-	import PrintPanel from '$lib/components/PrintPanel.svelte';
-	import { printer } from '$lib/printer/ble.svelte';
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
@@ -68,15 +66,6 @@
 				</Sidebar.Group>
 			{/if}
 
-			{#if printer.connected}
-				<Sidebar.Separator />
-				<Sidebar.Group>
-					<Sidebar.GroupLabel>Printer</Sidebar.GroupLabel>
-					<Sidebar.GroupContent class="px-2">
-						<PrintPanel />
-					</Sidebar.GroupContent>
-				</Sidebar.Group>
-			{/if}
 			<Sidebar.Separator />
 			<Sidebar.Group>
 				<Sidebar.GroupLabel>Layers</Sidebar.GroupLabel>
@@ -103,32 +92,41 @@
 			<div class="absolute top-3 left-3 z-10 float-in-down">
 				<!-- explicit utilities beat the trigger's own button classes reliably -->
 				<Sidebar.Trigger
-					class="size-9 rounded-lg border border-border bg-card/85 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-8px_rgb(0_0_0/0.18)] backdrop-blur-[10px] hover:bg-accent dark:bg-card/85"
+					class="size-9 rounded-lg border border-border bg-(--surface-tool) shadow-(--shadow-tool) backdrop-blur-[10px] hover:bg-accent"
 				/>
 			</div>
 
+			<!-- source link, top right -->
+			<a
+				href="https://github.com/slastra/printrow"
+				target="_blank"
+				rel="noreferrer"
+				title="Source on GitHub"
+				class="absolute top-3 right-3 z-10 flex size-9 float-in-down items-center justify-center rounded-lg border border-border bg-(--surface-tool) text-muted-foreground shadow-(--shadow-tool) backdrop-blur-[10px] transition-colors float-step-1 hover:text-foreground"
+			>
+				<!-- lucide dropped brand marks, so the GitHub glyph is inline -->
+				<svg viewBox="0 0 16 16" fill="currentColor" class="size-4" aria-hidden="true">
+					<path
+						d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"
+					/>
+				</svg>
+				<span class="sr-only">Source on GitHub</span>
+			</a>
+
 			<!-- context toolbar, top center -->
 			<div
-				class="pointer-events-none absolute inset-x-14 top-3 z-10 flex float-in-down justify-center"
-				style="animation-delay: 60ms"
+				class="absolute inset-x-14 top-3 z-10 mx-auto w-fit max-w-full float-in-down float-step-1"
 			>
-				<div class="pointer-events-auto max-w-full">
-					<EditorToolbar />
-				</div>
+				<EditorToolbar />
 			</div>
 
 			<!-- insert bar, bottom center -->
-			<div
-				class="pointer-events-none absolute inset-x-0 bottom-3 z-10 flex float-in-up justify-center"
-				style="animation-delay: 120ms"
-			>
-				<div class="pointer-events-auto">
-					<InsertBar />
-				</div>
+			<div class="absolute inset-x-0 bottom-3 z-10 mx-auto w-fit float-in-up float-step-2">
+				<InsertBar />
 			</div>
 
 			<!-- media size, bottom left -->
-			<div class="absolute bottom-3 left-3 z-10 float-in-up" style="animation-delay: 180ms">
+			<div class="absolute bottom-3 left-3 z-10 float-in-up float-step-3">
 				<MediaSelect />
 			</div>
 		</div>

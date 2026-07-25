@@ -16,6 +16,20 @@ export const MIN_SIZE = 8;
 export const MIN_FONT_SIZE = 6;
 export const MAX_FONT_SIZE = 200;
 
+export const BORDER_STYLES = ['solid', 'dashed', 'dotted'] as const;
+export type BorderStyle = (typeof BORDER_STYLES)[number];
+
+// Media bounds in mm, derived from the print head so one protocol change
+// propagates to the picker, the schema, and the clamps.
+export const MEDIA_MIN_MM = 10;
+export const MEDIA_MAX_W_MM = WIDTH / DOTS_PER_MM;
+export const MEDIA_MAX_H_MM = 200;
+
+// Box geometry bounds, shared by the schema and the inspector controls.
+export const MIN_THICKNESS = 1;
+export const MAX_THICKNESS = 50;
+export const MAX_RADIUS = 120;
+
 // Height is safe to vary — the printer takes rows until the raster ends.
 // Width rides in the setup frames in mm; only 50 mm is hardware-verified.
 export interface MediaPreset {
@@ -100,10 +114,10 @@ export const RectElementSchema = z.object({
 	...base,
 	type: z.literal('rect'),
 	solid: z.boolean().default(false),
-	thickness: z.number().int().min(1).max(50).default(2),
-	borderStyle: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+	thickness: z.number().int().min(MIN_THICKNESS).max(MAX_THICKNESS).default(2),
+	borderStyle: z.enum(BORDER_STYLES).default('solid'),
 	// corner radius in dots; applies to fill and border alike
-	radius: z.number().int().min(0).max(120).default(0)
+	radius: z.number().int().min(0).max(MAX_RADIUS).default(0)
 });
 
 export const ElementSchema = z.discriminatedUnion('type', [
@@ -156,6 +170,28 @@ export const ColumnFormatSchema = z.object({
 	maxChars: z.number().int().min(0).max(200).default(0)
 });
 export type ColumnFormat = z.infer<typeof ColumnFormatSchema>;
+export type FormatKind = ColumnFormat['kind'];
+export const DEFAULT_FORMAT: ColumnFormat = ColumnFormatSchema.parse({});
+
+/**
+ * Which options each kind actually exposes. The dialog renders controls from
+ * this, and editor.setFormat strips anything a kind doesn't own when the kind
+ * changes, so a hidden setting can never keep applying.
+ */
+export const FORMAT_OPTIONS: Record<FormatKind, Set<keyof ColumnFormat>> = {
+	text: new Set(['transform', 'prefix', 'suffix', 'maxChars']),
+	number: new Set(['decimals', 'padDigits', 'thousands', 'prefix', 'suffix', 'maxChars']),
+	currency: new Set([
+		'decimals',
+		'thousands',
+		'currency',
+		'currencyCode',
+		'prefix',
+		'suffix',
+		'maxChars'
+	]),
+	date: new Set(['datePattern', 'prefix', 'suffix', 'maxChars'])
+};
 
 export const TemplateSchema = z.object({
 	version: z.literal(1).default(1),

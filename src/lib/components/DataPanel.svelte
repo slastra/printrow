@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
 	import { data } from '$lib/template/data.svelte';
-	import { unknownVars } from '$lib/template/vars';
 	import ColumnRow from './ColumnRow.svelte';
 	import FormatDialog from './FormatDialog.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -13,7 +11,7 @@
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 
 	const used = $derived(data.usedColumns);
-	const unknown = $derived(unknownVars(editor.template, data.columns));
+	const unknown = $derived(data.unknownVars);
 
 	let formatColumn = $state<string | null>(null);
 </script>
