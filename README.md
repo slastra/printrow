@@ -2,7 +2,7 @@
 
 **[printrow.lastra.us](https://printrow.lastra.us)** is a label designer that prints against CSV data over Web Bluetooth. No drivers, no installs, no print server: design a label in the browser, bind `{{variables}}` to CSV columns, and batch-print to a KNAON Y50P thermal printer directly from the page.
 
-![The printrow editor: a yellow label with an icon, product name, SKU, and a Code 128 barcode, alongside the CSV column panel](docs/screenshot.jpg)
+![The printrow editor: a yellow label carrying a package icon, a product name, a SKU and price bound to {{variables}}, and a Code 128 barcode, with the element inspector and layer list alongside it](docs/screenshot.jpg)
 
 ## What it does
 
