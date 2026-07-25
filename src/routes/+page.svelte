@@ -28,8 +28,8 @@
 	<Sidebar.Root variant="inset" class="border-none">
 		<Sidebar.Header class="gap-3 px-3 py-4">
 			<span
-				class="text-4xl font-black tracking-tight"
-				style="font-family: 'Doto Variable', sans-serif; font-variation-settings: 'ROND' 100;"
+				class="text-4xl font-extrabold tracking-tight"
+				style="font-family: 'Bricolage Grotesque Variable', sans-serif;"
 			>
 				printrow
 			</span>
