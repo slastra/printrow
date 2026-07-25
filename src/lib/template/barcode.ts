@@ -23,6 +23,8 @@ export async function barcodeCanvas(
 		bcid: spec.bcid,
 		text: data || ' ',
 		scale: 1
+		// no backgroundcolor: bwip leaves the plate transparent, so the label's
+		// stock colour shows through the quiet zone
 	});
 	return cv;
 }

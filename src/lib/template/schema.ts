@@ -25,6 +25,21 @@ export const MEDIA_MIN_MM = 10;
 export const MEDIA_MAX_W_MM = WIDTH / DOTS_PER_MM;
 export const MEDIA_MAX_H_MM = 200;
 
+/**
+ * Thermal stock comes in colours, but the printer only burns black — so this
+ * is a preview property. The print path always rasterizes against white.
+ */
+export const STOCK_COLORS = [
+	{ value: '#ffffff', label: 'White' },
+	{ value: '#fde68a', label: 'Yellow' },
+	{ value: '#fca5a5', label: 'Red' },
+	{ value: '#a5b4fc', label: 'Blue' },
+	{ value: '#a7f3d0', label: 'Green' },
+	{ value: '#fdba74', label: 'Orange' },
+	{ value: '#f9a8d4', label: 'Pink' },
+	{ value: '#e5e7eb', label: 'Silver' }
+] as const;
+
 // Box geometry bounds, shared by the schema and the inspector controls.
 export const MIN_THICKNESS = 1;
 export const MAX_THICKNESS = 50;
@@ -205,6 +220,12 @@ export const TemplateSchema = z.object({
 		.min(MIN_SIZE)
 		.max(200 * DOTS_PER_MM)
 		.default(LABEL_H),
+	// Preview-only: the colour of the stock in the printer. Never affects the
+	// raster, which is always black on white.
+	stockColor: z
+		.string()
+		.regex(/^#[0-9a-f]{6}$/i)
+		.default('#ffffff'),
 	// Draw order: later elements paint over earlier ones.
 	elements: z.array(ElementSchema).default([]),
 	// {{name}} binds directly to the CSV column called "name" — no mapping

@@ -40,6 +40,8 @@ class EditorState {
 	selectedIds = $state<string[]>([]);
 	/** Set by the canvas double-click; the Inspector focuses its text field and clears it. */
 	textEditRequest = $state<string | null>(null);
+	/** The label itself is selectable, like a bottom layer. */
+	labelSelected = $state(false);
 
 	private saveTimer: ReturnType<typeof setTimeout> | undefined;
 	private past = $state<string[]>([]);
@@ -170,6 +172,7 @@ class EditorState {
 
 	/** Click selection. Clicking a group member selects the whole group. */
 	select(id: string, opts: { toggle?: boolean } = {}) {
+		this.labelSelected = false;
 		const ids = this.expandGroup(id);
 		const allIn = ids.every((i) => this.selectedIds.includes(i));
 		if (opts.toggle) {
@@ -185,6 +188,7 @@ class EditorState {
 
 	/** Marquee / programmatic selection. */
 	setSelection(ids: string[], opts: { expand?: boolean } = {}) {
+		this.labelSelected = false;
 		this.selectedIds = [
 			...new Set((opts.expand ?? true) ? ids.flatMap((i) => this.expandGroup(i)) : ids)
 		];
@@ -196,6 +200,7 @@ class EditorState {
 
 	clearSelection() {
 		this.selectedIds = [];
+		this.labelSelected = false;
 	}
 
 	/** Canvas double-click on a text element: select just it and focus the inspector field. */
@@ -252,6 +257,16 @@ class EditorState {
 	}
 
 	/** Change label stock. Elements keep their positions; re-clamp to the new bounds. */
+	/** Stock colour is preview-only; the raster is always black on white. */
+	setStockColor(hex: string) {
+		this.commit(() => (this.template.stockColor = hex));
+	}
+
+	selectLabel() {
+		this.selectedIds = [];
+		this.labelSelected = true;
+	}
+
 	setMedia(wMm: number, hMm: number) {
 		// clamp here, not at the call site: an out-of-range size would fail
 		// TemplateSchema on the next load and discard the whole template

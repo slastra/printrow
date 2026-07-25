@@ -8,6 +8,8 @@
 		MAX_THICKNESS,
 		MAX_RADIUS,
 		BORDER_STYLES,
+		STOCK_COLORS,
+		DOTS_PER_MM,
 		type BorderStyle,
 		type BarcodeType
 	} from '$lib/template/schema';
@@ -58,7 +60,34 @@
 	] as const;
 </script>
 
-{#if editor.selectedIds.length > 1}
+{#if editor.labelSelected}
+	<div class="space-y-4">
+		<div class="space-y-1.5">
+			<Label>Stock colour</Label>
+			<div class="flex flex-wrap gap-1.5">
+				{#each STOCK_COLORS as c (c.value)}
+					<button
+						class="size-7 cursor-pointer rounded-md border transition-transform hover:scale-105
+							{editor.template.stockColor === c.value ? 'border-ring ring-2 ring-ring/40' : 'border-border'}"
+						style="background: {c.value}"
+						title={c.label}
+						aria-label={c.label}
+						onclick={() => editor.setStockColor(c.value)}
+					></button>
+				{/each}
+			</div>
+			<p class="text-xs text-muted-foreground">
+				Preview only. The printer burns black onto whatever stock is loaded.
+			</p>
+		</div>
+		<div class="flex items-center justify-between text-sm">
+			<span class="text-muted-foreground">Size</span>
+			<span class="tabular-nums">
+				{editor.template.width / DOTS_PER_MM} × {editor.template.height / DOTS_PER_MM} mm
+			</span>
+		</div>
+	</div>
+{:else if editor.selectedIds.length > 1}
 	<div class="space-y-3">
 		<p class="text-sm text-muted-foreground">{editor.selectedIds.length} elements selected.</p>
 		<p class="text-xs text-muted-foreground">

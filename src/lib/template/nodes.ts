@@ -85,8 +85,8 @@ export function ditherAtkinson(cv: HTMLCanvasElement): HTMLCanvasElement {
 				if (nx >= 0 && nx < width && ny < height) gray[ny * width + nx] += err;
 			}
 			const j = i * 4;
-			data[j] = data[j + 1] = data[j + 2] = out;
-			data[j + 3] = 255;
+			data[j] = data[j + 1] = data[j + 2] = 0;
+			data[j + 3] = out === 0 ? 255 : 0;
 		}
 	}
 	ctx.putImageData(img, 0, 0);
@@ -109,16 +109,21 @@ export function onebitFilter(imageData: ImageData) {
 	}
 }
 
-/** Hard 1-bit threshold, in place — same luma + white compositing as the print path. */
+/**
+ * Reduce a canvas to printed dots: black where the head fires, transparent
+ * everywhere else. Transparent (rather than white) lets the label's stock
+ * colour show through in the editor; the print path composites over white, so
+ * the raster is unchanged.
+ */
 export function thresholdCanvas(cv: HTMLCanvasElement, cutoff = THRESHOLD): HTMLCanvasElement {
 	const ctx = cv.getContext('2d', { willReadFrequently: true });
 	if (!ctx) return cv;
 	const img = ctx.getImageData(0, 0, cv.width, cv.height);
 	const { data } = img;
 	for (let i = 0; i < data.length; i += 4) {
-		const out = lumaOverWhite(data, i) < cutoff ? 0 : 255;
-		data[i] = data[i + 1] = data[i + 2] = out;
-		data[i + 3] = 255;
+		const black = lumaOverWhite(data, i) < cutoff;
+		data[i] = data[i + 1] = data[i + 2] = 0;
+		data[i + 3] = black ? 255 : 0;
 	}
 	ctx.putImageData(img, 0, 0);
 	return cv;
@@ -161,8 +166,7 @@ export function fitBarcode(base: HTMLCanvasElement, el: BarcodeElement): HTMLCan
 	cv.height = el.h;
 	const ctx = cv.getContext('2d');
 	if (!ctx) return base;
-	ctx.fillStyle = '#fff';
-	ctx.fillRect(0, 0, el.w, el.h);
+	// no white plate: the stock colour shows through the quiet zone
 	ctx.imageSmoothingEnabled = false;
 	const sx = Math.max(1, Math.floor(el.w / base.width));
 	if (TWO_D.has(el.bcid)) {
@@ -175,7 +179,7 @@ export function fitBarcode(base: HTMLCanvasElement, el: BarcodeElement): HTMLCan
 		const w = base.width * sx;
 		ctx.drawImage(base, Math.floor((el.w - w) / 2), 0, w, el.h);
 	}
-	return cv;
+	return thresholdCanvas(cv);
 }
 
 /**

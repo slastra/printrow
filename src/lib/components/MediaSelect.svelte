@@ -50,7 +50,7 @@
 	     and shadow classes, and overriding all three (in both themes) drifts
 	     from the shared utility. Stripped bare, it inherits the real thing.
 	     The chevron flips up because the menu opens upward. -->
-	<div class="tool-surface w-fit">
+	<div class="w-fit tool-surface">
 		<Select.Trigger
 			class="h-9 gap-2 rounded-lg border-0 bg-transparent shadow-none hover:bg-accent/60 dark:bg-transparent dark:hover:bg-accent/60 [&>svg:last-child]:rotate-180"
 		>

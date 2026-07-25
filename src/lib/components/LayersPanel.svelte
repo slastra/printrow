@@ -39,7 +39,9 @@
 
 {#if items.length === 0}
 	<p class="px-2 py-1.5 text-xs text-muted-foreground">No elements yet. Add one below.</p>
-{:else}
+{/if}
+
+{#if items.length > 0}
 	<div
 		class="space-y-0.5"
 		use:dndzone={{ items, flipDurationMs: FLIP_MS, dropTargetStyle: {} }}
@@ -86,3 +88,17 @@
 		{/each}
 	</div>
 {/if}
+
+<!-- the stock itself, pinned to the back of the stack -->
+<button
+	class="mt-0.5 flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs select-none
+		{editor.labelSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-muted'}"
+	onclick={() => editor.selectLabel()}
+>
+	<span class="w-3.5"></span>
+	<span
+		class="size-3.5 shrink-0 rounded-sm border border-border"
+		style="background: {editor.template.stockColor}"
+	></span>
+	<span class="truncate">Label</span>
+</button>

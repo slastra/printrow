@@ -46,6 +46,9 @@ export async function renderTemplateToCanvas(
 		// dot-resolution node caches, so preview and paper are pixel-identical
 		const layer = new K.Layer({ listening: false, imageSmoothingEnabled: false });
 		stage.add(layer);
+		// always white here, whatever stock colour the editor previews: the
+		// printer burns black onto the stock, and thresholding a coloured
+		// background would print the whole label solid black
 		layer.add(
 			new K.Rect({ x: 0, y: 0, width: template.width, height: template.height, fill: '#fff' })
 		);
