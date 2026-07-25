@@ -1,0 +1,439 @@
+import {
+	blankTemplate,
+	ElementSchema,
+	TemplateSchema,
+	LABEL_W,
+	LABEL_H,
+	MIN_SIZE,
+	type AnyElement,
+	type Template
+} from './schema';
+import { alignTargets, distributeTargets, selectionBounds, type AlignKind } from './geometry';
+import { ELEMENT_META, type ElementKind } from './elements';
+import { autoMap, extractVars } from './vars';
+import { loadImage } from './nodes';
+import { clamp } from '$lib/utils';
+
+const STORAGE_KEY = 'printrow:template:v1';
+const HISTORY_LIMIT = 100;
+const COALESCE_MS = 500;
+const INTERN_PREFIX = '@interned:';
+
+/**
+ * The template model is the single source of truth; Konva is a view of it.
+ * The LabelEditor component rebuilds nodes from `template.elements` and feeds
+ * gesture results back through updateGeometry. Array order is draw order —
+ * z-index operations are array reorders.
+ *
+ * Every mutation goes through commit(), which owns the history/autosave
+ * bookkeeping — mutators never call pushHistory/scheduleSave by hand.
+ */
+class EditorState {
+	template = $state<Template>(blankTemplate());
+	selectedIds = $state<string[]>([]);
+	saved = $state(true);
+	/** Set by the canvas double-click; the Inspector focuses its text field and clears it. */
+	textEditRequest = $state<string | null>(null);
+
+	private saveTimer: ReturnType<typeof setTimeout> | undefined;
+	private past = $state<string[]>([]);
+	private future = $state<string[]>([]);
+	private lastPush = 0;
+	private lastSavedJson: string | null = null;
+	// Image dataUrls are interned out of history snapshots — they're immutable
+	// per element, and 100 snapshots × embedded base64 photos would otherwise
+	// retain hundreds of MB.
+	private internedImages = new Map<string, string>();
+	private internCounter = 0;
+
+	get canUndo(): boolean {
+		return this.past.length > 0;
+	}
+
+	get canRedo(): boolean {
+		return this.future.length > 0;
+	}
+
+	get selectedElements(): AnyElement[] {
+		return this.template.elements.filter((e) => this.selectedIds.includes(e.id));
+	}
+
+	/** The selected element when exactly one is — what the inspector edits. */
+	get single(): AnyElement | null {
+		return this.selectedIds.length === 1 ? (this.byId(this.selectedIds[0]) ?? null) : null;
+	}
+
+	/** True when the whole selection is one intact group. */
+	get selectionGrouped(): boolean {
+		const els = this.selectedElements;
+		return (
+			els.length > 1 && els.every((e) => e.groupId !== undefined && e.groupId === els[0].groupId)
+		);
+	}
+
+	byId(id: string): AnyElement | undefined {
+		return this.template.elements.find((e) => e.id === id);
+	}
+
+	load() {
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (!raw) return;
+			const parsed = TemplateSchema.safeParse(JSON.parse(raw));
+			if (parsed.success) this.template = parsed.data;
+		} catch {
+			// unreadable autosave — start fresh rather than wedge the editor
+		}
+	}
+
+	// --- history -------------------------------------------------------------
+
+	/** pushHistory → mutate → scheduleSave, the only mutation path. */
+	private commit(mutate: () => void) {
+		this.pushHistory();
+		mutate();
+		this.scheduleSave();
+	}
+
+	/**
+	 * Capture the pre-mutation state. Calls within 500 ms coalesce into one
+	 * step, so a typing burst, arrow-key spam, or a multi-element drag undoes
+	 * as a single unit.
+	 */
+	private pushHistory() {
+		const now = Date.now();
+		if (now - this.lastPush < COALESCE_MS && this.past.length) {
+			this.lastPush = now;
+			return;
+		}
+		this.lastPush = now;
+		this.past.push(this.snapshot());
+		if (this.past.length > HISTORY_LIMIT) this.past.shift();
+		this.future = [];
+	}
+
+	private snapshot(): string {
+		return JSON.stringify(this.template, (key, value) => {
+			if (key === 'dataUrl' && typeof value === 'string' && !value.startsWith(INTERN_PREFIX)) {
+				for (const [token, url] of this.internedImages) if (url === value) return token;
+				const token = `${INTERN_PREFIX}${this.internCounter++}`;
+				this.internedImages.set(token, value);
+				return token;
+			}
+			return value;
+		});
+	}
+
+	private restore(json: string) {
+		const revived = JSON.parse(json, (key, value) =>
+			key === 'dataUrl' && typeof value === 'string' && value.startsWith(INTERN_PREFIX)
+				? (this.internedImages.get(value) ?? value)
+				: value
+		);
+		const parsed = TemplateSchema.safeParse(revived);
+		if (!parsed.success) return;
+		this.template = parsed.data;
+		this.selectedIds = this.selectedIds.filter((id) =>
+			parsed.data.elements.some((e) => e.id === id)
+		);
+		this.lastPush = 0; // an undo boundary must never coalesce with what follows
+		this.scheduleSave();
+	}
+
+	undo() {
+		const snapshot = this.past.pop();
+		if (snapshot === undefined) return;
+		this.future.push(this.snapshot());
+		this.restore(snapshot);
+	}
+
+	redo() {
+		const snapshot = this.future.pop();
+		if (snapshot === undefined) return;
+		this.past.push(this.snapshot());
+		this.restore(snapshot);
+	}
+
+	// --- selection -----------------------------------------------------------
+
+	private expandGroup(id: string): string[] {
+		const el = this.byId(id);
+		if (!el?.groupId) return [id];
+		return this.template.elements.filter((e) => e.groupId === el.groupId).map((e) => e.id);
+	}
+
+	/** Click selection. Clicking a group member selects the whole group. */
+	select(id: string, opts: { toggle?: boolean } = {}) {
+		const ids = this.expandGroup(id);
+		const allIn = ids.every((i) => this.selectedIds.includes(i));
+		if (opts.toggle) {
+			this.selectedIds = allIn
+				? this.selectedIds.filter((i) => !ids.includes(i))
+				: [...new Set([...this.selectedIds, ...ids])];
+		} else if (!allIn) {
+			this.selectedIds = ids;
+		}
+		// plain click on an already-selected member keeps the selection so a
+		// drag that follows moves the whole thing
+	}
+
+	/** Marquee / programmatic selection. */
+	setSelection(ids: string[], opts: { expand?: boolean } = {}) {
+		this.selectedIds = [
+			...new Set((opts.expand ?? true) ? ids.flatMap((i) => this.expandGroup(i)) : ids)
+		];
+	}
+
+	selectAll() {
+		this.selectedIds = this.template.elements.map((e) => e.id);
+	}
+
+	clearSelection() {
+		this.selectedIds = [];
+	}
+
+	/** Canvas double-click on a text element: select just it and focus the inspector field. */
+	requestTextEdit(id: string) {
+		this.setSelection([id], { expand: false });
+		this.textEditRequest = id;
+	}
+
+	// --- template ------------------------------------------------------------
+
+	rename(name: string) {
+		this.commit(() => (this.template.name = name || 'Untitled label'));
+	}
+
+	setMapping(variable: string, column: string) {
+		this.commit(() => (this.template.mapping = { ...this.template.mapping, [variable]: column }));
+	}
+
+	/** CSV import: keep manual picks that still exist, auto-fill the rest by name. */
+	mergeMapping(columns: string[]) {
+		const kept = Object.fromEntries(
+			Object.entries(this.template.mapping).filter(([, col]) => columns.includes(col))
+		);
+		this.commit(() => {
+			this.template.mapping = { ...autoMap(extractVars(this.template), columns), ...kept };
+		});
+	}
+
+	// --- elements ------------------------------------------------------------
+
+	add(kind: ElementKind, extra: Record<string, unknown> = {}) {
+		const el = ElementSchema.parse({
+			id: crypto.randomUUID(),
+			x: 24,
+			y: 24,
+			...ELEMENT_META[kind].defaults,
+			...extra
+		});
+		this.commit(() => {
+			this.template.elements.push(el);
+		});
+		this.selectedIds = [el.id];
+	}
+
+	async addImageFromFile(file: File) {
+		const dataUrl = await new Promise<string>((resolve, reject) => {
+			const r = new FileReader();
+			r.onload = () => resolve(r.result as string);
+			r.onerror = () => reject(new Error('could not read file'));
+			r.readAsDataURL(file);
+		});
+		const img = await loadImage(dataUrl); // also warms the render cache
+		// fit within the label at natural aspect
+		const scale = Math.min(1, (LABEL_H * 0.66) / img.height, (LABEL_W * 0.66) / img.width);
+		this.add('image', {
+			dataUrl,
+			w: Math.max(MIN_SIZE, Math.round(img.width * scale)),
+			h: Math.max(MIN_SIZE, Math.round(img.height * scale))
+		});
+	}
+
+	/** Inspector edits on the single selected element. */
+	update(patch: Partial<AnyElement>) {
+		if (this.single) this.updateById(this.single.id, patch);
+	}
+
+	/**
+	 * The mutation funnel for element fields. Validates through the schema so
+	 * out-of-range inspector input (font size 300, thickness 60) can never
+	 * reach the autosave — an invalid saved template would be discarded
+	 * wholesale on the next load.
+	 */
+	updateById(id: string, patch: Partial<AnyElement>) {
+		const el = this.byId(id);
+		if (!el) return;
+		const merged = ElementSchema.safeParse({ ...el, ...patch });
+		if (!merged.success) return;
+		this.commit(() => Object.assign(el, merged.data));
+	}
+
+	/** Gesture results from Konva. Rounded to whole dots — 1-bit has no subpixels. */
+	updateGeometry(id: string, geo: Partial<Pick<AnyElement, 'x' | 'y' | 'w' | 'h' | 'rotation'>>) {
+		const el = this.byId(id);
+		if (!el) return;
+		const patch: Partial<AnyElement> = {};
+		if (geo.w !== undefined) patch.w = Math.max(MIN_SIZE, Math.round(geo.w));
+		if (geo.h !== undefined) patch.h = Math.max(MIN_SIZE, Math.round(geo.h));
+		if (geo.rotation !== undefined) patch.rotation = ((Math.round(geo.rotation) % 360) + 360) % 360;
+		// keep-on-label applies to every position mutation (drag, nudge, paste)
+		const w = patch.w ?? el.w,
+			h = patch.h ?? el.h;
+		if (geo.x !== undefined) patch.x = this.clampX(Math.round(geo.x), w);
+		if (geo.y !== undefined) patch.y = this.clampY(Math.round(geo.y), h);
+		this.updateById(id, patch);
+	}
+
+	private clampX(x: number, w: number): number {
+		return clamp(x, -w + MIN_SIZE, this.template.width - MIN_SIZE);
+	}
+
+	private clampY(y: number, h: number): number {
+		return clamp(y, -h + MIN_SIZE, this.template.height - MIN_SIZE);
+	}
+
+	remove(ids = this.selectedIds) {
+		if (!ids.length) return;
+		this.commit(() => {
+			this.template.elements = this.template.elements.filter((e) => !ids.includes(e.id));
+			this.selectedIds = this.selectedIds.filter((id) => !ids.includes(id));
+		});
+	}
+
+	duplicateSelection() {
+		const els = this.selectedElements;
+		if (!els.length) return;
+		const gidMap = new Map<string, string>();
+		const copies = els.map((el) => {
+			const copy: AnyElement = { ...el, id: crypto.randomUUID(), x: el.x + 8, y: el.y + 8 };
+			if (copy.groupId) {
+				if (!gidMap.has(copy.groupId)) gidMap.set(copy.groupId, crypto.randomUUID());
+				copy.groupId = gidMap.get(copy.groupId);
+			}
+			return copy;
+		});
+		this.commit(() => {
+			this.template.elements.push(...copies);
+		});
+		this.selectedIds = copies.map((c) => c.id);
+	}
+
+	nudge(dx: number, dy: number) {
+		const els = this.selectedElements;
+		if (!els.length) return;
+		this.commit(() => {
+			for (const el of els) {
+				el.x = this.clampX(el.x + dx, el.w);
+				el.y = this.clampY(el.y + dy, el.h);
+			}
+		});
+	}
+
+	// --- arrange -------------------------------------------------------------
+
+	/** Single selection aligns to the label; multi aligns to the selection bounds. */
+	align(kind: AlignKind) {
+		const els = this.selectedElements;
+		if (!els.length) return;
+		const bounds =
+			els.length === 1
+				? { x: 0, y: 0, w: this.template.width, h: this.template.height }
+				: selectionBounds(els);
+		this.applyMoves(alignTargets(kind, els, bounds));
+	}
+
+	distribute(axis: 'x' | 'y') {
+		const els = this.selectedElements;
+		if (els.length < 3) return;
+		this.applyMoves(distributeTargets(axis, els));
+	}
+
+	private applyMoves(moves: { id: string; x: number; y: number }[]) {
+		this.commit(() => {
+			for (const m of moves) {
+				const el = this.byId(m.id);
+				if (el) {
+					el.x = m.x;
+					el.y = m.y;
+				}
+			}
+		});
+	}
+
+	groupSelection() {
+		if (this.selectedElements.length < 2) return;
+		const gid = crypto.randomUUID();
+		this.commit(() => {
+			for (const el of this.selectedElements) el.groupId = gid;
+		});
+	}
+
+	ungroupSelection() {
+		this.commit(() => {
+			for (const el of this.selectedElements) el.groupId = undefined;
+		});
+	}
+
+	// --- z-order (array order = draw order) ----------------------------------
+
+	private reorder(
+		mutate: (arr: AnyElement[], sel: Set<string>) => AnyElement[],
+		ids = this.selectedIds
+	) {
+		if (!ids.length) return;
+		this.commit(() => {
+			this.template.elements = mutate([...this.template.elements], new Set(ids));
+		});
+	}
+
+	bringToFront(ids?: string[]) {
+		this.reorder(
+			(arr, sel) => [...arr.filter((e) => !sel.has(e.id)), ...arr.filter((e) => sel.has(e.id))],
+			ids
+		);
+	}
+
+	sendToBack(ids?: string[]) {
+		this.reorder(
+			(arr, sel) => [...arr.filter((e) => sel.has(e.id)), ...arr.filter((e) => !sel.has(e.id))],
+			ids
+		);
+	}
+
+	raise(ids?: string[]) {
+		this.reorder((arr, sel) => {
+			for (let i = arr.length - 2; i >= 0; i--)
+				if (sel.has(arr[i].id) && !sel.has(arr[i + 1].id))
+					[arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+			return arr;
+		}, ids);
+	}
+
+	lower(ids?: string[]) {
+		this.reorder((arr, sel) => {
+			for (let i = 1; i < arr.length; i++)
+				if (sel.has(arr[i].id) && !sel.has(arr[i - 1].id))
+					[arr[i], arr[i - 1]] = [arr[i - 1], arr[i]];
+			return arr;
+		}, ids);
+	}
+
+	// --- persistence ---------------------------------------------------------
+
+	private scheduleSave() {
+		this.saved = false;
+		clearTimeout(this.saveTimer);
+		this.saveTimer = setTimeout(() => {
+			const json = JSON.stringify(this.template);
+			if (json !== this.lastSavedJson) {
+				localStorage.setItem(STORAGE_KEY, json);
+				this.lastSavedJson = json;
+			}
+			this.saved = true;
+		}, 400);
+	}
+}
+
+export const editor = new EditorState();

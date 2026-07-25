@@ -1,0 +1,118 @@
+import { z } from 'zod';
+import { WIDTH, HEIGHT } from '$lib/printer/protocol';
+
+// The Y50P takes a fixed 400×240 1-bit framebuffer (50×30 mm at 8 dots/mm).
+// All geometry is in printer dots — the editor stage, print renderer, and wire
+// format share one coordinate space, with zoom applied only at display time.
+// The wire format (protocol.ts) owns the physical constants; re-exported here
+// so one definition serves both sides of the raster boundary.
+export const DOTS_PER_MM = 8;
+export const LABEL_W = WIDTH;
+export const LABEL_H = HEIGHT;
+
+// Shared bounds: the zod schema and every gesture/mutation clamp must agree,
+// or clamped-in-view values can produce elements the schema later rejects.
+export const MIN_SIZE = 8;
+export const MIN_FONT_SIZE = 6;
+export const MAX_FONT_SIZE = 200;
+
+// Bundled via @fontsource-variable/inter so every machine rasterizes text
+// identically — system fonts would make the same template print differently
+// per device.
+export const DEFAULT_FONT = "'Inter Variable', sans-serif";
+
+export const BARCODE_TYPES = [
+	'code128',
+	'qrcode',
+	'datamatrix',
+	'code39',
+	'ean13',
+	'upca',
+	'interleaved2of5'
+] as const;
+export type BarcodeType = (typeof BARCODE_TYPES)[number];
+
+const base = {
+	id: z.string(),
+	x: z.number().int(),
+	y: z.number().int(),
+	w: z.number().int().min(MIN_SIZE),
+	h: z.number().int().min(MIN_SIZE),
+	// Degrees, free-form. Off-axis angles alias at 1-bit (especially barcode
+	// bars) — the preview thresholds the same render, so what you see is the
+	// honest result.
+	rotation: z.number().min(0).max(360).default(0),
+	// Elements sharing a groupId select and move as one (flat groups, no nesting).
+	groupId: z.string().optional()
+};
+
+export const TextElementSchema = z.object({
+	...base,
+	type: z.literal('text'),
+	// May contain {{var}} placeholders resolved from a CSV row at print time.
+	text: z.string(),
+	fontSize: z.number().int().min(MIN_FONT_SIZE).max(MAX_FONT_SIZE).default(32),
+	bold: z.boolean().default(true),
+	italic: z.boolean().default(false),
+	underline: z.boolean().default(false),
+	align: z.enum(['left', 'center', 'right']).default('left'),
+	// Shrink until the wrapped text fits the box — essential when a CSV value
+	// runs longer than the sample the template was designed around.
+	autoFit: z.boolean().default(true)
+});
+
+export const BarcodeElementSchema = z.object({
+	...base,
+	type: z.literal('barcode'),
+	bcid: z.enum(BARCODE_TYPES).default('code128'),
+	// May contain {{var}} placeholders.
+	data: z.string()
+});
+
+export const ImageElementSchema = z.object({
+	...base,
+	type: z.literal('image'),
+	// Embedded so a template document stays self-contained and exportable.
+	dataUrl: z.string(),
+	// threshold keeps logos/line art crisp; dither is for photos and gradients,
+	// which a hard threshold annihilates.
+	mode: z.enum(['threshold', 'dither']).default('threshold')
+});
+
+export const RectElementSchema = z.object({
+	...base,
+	type: z.literal('rect'),
+	solid: z.boolean().default(false),
+	thickness: z.number().int().min(1).max(50).default(2)
+});
+
+export const ElementSchema = z.discriminatedUnion('type', [
+	TextElementSchema,
+	BarcodeElementSchema,
+	ImageElementSchema,
+	RectElementSchema
+]);
+
+export const TemplateSchema = z.object({
+	version: z.literal(1).default(1),
+	id: z.string(),
+	name: z.string().min(1).default('Untitled label'),
+	width: z.number().int().default(LABEL_W),
+	height: z.number().int().default(LABEL_H),
+	// Draw order: later elements paint over earlier ones.
+	elements: z.array(ElementSchema).default([]),
+	// {{var}} → CSV column. Kept separate from elements so re-importing a CSV
+	// with the same headers needs no re-mapping.
+	mapping: z.record(z.string(), z.string()).default({})
+});
+
+export type TextElement = z.infer<typeof TextElementSchema>;
+export type BarcodeElement = z.infer<typeof BarcodeElementSchema>;
+export type ImageElement = z.infer<typeof ImageElementSchema>;
+export type RectElement = z.infer<typeof RectElementSchema>;
+export type AnyElement = z.infer<typeof ElementSchema>;
+export type Template = z.infer<typeof TemplateSchema>;
+
+export function blankTemplate(): Template {
+	return TemplateSchema.parse({ id: crypto.randomUUID() });
+}
