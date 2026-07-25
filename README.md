@@ -58,11 +58,11 @@ Discovery deliberately filters by device name, never by service UUID: a service-
 
 Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
 
-This hardware is white-labelled, so the printer on your desk may carry a different name than the app that drives it. The KNAON unit here pairs with an app called **FlashLabel Pro**, and the sibling **FlashToy U8** runs the same protocol again. All of them wrap the same `com.j0data.sdk` Android library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
+This hardware is white-labelled, so the printer on your desk may carry a different name. The KNAON unit here and the sibling **FlashToy U8** speak the same protocol, and the vendor Android apps that drive them all wrap the same `com.j0data.sdk` library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
 
 ## Credits
 
-The protocol here was reverse-engineered from HCI snoops of the FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
+The protocol here was reverse-engineered from HCI snoops of the manufacturer's Android app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
 
 **Have a FlashToy U8?** Go to [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), a separate derivation of the same protocol (they call it YPL) that targets that printer directly. Three status bits in `protocol.ts` come from their work and are credited there.
 
