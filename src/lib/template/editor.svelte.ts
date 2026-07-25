@@ -16,7 +16,13 @@ import {
 	type ColumnFormat,
 	type Template
 } from './schema';
-import { alignTargets, distributeTargets, selectionBounds, type AlignKind } from './geometry';
+import {
+	alignTargets,
+	arrangeUnits,
+	distributeTargets,
+	selectionBounds,
+	type AlignKind
+} from './geometry';
 import { ELEMENT_META, type ElementKind } from './elements';
 import { loadImage } from './nodes';
 import { clamp } from '$lib/utils';
@@ -69,6 +75,15 @@ class EditorState {
 	/** The selected element when exactly one is — what the inspector edits. */
 	get single(): AnyElement | null {
 		return this.selectedIds.length === 1 ? (this.byId(this.selectedIds[0]) ?? null) : null;
+	}
+
+	/**
+	 * How many independent objects are selected, counting each group as one.
+	 * Arrange actions are gated on this rather than on the element count, so
+	 * they offer only what they can actually do.
+	 */
+	get unitCount(): number {
+		return arrangeUnits(this.selectedElements).length;
 	}
 
 	/** True when the whole selection is one intact group. */
@@ -402,21 +417,25 @@ class EditorState {
 
 	// --- arrange -------------------------------------------------------------
 
-	/** Single selection aligns to the label; multi aligns to the selection bounds. */
+	/**
+	 * A single unit aligns to the label; two or more align within the selection
+	 * bounds. Counted in units, not elements, so selecting one whole group
+	 * centres that group on the label rather than collapsing its members onto
+	 * each other.
+	 */
 	align(kind: AlignKind) {
 		const els = this.selectedElements;
 		if (!els.length) return;
 		const bounds =
-			els.length === 1
+			this.unitCount === 1
 				? { x: 0, y: 0, w: this.template.width, h: this.template.height }
 				: selectionBounds(els);
 		this.applyMoves(alignTargets(kind, els, bounds));
 	}
 
 	distribute(axis: 'x' | 'y') {
-		const els = this.selectedElements;
-		if (els.length < 3) return;
-		this.applyMoves(distributeTargets(axis, els));
+		if (this.unitCount < 3) return;
+		this.applyMoves(distributeTargets(axis, this.selectedElements));
 	}
 
 	private applyMoves(moves: { id: string; x: number; y: number }[]) {

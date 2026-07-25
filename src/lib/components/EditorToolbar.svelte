@@ -24,6 +24,8 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
 	const n = $derived(editor.selectedIds.length);
+	// arrange acts on units (a group counts once), so gate on those, not elements
+	const units = $derived(editor.unitCount);
 
 	const alignItems: { kind: AlignKind; label: string; Icon: Component }[] = [
 		{ kind: 'left', label: 'Align left', Icon: AlignStartVerticalIcon },
@@ -66,7 +68,7 @@
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="start" class="min-w-56">
 					<DropdownMenu.Label class="text-xs">
-						{n === 1 ? 'Align to label' : 'Align to selection'}
+						{units === 1 ? 'Align to label' : 'Align to selection'}
 					</DropdownMenu.Label>
 					{#each alignItems as a (a.kind)}
 						<DropdownMenu.Item onclick={() => editor.align(a.kind)}>
@@ -75,10 +77,10 @@
 						</DropdownMenu.Item>
 					{/each}
 					<DropdownMenu.Separator />
-					<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('x')}>
+					<DropdownMenu.Item disabled={units < 3} onclick={() => editor.distribute('x')}>
 						<AlignHorizontalSpaceBetweenIcon class="size-4" /> Distribute horizontally
 					</DropdownMenu.Item>
-					<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('y')}>
+					<DropdownMenu.Item disabled={units < 3} onclick={() => editor.distribute('y')}>
 						<AlignVerticalSpaceBetweenIcon class="size-4" /> Distribute vertically
 					</DropdownMenu.Item>
 				</DropdownMenu.Content>
