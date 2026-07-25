@@ -79,16 +79,17 @@
 					     spacing, and chips ride the text baseline via align-middle. -->
 					<span class="min-w-0 truncate">
 						{#each splitVars(content) as part, i (i)}{#if part.isVar}{@const detected =
-									data.columns.includes(part.text)}<span
+									data.columns.includes(part.text)}{@const bad = data.loaded && !detected}<span
 									class={cn(
 										badgeVariants({ variant: detected ? 'secondary' : 'outline' }),
 										'mx-px gap-1 py-0 align-middle font-mono text-[11px]',
 										!detected && 'text-muted-foreground'
 									)}
+									title={bad ? 'No column with this name' : undefined}
 									><span
 										class={cn(
 											'size-1.5 shrink-0 rounded-full',
-											detected ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+											detected ? 'bg-emerald-500' : bad ? 'bg-amber-500' : 'bg-muted-foreground/40'
 										)}
 									></span>{part.text}</span
 								>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
