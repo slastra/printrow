@@ -155,6 +155,22 @@ export function resolveValues(
 	);
 }
 
+/**
+ * Split a string into literal and {{var}} runs so the UI can render variables
+ * distinctly from surrounding copy.
+ */
+export function splitVars(s: string): { text: string; isVar: boolean }[] {
+	const out: { text: string; isVar: boolean }[] = [];
+	let last = 0;
+	for (const m of s.matchAll(VAR_RE)) {
+		if (m.index > last) out.push({ text: s.slice(last, m.index), isVar: false });
+		out.push({ text: m[1], isVar: true });
+		last = m.index + m[0].length;
+	}
+	if (last < s.length) out.push({ text: s.slice(last), isVar: false });
+	return out;
+}
+
 /** Unresolved placeholders stay visible rather than vanishing into blank paper. */
 export function interpolate(s: string, values: Record<string, string | undefined>): string {
 	return s.replace(VAR_RE, (whole, name: string) => values[name] ?? whole);

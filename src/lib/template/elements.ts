@@ -15,6 +15,8 @@ interface ElementMeta {
 	defaults: Record<string, unknown>;
 	/** Layers-panel row label for a concrete element. */
 	label: (el: AnyElement) => string;
+	/** The user-authored string to show verbatim (with {{vars}} highlighted), if any. */
+	content?: (el: AnyElement) => string;
 	/** Single-axis handle drags reflow content (text re-wraps, barcode
 	 * re-snaps its module grid) instead of stretching it. */
 	reflowsOnAxisResize: boolean;
@@ -36,6 +38,7 @@ export const ELEMENT_META: Record<ElementKind, ElementMeta> = {
 		defaults: { type: 'text', text: 'New text', w: 180, h: 44 },
 		label: (el) =>
 			el.type === 'text' ? el.text.replace(/\s+/g, ' ').trim().slice(0, 20) || 'Text' : 'Text',
+		content: (el) => (el.type === 'text' ? el.text.replace(/\s+/g, ' ').trim() : ''),
 		reflowsOnAxisResize: true,
 		cornerScalesFont: true,
 		keepAspect: true
@@ -45,6 +48,7 @@ export const ELEMENT_META: Record<ElementKind, ElementMeta> = {
 		icon: BarcodeIcon,
 		defaults: { type: 'barcode', data: '{{code}}', w: 200, h: 80 },
 		label: (el) => (el.type === 'barcode' ? `${el.bcid} · ${el.data.slice(0, 12)}` : 'Barcode'),
+		content: (el) => (el.type === 'barcode' ? el.data : ''),
 		reflowsOnAxisResize: true,
 		cornerScalesFont: false,
 		keepAspect: true

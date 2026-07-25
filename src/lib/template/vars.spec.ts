@@ -5,6 +5,7 @@ import {
 	formatValue,
 	interpolate,
 	resolveValues,
+	splitVars,
 	unknownVars,
 	varsInString
 } from './vars';
@@ -157,5 +158,23 @@ describe('number padding', () => {
 		expect(formatValue('12345', fmt({ kind: 'number', padDigits: 3, thousands: false }))).toBe(
 			'12345'
 		);
+	});
+});
+
+describe('splitVars', () => {
+	test('splits literals and variables in order', () => {
+		expect(splitVars('SKU {{sku}} / {{qty}} ea')).toEqual([
+			{ text: 'SKU ', isVar: false },
+			{ text: 'sku', isVar: true },
+			{ text: ' / ', isVar: false },
+			{ text: 'qty', isVar: true },
+			{ text: ' ea', isVar: false }
+		]);
+	});
+
+	test('handles bare literals and bare variables', () => {
+		expect(splitVars('plain')).toEqual([{ text: 'plain', isVar: false }]);
+		expect(splitVars('{{a}}')).toEqual([{ text: 'a', isVar: true }]);
+		expect(splitVars('')).toEqual([]);
 	});
 });

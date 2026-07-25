@@ -3,6 +3,7 @@
 	import { flip } from 'svelte/animate';
 	import { editor } from '$lib/template/editor.svelte';
 	import { ELEMENT_META } from '$lib/template/elements';
+	import { splitVars } from '$lib/template/vars';
 	import type { AnyElement } from '$lib/template/schema';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
 
@@ -50,6 +51,7 @@
 		{#each items as item (item.id)}
 			{@const meta = ELEMENT_META[item.el.type]}
 			{@const Icon = meta.icon}
+			{@const content = meta.content?.(item.el) ?? ''}
 			<div
 				animate:flip={{ duration: FLIP_MS }}
 				role="button"
@@ -69,7 +71,24 @@
 					<span class="h-3 w-0.5 shrink-0 rounded bg-ring" title="Grouped"></span>
 				{/if}
 				<Icon class="size-3.5 shrink-0 text-muted-foreground" />
-				<span class="truncate">{meta.label(item.el)}</span>
+				{#if content}
+					<!-- show the authored string, with {{vars}} called out as chips -->
+					<span class="flex min-w-0 items-center gap-0.5 truncate">
+						{#each splitVars(content) as part, i (i)}
+							{#if part.isVar}
+								<span
+									class="shrink-0 rounded bg-emerald-500/15 px-1 font-mono text-[10px] text-emerald-700 dark:text-emerald-400"
+								>
+									{part.text}
+								</span>
+							{:else}
+								<span class="truncate whitespace-pre">{part.text}</span>
+							{/if}
+						{/each}
+					</span>
+				{:else}
+					<span class="truncate">{meta.label(item.el)}</span>
+				{/if}
 			</div>
 		{/each}
 	</div>
