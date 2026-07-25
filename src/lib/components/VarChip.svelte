@@ -39,7 +39,9 @@
 
 <span
 	class={cn(
-		badgeVariants({ variant: status === 'detected' ? 'secondary' : 'outline' }),
+		// always outline: the dot carries the status, so a filled variant would
+		// say the same thing twice and make detected columns shout
+		badgeVariants({ variant: 'outline' }),
 		'gap-1.5 font-mono',
 		status !== 'detected' && 'text-muted-foreground',
 		inline && 'mx-px gap-1 py-0 align-middle text-[11px]',
