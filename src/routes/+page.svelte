@@ -26,8 +26,8 @@
 
 <Sidebar.Provider open={data.sidebarOpen}>
 	<Sidebar.Root variant="inset" class="border-none">
-		<Sidebar.Header class="gap-4 px-4 pt-7 pb-4">
-			<span class="flex items-end gap-2">
+		<Sidebar.Header class="gap-3 px-4 pt-4 pb-4">
+			<span class="mb-3 flex items-end gap-2">
 				<span
 					class="text-4xl leading-none font-extrabold tracking-tight"
 					style="font-family: 'Bricolage Grotesque Variable', sans-serif;"
