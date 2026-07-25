@@ -5,6 +5,7 @@
 	import { ELEMENT_META } from '$lib/template/elements';
 	import { splitVars } from '$lib/template/vars';
 	import { data } from '$lib/template/data.svelte';
+	import { badgeVariants } from '$lib/components/ui/badge';
 	import { cn } from '$lib/utils';
 	import type { AnyElement } from '$lib/template/schema';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
@@ -77,13 +78,19 @@
 					<!-- Inline flow, not flex: the authored string's own spaces do the
 					     spacing, and chips ride the text baseline via align-middle. -->
 					<span class="min-w-0 truncate">
-						{#each splitVars(content) as part, i (i)}{#if part.isVar}<span
+						{#each splitVars(content) as part, i (i)}{#if part.isVar}{@const detected =
+									data.columns.includes(part.text)}<span
 									class={cn(
-										'mx-px inline-block rounded px-1.5 py-[3px] align-middle font-mono text-[11px] leading-none',
-										data.columns.includes(part.text)
-											? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-											: 'bg-muted-foreground/15 text-muted-foreground'
-									)}>{part.text}</span
+										badgeVariants({ variant: detected ? 'secondary' : 'outline' }),
+										'mx-px gap-1 py-0 align-middle font-mono text-[11px]',
+										!detected && 'text-muted-foreground'
+									)}
+									><span
+										class={cn(
+											'size-1.5 shrink-0 rounded-full',
+											detected ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+										)}
+									></span>{part.text}</span
 								>{:else}<span class="align-middle whitespace-pre">{part.text}</span>{/if}{/each}
 					</span>
 				{:else}
