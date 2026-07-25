@@ -56,6 +56,10 @@ Discovery deliberately filters by device name, never by service UUID: a service-
 
 ## Hardware
 
+<p align="center">
+  <img src="docs/printer.png" alt="A KNAON Y50P thermal printer, lid closed, presenting a freshly printed label that reads PRINTROW above a barcode" width="440">
+</p>
+
 Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
 
 This hardware is white-labelled, so the printer on your desk may carry a different name. The KNAON unit here and the sibling **FlashToy U8** speak the same protocol, and the vendor Android apps that drive them all wrap the same `com.j0data.sdk` library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
