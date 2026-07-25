@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { printer } from '$lib/printer/ble.svelte';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -9,6 +10,22 @@
 	import printerImage from '$lib/assets/printer.png';
 
 	let open = $state(false);
+
+	const SEEN_KEY = 'printrow:seen-about:v1';
+
+	// A first-time visitor's most useful fact is whether printing can work in
+	// this browser at all, which is worth knowing before designing a label
+	// rather than after. Marked seen on open, not on close, so refreshing
+	// midway through reading it does not make it reappear.
+	onMount(() => {
+		try {
+			if (localStorage.getItem(SEEN_KEY)) return;
+			localStorage.setItem(SEEN_KEY, '1');
+			open = true;
+		} catch {
+			// storage blocked: staying quiet beats greeting them on every load
+		}
+	});
 
 	// Read live rather than at module load: the checks depend on the browser and
 	// the origin, so a static list would lie to whoever most needs the truth.
@@ -56,9 +73,8 @@
 				<h3 class="text-sm font-medium">Supported printers</h3>
 				<p class="text-xs text-muted-foreground">
 					Verified on a <strong class="font-medium text-foreground">KNAON Y50P</strong> at 50 × 30 mm.
-					The same hardware is white-labelled under other names, so the badge on the case is not the
-					giveaway. If the vendor app pairs over Bluetooth and the printer takes 50 mm stock, it is
-					worth a try.
+					The same hardware is white-labelled under other names, so the badge on the case is not the giveaway.
+					If the vendor app pairs over Bluetooth and the printer takes 50 mm stock, it is worth a try.
 				</p>
 			</div>
 
