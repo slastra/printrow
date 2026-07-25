@@ -13,7 +13,7 @@
 
 ## How it works
 
-The Y50P speaks a proprietary framed binary protocol, reverse-engineered against hardware captures. The printer has no fonts and no barcode symbologies. It accepts nothing but a 400×240 1-bit bitmap. Everything is rendered host-side, which is what makes the preview trustworthy:
+The Y50P speaks a proprietary framed binary protocol, handled by [yplib](https://github.com/slastra/yplib). The printer has no fonts and no barcode symbologies. It accepts nothing but a 400×240 1-bit bitmap. Everything is rendered host-side, which is what makes the preview trustworthy:
 
 - **A zod model is the single source of truth**; Konva is a view of it. The same node builder feeds the editor canvas and the print rasterizer, so they cannot drift.
 - **The preview renders at the printer's real resolution**: 203 dpi, hard 1-bit threshold, Atkinson dithering for photos. The dot grid on screen _is_ the label, stair-steps and all.
@@ -21,18 +21,18 @@ The Y50P speaks a proprietary framed binary protocol, reverse-engineered against
 - **Stock colour and die-cut shape are preview-only.** The head burns black onto whatever stock is loaded; a coloured background reaching the thresholder would print the label solid black.
 - **Transport**: BLE GATT writes in 20-byte chunks with pacing, with bidirectional status (ready / cover open / out of paper) polled between labels.
 
-The wire format is unforgiving in a specific way worth knowing if you fork this: raster rows carry no length field, so a row that isn't exactly the media width shifts every following row marker and can hang the firmware. `buildStream` refuses to encode one, and the preamble is pinned byte-for-byte against a hardware capture in `protocol.spec.ts`.
+The wire format is unforgiving in a specific way worth knowing if you fork this: raster rows carry no length field, so a row that isn't exactly the media width shifts every following row marker and can hang the firmware. `buildStream` refuses to encode one, and yplib's tests rebuild real hardware captures byte for byte to prove the rest.
 
 ## Stack
 
-SvelteKit 2 · Svelte 5 runes · Tailwind 4 · shadcn-svelte · Konva · zod · bwip-js · lucide · bun
+SvelteKit 2 · Svelte 5 runes · Tailwind 4 · shadcn-svelte · Konva · zod · bwip-js · lucide · yplib · bun
 
 ## Development
 
 ```bash
 bun install
 bun run dev        # http://localhost:5173
-bun test src       # protocol vectors, CSV parsing, geometry, formatting, icon search
+bun test src       # CSV parsing, geometry, formatting, row ranges, icon search
 bun run check      # svelte-check
 ```
 
@@ -66,7 +66,7 @@ This hardware is white-labelled, so the printer on your desk may carry a differe
 
 ## Credits
 
-The protocol here was reverse-engineered from HCI snoops of the manufacturer's Android app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
+The protocol lives in **[yplib](https://github.com/slastra/yplib)**, reverse-engineered from HCI snoops of the manufacturer's Android app and verified by rebuilding whole print sessions byte for byte. Its `FINDINGS.md` is the full derivation.
 
 **Have a FlashToy U8?** Go to [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), a separate derivation of the same protocol (they call it YPL) that targets that printer directly. Three status bits in `protocol.ts` come from their work and are credited there.
 

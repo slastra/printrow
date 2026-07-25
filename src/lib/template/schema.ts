@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { WIDTH, HEIGHT } from '$lib/printer/protocol';
+import { WIDTH, HEIGHT } from '@slastra/yplib';
 
 // The Y50P takes a fixed 400×240 1-bit framebuffer (50×30 mm at 8 dots/mm).
 // All geometry is in printer dots — the editor stage, print renderer, and wire

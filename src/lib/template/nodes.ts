@@ -7,6 +7,7 @@ import {
 	type IconElement,
 	type ImageElement
 } from './schema';
+import { THRESHOLD, lumaOverWhite } from '@slastra/yplib';
 import { barcodeCanvas } from './barcode';
 import { iconSvg, loadIcons, svgDataUrl } from './icons';
 import { interpolate } from './vars';
@@ -15,18 +16,10 @@ export type KonvaNS = (typeof import('konva'))['default'];
 
 export const LINE_HEIGHT = 1.15;
 
-/** 1-bit cutoff — matches the hardware-verified Python renderer. */
-export const THRESHOLD = 128;
-
-/**
- * BT.601 luma composited over white paper — THE print-fidelity formula. Every
- * 1-bit conversion (dither, threshold, node filter, wire rasterizer) must use
- * this one function or preview and paper can silently desync.
- */
-export function lumaOverWhite(data: Uint8ClampedArray, i: number): number {
-	const a = data[i + 3] / 255;
-	return (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) * a + 255 * (1 - a);
-}
+// The threshold and the luma formula come from yplib, so this app and the wire
+// rasterizer cannot drift apart. A second copy is exactly how a preview and
+// the paper start disagreeing.
+export { THRESHOLD, lumaOverWhite };
 
 /** Drop the oldest entries once a cache outgrows its cap. */
 function evict(cache: Map<string, unknown>, cap: number) {

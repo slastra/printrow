@@ -1,6 +1,6 @@
-import { buildStream, WIDTH, type RasterRow } from '$lib/printer/protocol';
+import { buildStream, imageDataToRows, THRESHOLD, WIDTH, type RasterRow } from '@slastra/yplib';
 import { DOTS_PER_MM, type Template } from './schema';
-import { buildNode, lumaOverWhite, THRESHOLD } from './nodes';
+import { buildNode } from './nodes';
 
 /**
  * Threshold a rendered canvas to the printer's 1-bit rows, using the same
@@ -9,16 +9,7 @@ import { buildNode, lumaOverWhite, THRESHOLD } from './nodes';
 export function canvasToRows(cv: HTMLCanvasElement, threshold = THRESHOLD): RasterRow[] {
 	const ctx = cv.getContext('2d', { willReadFrequently: true });
 	if (!ctx) throw new Error('canvas has no 2d context');
-	const { data } = ctx.getImageData(0, 0, cv.width, cv.height);
-	const rows: RasterRow[] = [];
-	for (let y = 0; y < cv.height; y++) {
-		const row = new Uint8Array(cv.width);
-		for (let x = 0; x < cv.width; x++) {
-			row[x] = lumaOverWhite(data, (y * cv.width + x) * 4) < threshold ? 1 : 0;
-		}
-		rows.push(row);
-	}
-	return rows;
+	return imageDataToRows(ctx.getImageData(0, 0, cv.width, cv.height), threshold);
 }
 
 /**
