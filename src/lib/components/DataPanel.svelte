@@ -38,9 +38,7 @@
 	{#if unknown.length}
 		<p class="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-500">
 			<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
-			<span>
-				{unknown.map((v) => `{{${v}}}`).join(', ')} has no matching column and will print as written.
-			</span>
+			<span>{unknown.map((v) => `{{${v}}}`).join(', ')} has no match.</span>
 		</p>
 	{/if}
 
