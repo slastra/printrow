@@ -107,11 +107,11 @@ class PrinterState {
 	async send(bytes: Uint8Array) {
 		if (!this.writeChar) throw new Error('not connected');
 		for (let i = 0; i < bytes.length; i += CHUNK) {
-			// subarray: zero-copy view; a full label is ~500 chunks. The cast is
-			// sound — every stream here is ArrayBuffer-backed, TS just can't see
-			// through the ArrayBufferLike generic.
+			// slice, not subarray: the hardware-verified driver sends a copied
+			// chunk, and a view over a shared buffer is not worth the risk on a
+			// link with no backpressure.
 			await this.writeChar.writeValueWithoutResponse(
-				bytes.subarray(i, i + CHUNK) as Uint8Array<ArrayBuffer>
+				bytes.slice(i, i + CHUNK) as Uint8Array<ArrayBuffer>
 			);
 			await sleep(PACE_MS);
 		}

@@ -147,6 +147,15 @@ export function buildStream(
 	job = 0x08,
 	trailer: string[] = TRAILER
 ): Uint8Array {
+	// The printer reads rows back-to-back with no length field: a row that
+	// isn't exactly the media width shifts every following row marker and can
+	// hang the firmware. Refuse rather than transmit that.
+	const dots = widthMm * 8;
+	for (const [i, row] of rows.entries()) {
+		if (row.length !== dots) {
+			throw new Error(`raster row ${i} is ${row.length} px, expected ${dots} for ${widthMm} mm`);
+		}
+	}
 	const parts = preamble(widthMm).map((p) => frame(p));
 	parts.push(frame(new Uint8Array([0x05, 0x39, 0x04, 0x01, 0x00, job & 0xff])));
 	parts.push(encodeRaster(rows));

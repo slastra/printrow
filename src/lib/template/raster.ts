@@ -56,8 +56,17 @@ export async function renderTemplateToCanvas(
 		const nodes = await Promise.all(template.elements.map((el) => buildNode(K, el, values)));
 		for (const node of nodes) layer.add(node);
 		layer.draw();
-		// pixelRatio 1 pins 1 Konva unit = 1 printer dot regardless of the display
-		return stage.toCanvas({ pixelRatio: 1 });
+		// Crop explicitly to the label. Without x/y/width/height, Konva exports
+		// the CONTENT bounding box, so a single element hanging over the edge
+		// (which the editor allows) would silently widen the raster and desync
+		// the printer's row reader. pixelRatio 1 pins 1 unit = 1 printer dot.
+		return stage.toCanvas({
+			x: 0,
+			y: 0,
+			width: template.width,
+			height: template.height,
+			pixelRatio: 1
+		});
 	} finally {
 		stage.destroy();
 	}
@@ -69,8 +78,14 @@ export async function buildPrintStream(
 	values: Record<string, string | undefined>
 ): Promise<Uint8Array> {
 	const cv = await renderTemplateToCanvas(template, values);
-	// a template wider than the head must fail loudly here, not emit corrupt
-	// run-length data at the printer
+	// The wire format is unforgiving: rows must be exactly the media width in
+	// dots, or the printer misreads the next row marker and can hang. Fail
+	// loudly here rather than emit a stream that wedges the hardware.
+	if (cv.width !== template.width || cv.height !== template.height) {
+		throw new Error(
+			`render is ${cv.width}×${cv.height}, expected ${template.width}×${template.height}`
+		);
+	}
 	if (cv.width > WIDTH) throw new Error(`template width ${cv.width} exceeds print head ${WIDTH}`);
 	return buildStream(canvasToRows(cv), Math.round(cv.width / DOTS_PER_MM));
 }
