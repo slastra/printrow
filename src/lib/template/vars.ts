@@ -32,19 +32,105 @@ export const DEFAULT_FORMAT: ColumnFormat = ColumnFormatSchema.parse({});
 const titleCase = (s: string) =>
 	s.replace(/\w\S*/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 
-/** Apply a column's display formatting. Non-numeric text ignores number options. */
+const MONTHS = [
+	'January',
+	'February',
+	'March',
+	'April',
+	'May',
+	'June',
+	'July',
+	'August',
+	'September',
+	'October',
+	'November',
+	'December'
+];
+
+/** Numeric value of a CSV cell, tolerating thousands separators and currency symbols. */
+function toNumber(raw: string): number | null {
+	const cleaned = raw.replace(/[\s,$€£¥]/g, '');
+	if (cleaned === '') return null;
+	const n = Number(cleaned);
+	return Number.isFinite(n) ? n : null;
+}
+
+/**
+ * Parse the date shapes CSVs actually contain, as calendar dates in local time
+ * (never UTC, or a YYYY-MM-DD value shifts a day for western timezones).
+ */
+export function parseDate(raw: string): Date | null {
+	const s = raw.trim();
+	let m = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/.exec(s);
+	if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+	// US convention when the first part can't be a day-of-month is ambiguous;
+	// CSVs from spreadsheets are overwhelmingly M/D/Y, so take that.
+	m = /^(\d{1,2})[/](\d{1,2})[/](\d{4})$/.exec(s);
+	if (m) return new Date(+m[3], +m[1] - 1, +m[2]);
+	m = /^(\d{1,2})[.](\d{1,2})[.](\d{4})$/.exec(s);
+	if (m) return new Date(+m[3], +m[2] - 1, +m[1]);
+	const parsed = new Date(s);
+	return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+
+function formatDate(d: Date, pattern: ColumnFormat['datePattern']): string {
+	const p2 = (n: number) => String(n).padStart(2, '0');
+	const y = d.getFullYear(),
+		mo = d.getMonth(),
+		day = d.getDate();
+	switch (pattern) {
+		case 'iso':
+			return `${y}-${p2(mo + 1)}-${p2(day)}`;
+		case 'us':
+			return `${p2(mo + 1)}/${p2(day)}/${y}`;
+		case 'eu':
+			return `${p2(day)}/${p2(mo + 1)}/${y}`;
+		case 'medium':
+			return `${MONTHS[mo].slice(0, 3)} ${day}, ${y}`;
+		case 'long':
+			return `${MONTHS[mo]} ${day}, ${y}`;
+		case 'day-month':
+			return `${day} ${MONTHS[mo].slice(0, 3)} ${y}`;
+		case 'compact':
+			return `${p2(day)}${MONTHS[mo].slice(0, 3)}${String(y).slice(2)}`;
+	}
+}
+
+/**
+ * Apply a column's display formatting. Values that don't fit the chosen kind
+ * (text in a number column, an unparseable date) pass through untouched rather
+ * than printing a confusing NaN.
+ */
 export function formatValue(raw: string | undefined, fmt: ColumnFormat = DEFAULT_FORMAT): string {
 	if (raw === undefined) return '';
 	let out = raw;
 
-	const n = Number(out.replace(/,/g, ''));
-	const numeric = out.trim() !== '' && Number.isFinite(n);
-	if (numeric && (fmt.decimals !== null || fmt.thousands)) {
-		out = n.toLocaleString('en-US', {
-			minimumFractionDigits: fmt.decimals ?? 0,
-			maximumFractionDigits: fmt.decimals ?? 20,
-			useGrouping: fmt.thousands
-		});
+	if (fmt.kind === 'number') {
+		const n = toNumber(out);
+		if (n !== null)
+			out = n.toLocaleString('en-US', {
+				minimumFractionDigits: fmt.decimals ?? 0,
+				maximumFractionDigits: fmt.decimals ?? 20,
+				useGrouping: fmt.thousands
+			});
+	} else if (fmt.kind === 'currency') {
+		const n = toNumber(out);
+		if (n !== null)
+			out = n
+				.toLocaleString('en-US', {
+					style: 'currency',
+					currency: fmt.currency,
+					currencyDisplay: fmt.currencyCode ? 'code' : 'symbol',
+					minimumFractionDigits: fmt.decimals ?? undefined,
+					maximumFractionDigits: fmt.decimals ?? undefined,
+					useGrouping: fmt.thousands
+				})
+				// Intl separates a currency code with U+00A0; plain spaces keep
+				// the canvas measurement and any downstream text handling simple
+				.replace(/ /g, ' ');
+	} else if (fmt.kind === 'date') {
+		const d = parseDate(out);
+		if (d) out = formatDate(d, fmt.datePattern);
 	}
 
 	if (fmt.transform === 'upper') out = out.toUpperCase();

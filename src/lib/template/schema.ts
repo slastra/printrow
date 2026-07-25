@@ -118,12 +118,35 @@ export const ElementSchema = z.discriminatedUnion('type', [
  * Kept on the template (not the CSV) so the same formatting survives a
  * re-import of next week's data.
  */
+export const CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'MXN'] as const;
+export type Currency = (typeof CURRENCIES)[number];
+
+/** Deterministic date patterns (no locale surprises between machines). */
+export const DATE_PATTERNS = [
+	{ value: 'iso', label: 'ISO', example: '2026-07-25' },
+	{ value: 'us', label: 'US', example: '07/25/2026' },
+	{ value: 'eu', label: 'European', example: '25/07/2026' },
+	{ value: 'medium', label: 'Medium', example: 'Jul 25, 2026' },
+	{ value: 'long', label: 'Long', example: 'July 25, 2026' },
+	{ value: 'day-month', label: 'Day month', example: '25 Jul 2026' },
+	{ value: 'compact', label: 'Compact', example: '25Jul26' }
+] as const;
+export type DatePattern = (typeof DATE_PATTERNS)[number]['value'];
+
 export const ColumnFormatSchema = z.object({
+	// which family of options applies; text is the pass-through default
+	kind: z.enum(['text', 'number', 'currency', 'date']).default('text'),
 	transform: z.enum(['none', 'upper', 'lower', 'title']).default('none'),
-	// fixed decimal places for numeric columns; null leaves the text as-is
+	// fixed decimal places; null means "as written"
 	decimals: z.number().int().min(0).max(6).nullable().default(null),
 	// thousands separators, e.g. 1234.5 -> 1,234.50
-	thousands: z.boolean().default(false),
+	thousands: z.boolean().default(true),
+	currency: z.enum(CURRENCIES).default('USD'),
+	// show the code instead of the symbol: USD 4.99 rather than $4.99
+	currencyCode: z.boolean().default(false),
+	datePattern: z
+		.enum(DATE_PATTERNS.map((p) => p.value) as [DatePattern, ...DatePattern[]])
+		.default('iso'),
 	prefix: z.string().max(8).default(''),
 	suffix: z.string().max(8).default(''),
 	// truncate long values with an ellipsis; 0 = no limit
