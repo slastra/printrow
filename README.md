@@ -1,6 +1,6 @@
 # printrow
 
-**[printrow.lastra.us](https://printrow.lastra.us)** is a label designer that prints against CSV data over Web Bluetooth. No drivers, no installs, no print server: design a label in the browser, bind `{{variables}}` to CSV columns, and batch-print to a Y50P thermal printer directly from the page.
+**[printrow.lastra.us](https://printrow.lastra.us)** is a label designer that prints against CSV data over Web Bluetooth. No drivers, no installs, no print server: design a label in the browser, bind `{{variables}}` to CSV columns, and batch-print to a KNAON Y50P thermal printer directly from the page.
 
 ![The printrow editor: a yellow label with an icon, product name, SKU, and a Code 128 barcode, alongside the CSV column panel](docs/screenshot.jpg)
 
@@ -56,15 +56,15 @@ Discovery deliberately filters by device name, never by service UUID: a service-
 
 ## Hardware
 
-Verified on a **Y50P** (FlashLabel), 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
+Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
 
-This hardware is white-labelled, so the printer on your desk may carry a different name. **KNAON**, **FlashLabel**, and **FlashToy** all ship it, and their Android apps all wrap the same `com.j0data.sdk` library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
+This hardware is white-labelled, so the printer on your desk may carry a different name than the app that drives it. The KNAON unit here pairs with an app called **FlashLabel Pro**, and the sibling **FlashToy U8** runs the same protocol again. All of them wrap the same `com.j0data.sdk` Android library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
 
 ## Credits
 
-The protocol here was reverse-engineered from HCI snoops of the vendor's FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
+The protocol here was reverse-engineered from HCI snoops of the FlashLabel Pro app, then verified by rebuilding whole print sessions byte for byte. Everything it documents was derived and confirmed on a Y50P.
 
-**Have a KNAON / FlashToy U8?** Go to [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), a separate derivation of the same protocol (they call it YPL) that targets that printer directly. Three status bits in `protocol.ts` come from their work and are credited there.
+**Have a FlashToy U8?** Go to [Souukou/OpenBluetoothPrinter](https://github.com/Souukou/OpenBluetoothPrinter) (MIT), a separate derivation of the same protocol (they call it YPL) that targets that printer directly. Three status bits in `protocol.ts` come from their work and are credited there.
 
 Bundled and redistributed by this app:
 
