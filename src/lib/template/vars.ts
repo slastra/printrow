@@ -111,6 +111,7 @@ export function formatValue(raw: string | undefined, fmt: ColumnFormat = DEFAULT
 			out = n.toLocaleString('en-US', {
 				minimumFractionDigits: fmt.decimals ?? 0,
 				maximumFractionDigits: fmt.decimals ?? 20,
+				minimumIntegerDigits: fmt.padDigits,
 				useGrouping: fmt.thousands
 			});
 	} else if (fmt.kind === 'currency') {

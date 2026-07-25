@@ -138,3 +138,24 @@ describe('formatValue kinds', () => {
 		expect(formatValue('someday', fmt({ kind: 'date' }))).toBe('someday');
 	});
 });
+
+describe('number padding', () => {
+	test('zero-pads the integer part', () => {
+		expect(formatValue('7', fmt({ kind: 'number', padDigits: 3 }))).toBe('007');
+		expect(formatValue('1234', fmt({ kind: 'number', padDigits: 6, thousands: false }))).toBe(
+			'001234'
+		);
+	});
+
+	test('padding coexists with decimals and grouping', () => {
+		expect(
+			formatValue('7.5', fmt({ kind: 'number', padDigits: 3, decimals: 2, thousands: true }))
+		).toBe('007.50');
+	});
+
+	test('values already longer than the pad are untouched', () => {
+		expect(formatValue('12345', fmt({ kind: 'number', padDigits: 3, thousands: false }))).toBe(
+			'12345'
+		);
+	});
+});

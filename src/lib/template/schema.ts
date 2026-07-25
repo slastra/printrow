@@ -139,6 +139,9 @@ export const ColumnFormatSchema = z.object({
 	transform: z.enum(['none', 'upper', 'lower', 'title']).default('none'),
 	// fixed decimal places; null means "as written"
 	decimals: z.number().int().min(0).max(6).nullable().default(null),
+	// zero-pad the integer part to this many digits (1 = no padding), e.g.
+	// 7 -> 007 for serials and bin numbers
+	padDigits: z.number().int().min(1).max(21).default(1),
 	// thousands separators, e.g. 1234.5 -> 1,234.50
 	thousands: z.boolean().default(true),
 	currency: z.enum(CURRENCIES).default('USD'),

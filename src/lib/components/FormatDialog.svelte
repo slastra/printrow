@@ -128,18 +128,32 @@
 			{/if}
 
 			{#if fmt.kind === 'number'}
-				<div class="space-y-1.5">
-					<Label for="fmt-dec-n" class="text-xs">Decimals</Label>
-					<Input
-						id="fmt-dec-n"
-						type="number"
-						min="0"
-						max="6"
-						placeholder="as written"
-						value={fmt.decimals ?? ''}
-						oninput={(e) =>
-							set({ decimals: e.currentTarget.value === '' ? null : +e.currentTarget.value })}
-					/>
+				<div class="grid grid-cols-2 gap-3">
+					<div class="space-y-1.5">
+						<Label for="fmt-dec-n" class="text-xs">Decimals</Label>
+						<Input
+							id="fmt-dec-n"
+							type="number"
+							min="0"
+							max="6"
+							placeholder="as written"
+							value={fmt.decimals ?? ''}
+							oninput={(e) =>
+								set({ decimals: e.currentTarget.value === '' ? null : +e.currentTarget.value })}
+						/>
+					</div>
+					<div class="space-y-1.5">
+						<Label for="fmt-pad" class="text-xs">Pad to digits</Label>
+						<Input
+							id="fmt-pad"
+							type="number"
+							min="1"
+							max="21"
+							placeholder="none"
+							value={fmt.padDigits > 1 ? fmt.padDigits : ''}
+							oninput={(e) => set({ padDigits: Math.max(1, +e.currentTarget.value || 1) })}
+						/>
+					</div>
 				</div>
 			{/if}
 
