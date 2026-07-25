@@ -62,10 +62,35 @@ export const MEDIA_PRESETS: MediaPreset[] = [
 	{ label: '30 × 20 mm', wMm: 30, hMm: 20 }
 ];
 
-// Bundled via @fontsource-variable/inter so every machine rasterizes text
-// identically — system fonts would make the same template print differently
-// per device.
-export const DEFAULT_FONT = "'Inter Variable', sans-serif";
+/**
+ * Bundled faces, so every machine rasterizes text identically — a system font
+ * would make the same template print differently per device. Chosen to stay
+ * legible once thresholded to 1-bit at 8 dots/mm: no hairline weights, and a
+ * condensed face because labels run out of width before they run out of room.
+ *
+ * Templates store the key, not the CSS stack, so the stack can change without
+ * breaking saved work.
+ */
+export const FONTS = [
+	{ key: 'inter', label: 'Inter', stack: "'Inter Variable', sans-serif" },
+	// Pacifico over a finer script: thick strokes survive the 1-bit threshold
+	{ key: 'script', label: 'Pacifico', stack: "'Pacifico', cursive" },
+	{ key: 'oswald', label: 'Oswald', stack: "'Oswald Variable', sans-serif" },
+	{ key: 'serif', label: 'Source Serif', stack: "'Source Serif 4 Variable', serif" },
+	{ key: 'mono', label: 'JetBrains Mono', stack: "'JetBrains Mono Variable', monospace" },
+	{ key: 'bebas', label: 'Bebas Neue', stack: "'Bebas Neue', sans-serif" },
+	{ key: 'black', label: 'Archivo Black', stack: "'Archivo Black', sans-serif" },
+	{ key: 'display', label: 'Playfair Display', stack: "'Playfair Display Variable', serif" },
+	{ key: 'grotesk', label: 'Space Grotesk', stack: "'Space Grotesk Variable', sans-serif" }
+] as const;
+export type FontKey = (typeof FONTS)[number]['key'];
+export const FONT_KEYS = FONTS.map((f) => f.key) as [FontKey, ...FontKey[]];
+
+export function fontStack(key: FontKey): string {
+	return (FONTS.find((f) => f.key === key) ?? FONTS[0]).stack;
+}
+
+export const DEFAULT_FONT = FONTS[0].stack;
 
 export const BARCODE_TYPES = [
 	'code128',
@@ -98,6 +123,7 @@ export const TextElementSchema = z.object({
 	// May contain {{var}} placeholders resolved from a CSV row at print time.
 	text: z.string(),
 	fontSize: z.number().int().min(MIN_FONT_SIZE).max(MAX_FONT_SIZE).default(32),
+	font: z.enum(FONT_KEYS).default('inter'),
 	bold: z.boolean().default(true),
 	italic: z.boolean().default(false),
 	underline: z.boolean().default(false),

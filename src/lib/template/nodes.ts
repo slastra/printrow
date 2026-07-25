@@ -1,6 +1,6 @@
 import type Konva from 'konva';
 import {
-	DEFAULT_FONT,
+	fontStack,
 	MIN_FONT_SIZE,
 	type AnyElement,
 	type BarcodeElement,
@@ -33,6 +33,23 @@ function evict(cache: Map<string, unknown>, cap: number) {
 		if (oldest === undefined) return;
 		cache.delete(oldest);
 	}
+}
+
+/**
+ * A bundled face isn't fetched until something asks for it, and
+ * `document.fonts.ready` only waits on loads already in flight — so the first
+ * render using a new face would silently fall back. Request it explicitly and
+ * remember the promise.
+ */
+const fontLoads = new Map<string, Promise<unknown>>();
+function ensureFont(stack: string): Promise<unknown> {
+	let p = fontLoads.get(stack);
+	if (!p) {
+		// any size works; the load is per family, not per size
+		p = document.fonts.load(`16px ${stack}`).catch(() => undefined);
+		fontLoads.set(stack, p);
+	}
+	return p;
 }
 
 const barcodeCache = new Map<string, HTMLCanvasElement>();
@@ -197,6 +214,9 @@ export async function buildNode(
 	const common = { id: el.id, x: el.x, y: el.y, rotation: el.rotation };
 	switch (el.type) {
 		case 'text': {
+			// measure and wrap against the real face, never a fallback
+			const family = fontStack(el.font);
+			await ensureFont(family);
 			const node = new K.Text({
 				...common,
 				width: el.w,
@@ -204,7 +224,7 @@ export async function buildNode(
 				fontSize: el.fontSize,
 				fontStyle: [el.italic && 'italic', el.bold && 'bold'].filter(Boolean).join(' ') || 'normal',
 				textDecoration: el.underline ? 'underline' : '',
-				fontFamily: DEFAULT_FONT,
+				fontFamily: family,
 				align: el.align,
 				wrap: 'word',
 				lineHeight: LINE_HEIGHT,

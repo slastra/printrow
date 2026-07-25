@@ -6,6 +6,15 @@
 @import '@fontsource-variable/inter/wght-italic.css';
 /* display face for the wordmark */
 @import '@fontsource-variable/bricolage-grotesque';
+/* label faces, selectable per text element */
+@import '@fontsource/pacifico';
+@import '@fontsource-variable/oswald';
+@import '@fontsource-variable/source-serif-4';
+@import '@fontsource-variable/jetbrains-mono';
+@import '@fontsource/bebas-neue';
+@import '@fontsource/archivo-black';
+@import '@fontsource-variable/playfair-display';
+@import '@fontsource-variable/space-grotesk';
 
 @custom-variant dark (&:is(.dark *));
 

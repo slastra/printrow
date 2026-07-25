@@ -8,6 +8,8 @@
 		MAX_THICKNESS,
 		MAX_RADIUS,
 		BORDER_STYLES,
+		FONTS,
+		type FontKey,
 		STOCK_COLORS,
 		DOTS_PER_MM,
 		type BorderStyle,
@@ -148,6 +150,25 @@
 					oninput={(e) => editor.update({ text: e.currentTarget.value })}
 				/>
 				<p class="text-xs text-muted-foreground">Supports {'{{var}}'} placeholders.</p>
+			</div>
+			<div class="space-y-1.5">
+				<Label>Font</Label>
+				<Select.Root
+					type="single"
+					value={el.font}
+					onValueChange={(v) => v && editor.update({ font: v as FontKey })}
+				>
+					<Select.Trigger class="w-full">
+						{FONTS.find((f) => f.key === el.font)?.label}
+					</Select.Trigger>
+					<Select.Content>
+						{#each FONTS as f (f.key)}
+							<Select.Item value={f.key}>
+								<span style="font-family: {f.stack}">{f.label}</span>
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
 			</div>
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
