@@ -40,80 +40,87 @@
 	);
 </script>
 
-<div class="flex flex-wrap items-center gap-0.5 tool-surface p-1">
-	<ToolButton
-		label="Undo (Ctrl+Z)"
-		icon={Undo2Icon}
-		onclick={() => editor.undo()}
-		disabled={!editor.canUndo}
-	/>
-	<ToolButton
-		label="Redo (Ctrl+Shift+Z)"
-		icon={Redo2Icon}
-		onclick={() => editor.redo()}
-		disabled={!editor.canRedo}
-	/>
-
-	{#if n > 0}
-		<Separator orientation="vertical" class="mx-1 h-5" />
-
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger class={menuTrigger}>
-				<AlignStartVerticalIcon class="size-4" /> Align
-				<ChevronDownIcon class="size-3 text-muted-foreground" />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start" class="min-w-56">
-				<DropdownMenu.Label class="text-xs">
-					{n === 1 ? 'Align to label' : 'Align to selection'}
-				</DropdownMenu.Label>
-				{#each alignItems as a (a.kind)}
-					<DropdownMenu.Item onclick={() => editor.align(a.kind)}>
-						<a.Icon class="size-4" />
-						{a.label}
-					</DropdownMenu.Item>
-				{/each}
-				<DropdownMenu.Separator />
-				<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('x')}>
-					<AlignHorizontalSpaceBetweenIcon class="size-4" /> Distribute horizontally
-				</DropdownMenu.Item>
-				<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('y')}>
-					<AlignVerticalSpaceBetweenIcon class="size-4" /> Distribute vertically
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
-
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger class={menuTrigger}>
-				<GroupIcon class="size-4" /> Group
-				<ChevronDownIcon class="size-3 text-muted-foreground" />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start" class="min-w-56">
-				<DropdownMenu.Item
-					disabled={n < 2 || editor.selectionGrouped}
-					onclick={() => editor.groupSelection()}
-				>
-					<GroupIcon class="size-4" /> Group
-					<DropdownMenu.Shortcut>Ctrl+G</DropdownMenu.Shortcut>
-				</DropdownMenu.Item>
-				<DropdownMenu.Item
-					disabled={!editor.selectedElements.some((e) => e.groupId)}
-					onclick={() => editor.ungroupSelection()}
-				>
-					<UngroupIcon class="size-4" /> Ungroup
-					<DropdownMenu.Shortcut>Ctrl+Shift+G</DropdownMenu.Shortcut>
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
-
-		<Separator orientation="vertical" class="mx-1 h-5" />
+<div class="flex flex-col items-center gap-1.5">
+	<div class="flex flex-wrap items-center gap-0.5 tool-surface p-1">
 		<ToolButton
-			label="Duplicate (Ctrl+D)"
-			icon={CopyIcon}
-			onclick={() => editor.duplicateSelection()}
+			label="Undo (Ctrl+Z)"
+			icon={Undo2Icon}
+			onclick={() => editor.undo()}
+			disabled={!editor.canUndo}
 		/>
-		<ToolButton label="Delete (Del)" icon={Trash2Icon} onclick={() => editor.remove()} />
+		<ToolButton
+			label="Redo (Ctrl+Shift+Z)"
+			icon={Redo2Icon}
+			onclick={() => editor.redo()}
+			disabled={!editor.canRedo}
+		/>
 
-		<Separator orientation="vertical" class="mx-1 h-5" />
-		<span class="px-1.5 text-xs whitespace-nowrap text-muted-foreground">{n} selected</span>
+		{#if n > 0}
+			<Separator orientation="vertical" class="mx-1 h-5" />
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class={menuTrigger}>
+					<AlignStartVerticalIcon class="size-4" /> Align
+					<ChevronDownIcon class="size-3 text-muted-foreground" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="start" class="min-w-56">
+					<DropdownMenu.Label class="text-xs">
+						{n === 1 ? 'Align to label' : 'Align to selection'}
+					</DropdownMenu.Label>
+					{#each alignItems as a (a.kind)}
+						<DropdownMenu.Item onclick={() => editor.align(a.kind)}>
+							<a.Icon class="size-4" />
+							{a.label}
+						</DropdownMenu.Item>
+					{/each}
+					<DropdownMenu.Separator />
+					<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('x')}>
+						<AlignHorizontalSpaceBetweenIcon class="size-4" /> Distribute horizontally
+					</DropdownMenu.Item>
+					<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('y')}>
+						<AlignVerticalSpaceBetweenIcon class="size-4" /> Distribute vertically
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class={menuTrigger}>
+					<GroupIcon class="size-4" /> Group
+					<ChevronDownIcon class="size-3 text-muted-foreground" />
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content align="start" class="min-w-56">
+					<DropdownMenu.Item
+						disabled={n < 2 || editor.selectionGrouped}
+						onclick={() => editor.groupSelection()}
+					>
+						<GroupIcon class="size-4" /> Group
+						<DropdownMenu.Shortcut>Ctrl+G</DropdownMenu.Shortcut>
+					</DropdownMenu.Item>
+					<DropdownMenu.Item
+						disabled={!editor.selectedElements.some((e) => e.groupId)}
+						onclick={() => editor.ungroupSelection()}
+					>
+						<UngroupIcon class="size-4" /> Ungroup
+						<DropdownMenu.Shortcut>Ctrl+Shift+G</DropdownMenu.Shortcut>
+					</DropdownMenu.Item>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+
+			<Separator orientation="vertical" class="mx-1 h-5" />
+			<ToolButton
+				label="Duplicate (Ctrl+D)"
+				icon={CopyIcon}
+				onclick={() => editor.duplicateSelection()}
+			/>
+			<ToolButton label="Delete (Del)" icon={Trash2Icon} onclick={() => editor.remove()} />
+		{/if}
+	</div>
+
+	<!-- the count is status, not a control: its own smaller pill below -->
+	{#if n > 0}
+		<div class="tool-surface px-2 py-0.5 text-[11px] whitespace-nowrap text-muted-foreground">
+			{n}
+			{n === 1 ? 'element' : 'elements'} selected
+		</div>
 	{/if}
 </div>
