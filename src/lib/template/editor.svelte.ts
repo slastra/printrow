@@ -2,6 +2,7 @@ import {
 	blankTemplate,
 	ElementSchema,
 	TemplateSchema,
+	DOTS_PER_MM,
 	LABEL_W,
 	LABEL_H,
 	MIN_SIZE,
@@ -206,6 +207,18 @@ class EditorState {
 
 	setMapping(variable: string, column: string) {
 		this.commit(() => (this.template.mapping = { ...this.template.mapping, [variable]: column }));
+	}
+
+	/** Change label stock. Elements keep their positions; re-clamp to the new bounds. */
+	setMedia(wMm: number, hMm: number) {
+		this.commit(() => {
+			this.template.width = wMm * DOTS_PER_MM;
+			this.template.height = hMm * DOTS_PER_MM;
+			for (const el of this.template.elements) {
+				el.x = this.clampX(el.x, el.w);
+				el.y = this.clampY(el.y, el.h);
+			}
+		});
 	}
 
 	/** CSV import: keep manual picks that still exist, auto-fill the rest by name. */

@@ -16,6 +16,23 @@ export const MIN_SIZE = 8;
 export const MIN_FONT_SIZE = 6;
 export const MAX_FONT_SIZE = 200;
 
+// Height is safe to vary — the printer takes rows until the raster ends.
+// Width rides in the setup frames in mm; only 50 mm is hardware-verified.
+export interface MediaPreset {
+	label: string;
+	wMm: number;
+	hMm: number;
+}
+export const MEDIA_PRESETS: MediaPreset[] = [
+	{ label: '50 × 30 mm', wMm: 50, hMm: 30 },
+	{ label: '50 × 40 mm', wMm: 50, hMm: 40 },
+	{ label: '50 × 50 mm', wMm: 50, hMm: 50 },
+	{ label: '50 × 80 mm', wMm: 50, hMm: 80 },
+	{ label: '40 × 30 mm', wMm: 40, hMm: 30 },
+	{ label: '40 × 60 mm', wMm: 40, hMm: 60 },
+	{ label: '30 × 20 mm', wMm: 30, hMm: 20 }
+];
+
 // Bundled via @fontsource-variable/inter so every machine rasterizes text
 // identically — system fonts would make the same template print differently
 // per device.
@@ -97,8 +114,14 @@ export const TemplateSchema = z.object({
 	version: z.literal(1).default(1),
 	id: z.string(),
 	name: z.string().min(1).default('Untitled label'),
-	width: z.number().int().default(LABEL_W),
-	height: z.number().int().default(LABEL_H),
+	// dots; width is capped by the 50 mm print head
+	width: z.number().int().min(MIN_SIZE).max(WIDTH).default(LABEL_W),
+	height: z
+		.number()
+		.int()
+		.min(MIN_SIZE)
+		.max(200 * DOTS_PER_MM)
+		.default(LABEL_H),
 	// Draw order: later elements paint over earlier ones.
 	elements: z.array(ElementSchema).default([]),
 	// {{var}} → CSV column. Kept separate from elements so re-importing a CSV

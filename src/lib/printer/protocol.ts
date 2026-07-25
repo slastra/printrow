@@ -63,34 +63,44 @@ export function request(group: number, cmd: number): Uint8Array {
 	return frame(new Uint8Array([group, cmd, 0x01, 0x00, 0x00]));
 }
 
-export const PREAMBLE = [
-	'0104010000',
-	'0104010000',
-	'01b7010000',
-	'0107010000',
-	'0102010000',
-	'050b010000',
-	'050b010000',
-	'050b010000',
-	'050b010000',
-	'050b010000',
-	'050b010000',
-	'052001010000',
-	'051101010008',
-	'0519010000',
-	'0536010000',
-	'050b010000',
-	'05410402003200',
-	'05380402003200',
-	'05400402000000'
-];
+/**
+ * Session setup frames. The 0x41 (canvas width) and 0x38 (print width) frames
+ * carry the media width in millimetres — only 50 mm is hardware-verified;
+ * other widths follow the captured frame format but are untested on stock.
+ */
+export function preamble(widthMm = 50): string[] {
+	const w = (widthMm & 0xff).toString(16).padStart(2, '0');
+	return [
+		'0104010000',
+		'0104010000',
+		'01b7010000',
+		'0107010000',
+		'0102010000',
+		'050b010000',
+		'050b010000',
+		'050b010000',
+		'050b010000',
+		'050b010000',
+		'050b010000',
+		'052001010000',
+		'051101010008',
+		'0519010000',
+		'0536010000',
+		'050b010000',
+		`05410402${w}00`,
+		`05380402${w}00`,
+		'05400402000000'
+	];
+}
+
+export const PREAMBLE = preamble(50);
 
 // 0x21 closes the raster; 0x37 and 0x1a feed the label to the tear bar.
 // Without the latter two the paper stops as soon as the last row clears the
 // head, leaving the label half-presented.
 export const TRAILER = ['0521010000', '0537010000', '051a010000', ...Array(10).fill('050b010000')];
 
-/** One row of 1-bit pixels, WIDTH long, 0 = white, 1 = black. */
+/** One row of 1-bit pixels, 0 = white, 1 = black. Row length = media width in dots. */
 export type RasterRow = Uint8Array;
 
 export function encodeRaster(rows: RasterRow[]): Uint8Array {
@@ -98,10 +108,10 @@ export function encodeRaster(rows: RasterRow[]): Uint8Array {
 	for (const row of rows) {
 		out.push(ROW_MARK);
 		let i = 0;
-		while (i < WIDTH) {
+		while (i < row.length) {
 			const colour = row[i];
 			let run = 1;
-			while (i + run < WIDTH && row[i + run] === colour && run < 128) run++;
+			while (i + run < row.length && row[i + run] === colour && run < 128) run++;
 			out.push((colour << 7) | (run - 1));
 			i += run;
 		}
@@ -109,20 +119,20 @@ export function encodeRaster(rows: RasterRow[]): Uint8Array {
 	return Uint8Array.from(out);
 }
 
-export function decodeRaster(blob: Uint8Array): RasterRow[] {
+export function decodeRaster(blob: Uint8Array, width = WIDTH): RasterRow[] {
 	const rows: RasterRow[] = [];
 	let i = 0;
 	while (i < blob.length) {
 		if (blob[i] !== ROW_MARK) throw new Error(`no row marker at ${i}`);
 		i++;
-		const row = new Uint8Array(WIDTH);
+		const row = new Uint8Array(width);
 		let x = 0;
-		while (x < WIDTH) {
+		while (x < width) {
 			if (i >= blob.length) throw new Error(`truncated row ${rows.length}`);
 			const b = blob[i++],
 				colour = b >> 7,
 				n = (b & 0x7f) + 1;
-			if (x + n > WIDTH) throw new Error(`row ${rows.length} overran`);
+			if (x + n > width) throw new Error(`row ${rows.length} overran`);
 			row.fill(colour, x, x + n);
 			x += n;
 		}
@@ -133,10 +143,11 @@ export function decodeRaster(blob: Uint8Array): RasterRow[] {
 
 export function buildStream(
 	rows: RasterRow[],
+	widthMm = 50,
 	job = 0x08,
 	trailer: string[] = TRAILER
 ): Uint8Array {
-	const parts = PREAMBLE.map((p) => frame(p));
+	const parts = preamble(widthMm).map((p) => frame(p));
 	parts.push(frame(new Uint8Array([0x05, 0x39, 0x04, 0x01, 0x00, job & 0xff])));
 	parts.push(encodeRaster(rows));
 	for (const p of trailer) parts.push(frame(p));

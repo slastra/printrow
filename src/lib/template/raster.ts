@@ -1,5 +1,5 @@
 import { buildStream, WIDTH, type RasterRow } from '$lib/printer/protocol';
-import type { Template } from './schema';
+import { DOTS_PER_MM, type Template } from './schema';
 import { buildNode, lumaOverWhite, THRESHOLD } from './nodes';
 
 /**
@@ -66,8 +66,8 @@ export async function buildPrintStream(
 	values: Record<string, string | undefined>
 ): Promise<Uint8Array> {
 	const cv = await renderTemplateToCanvas(template, values);
-	// the wire encoder assumes WIDTH-dot rows; a mis-sized template must fail
-	// loudly here, not emit corrupt run-length data at the printer
-	if (cv.width !== WIDTH) throw new Error(`template width ${cv.width} ≠ printer width ${WIDTH}`);
-	return buildStream(canvasToRows(cv));
+	// a template wider than the head must fail loudly here, not emit corrupt
+	// run-length data at the printer
+	if (cv.width > WIDTH) throw new Error(`template width ${cv.width} exceeds print head ${WIDTH}`);
+	return buildStream(canvasToRows(cv), Math.round(cv.width / DOTS_PER_MM));
 }

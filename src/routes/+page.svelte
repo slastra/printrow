@@ -7,6 +7,7 @@
 	import EditorToolbar from '$lib/components/EditorToolbar.svelte';
 	import LayersPanel from '$lib/components/LayersPanel.svelte';
 	import InsertBar from '$lib/components/InsertBar.svelte';
+	import MediaSelect from '$lib/components/MediaSelect.svelte';
 	import PrintButton from '$lib/components/PrintButton.svelte';
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import { Button } from '$lib/components/ui/button';
@@ -103,6 +104,11 @@
 			<div class="pointer-events-auto">
 				<InsertBar />
 			</div>
+		</div>
+
+		<!-- media size, bottom left -->
+		<div class="absolute bottom-3 left-3 z-10">
+			<MediaSelect />
 		</div>
 	</div>
 </div>

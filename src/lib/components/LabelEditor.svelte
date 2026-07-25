@@ -6,8 +6,6 @@
 	import { buildNode, fitBarcode, type KonvaNS } from '$lib/template/nodes';
 	import { ELEMENT_META } from '$lib/template/elements';
 	import {
-		LABEL_W,
-		LABEL_H,
 		DOTS_PER_MM,
 		MIN_SIZE,
 		MIN_FONT_SIZE,
@@ -29,6 +27,7 @@
 	let uiLayer: Konva.Layer | undefined;
 	let tr: Konva.Transformer | undefined;
 	let marqueeRect: Konva.Rect | undefined;
+	let bgRect: Konva.Rect | undefined;
 	// Konva owns node state mid-gesture; rebuilding under the pointer would
 	// yank the object out of the user's hand.
 	let gesture = false;
@@ -62,12 +61,19 @@
 			K = mod.default;
 			stage = new K.Stage({
 				container,
-				width: LABEL_W * zoom,
-				height: LABEL_H * zoom,
+				width: editor.template.width * zoom,
+				height: editor.template.height * zoom,
 				scale: { x: zoom, y: zoom }
 			});
 			const bg = new K.Layer({ listening: false });
-			bg.add(new K.Rect({ x: 0, y: 0, width: LABEL_W, height: LABEL_H, fill: '#fff' }));
+			bgRect = new K.Rect({
+				x: 0,
+				y: 0,
+				width: editor.template.width,
+				height: editor.template.height,
+				fill: '#fff'
+			});
+			bg.add(bgRect);
 			stage.add(bg);
 			// Images and barcodes are baked 1-bit at exact dot size; smoothing
 			// would blur the zoomed preview into gray the printer can't produce.
@@ -176,14 +182,7 @@
 			attributes: true,
 			attributeFilter: ['class']
 		});
-		// fit zoom tracks the workspace size — both axes, leaving headroom for
-		// the floating toolbar (top) and insert bar (bottom)
-		const ro = new ResizeObserver(() => {
-			if (!root) return;
-			const w = root.clientWidth - 48;
-			const h = root.clientHeight - 140;
-			fitZoom = clamp(Math.min(w / LABEL_W, h / LABEL_H), 0.25, 6);
-		});
+		const ro = new ResizeObserver(refit);
 		if (root) ro.observe(root);
 		return () => {
 			disposed = true;
@@ -194,13 +193,32 @@
 		};
 	});
 
-	// zoom → stage geometry
+	// fit zoom tracks the workspace and media size — both axes, leaving
+	// headroom for the floating toolbar (top) and insert bar (bottom)
+	function refit() {
+		if (!root) return;
+		const w = root.clientWidth - 48;
+		const h = root.clientHeight - 140;
+		fitZoom = clamp(Math.min(w / editor.template.width, h / editor.template.height), 0.25, 6);
+	}
+
+	// media change → refit
 	$effect(() => {
-		const z = zoom;
+		void editor.template.width;
+		void editor.template.height;
+		refit();
+	});
+
+	// zoom / media → stage geometry
+	$effect(() => {
+		const w = editor.template.width,
+			h = editor.template.height,
+			z = zoom;
 		if (!stage) return;
-		stage.width(LABEL_W * z);
-		stage.height(LABEL_H * z);
+		stage.width(w * z);
+		stage.height(h * z);
 		stage.scale({ x: z, y: z });
+		bgRect?.size({ width: w, height: h });
 		stage.batchDraw();
 	});
 
