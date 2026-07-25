@@ -331,11 +331,13 @@
 							{...props}
 							class={cn(
 								buttonVariants({ variant: 'outline' }),
-								'w-full cursor-pointer justify-between text-sm font-normal'
+								'w-full cursor-pointer justify-between overflow-hidden text-sm font-normal'
 							)}
 						>
-							<span class="capitalize">{el.name.replace(/-/g, ' ')}</span>
-							<ChevronDownIcon class="size-3.5 text-muted-foreground" />
+							<span class="min-w-0 truncate first-letter:uppercase">
+								{el.name.replace(/-/g, ' ')}
+							</span>
+							<ChevronDownIcon class="size-3.5 shrink-0 text-muted-foreground" />
 						</button>
 					{/snippet}
 				</IconPicker>
