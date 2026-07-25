@@ -19,11 +19,7 @@
 	import AlignVerticalSpaceBetweenIcon from '@lucide/svelte/icons/align-vertical-space-between';
 	import GroupIcon from '@lucide/svelte/icons/group';
 	import UngroupIcon from '@lucide/svelte/icons/ungroup';
-	import BringToFrontIcon from '@lucide/svelte/icons/bring-to-front';
-	import SendToBackIcon from '@lucide/svelte/icons/send-to-back';
-	import ChevronUpIcon from '@lucide/svelte/icons/chevron-up';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
-	import LayersIcon from '@lucide/svelte/icons/layers';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
@@ -82,29 +78,6 @@
 				</DropdownMenu.Item>
 				<DropdownMenu.Item disabled={n < 3} onclick={() => editor.distribute('y')}>
 					<AlignVerticalSpaceBetweenIcon class="size-4" /> Distribute vertically
-				</DropdownMenu.Item>
-			</DropdownMenu.Content>
-		</DropdownMenu.Root>
-
-		<DropdownMenu.Root>
-			<DropdownMenu.Trigger class={menuTrigger}>
-				<LayersIcon class="size-4" /> Layer
-				<ChevronDownIcon class="size-3 text-muted-foreground" />
-			</DropdownMenu.Trigger>
-			<DropdownMenu.Content align="start" class="min-w-56">
-				<DropdownMenu.Item onclick={() => editor.bringToFront()}>
-					<BringToFrontIcon class="size-4" /> Bring to front
-				</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={() => editor.raise()}>
-					<ChevronUpIcon class="size-4" /> Raise
-					<DropdownMenu.Shortcut>]</DropdownMenu.Shortcut>
-				</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={() => editor.lower()}>
-					<ChevronDownIcon class="size-4" /> Lower
-					<DropdownMenu.Shortcut>[</DropdownMenu.Shortcut>
-				</DropdownMenu.Item>
-				<DropdownMenu.Item onclick={() => editor.sendToBack()}>
-					<SendToBackIcon class="size-4" /> Send to back
 				</DropdownMenu.Item>
 			</DropdownMenu.Content>
 		</DropdownMenu.Root>
