@@ -113,6 +113,24 @@ export const ElementSchema = z.discriminatedUnion('type', [
 	RectElementSchema
 ]);
 
+/**
+ * Per-column display formatting, applied wherever {{column}} is substituted.
+ * Kept on the template (not the CSV) so the same formatting survives a
+ * re-import of next week's data.
+ */
+export const ColumnFormatSchema = z.object({
+	transform: z.enum(['none', 'upper', 'lower', 'title']).default('none'),
+	// fixed decimal places for numeric columns; null leaves the text as-is
+	decimals: z.number().int().min(0).max(6).nullable().default(null),
+	// thousands separators, e.g. 1234.5 -> 1,234.50
+	thousands: z.boolean().default(false),
+	prefix: z.string().max(8).default(''),
+	suffix: z.string().max(8).default(''),
+	// truncate long values with an ellipsis; 0 = no limit
+	maxChars: z.number().int().min(0).max(200).default(0)
+});
+export type ColumnFormat = z.infer<typeof ColumnFormatSchema>;
+
 export const TemplateSchema = z.object({
 	version: z.literal(1).default(1),
 	id: z.string(),
@@ -127,9 +145,9 @@ export const TemplateSchema = z.object({
 		.default(LABEL_H),
 	// Draw order: later elements paint over earlier ones.
 	elements: z.array(ElementSchema).default([]),
-	// {{var}} → CSV column. Kept separate from elements so re-importing a CSV
-	// with the same headers needs no re-mapping.
-	mapping: z.record(z.string(), z.string()).default({})
+	// {{name}} binds directly to the CSV column called "name" — no mapping
+	// step. Formatting per column lives here.
+	formats: z.record(z.string(), ColumnFormatSchema).default({})
 });
 
 export type TextElement = z.infer<typeof TextElementSchema>;

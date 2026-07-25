@@ -6,7 +6,7 @@ export interface CsvData {
 /**
  * RFC 4180-ish CSV: quoted fields, escaped double quotes, CR/LF line ends.
  * Empty header cells become column1, column2…; duplicate headers get a
- * numeric suffix so every column stays addressable in the mapping.
+ * numeric suffix so every column stays individually addressable.
  */
 export function parseCsv(text: string): CsvData {
 	if (text.charCodeAt(0) === 0xfeff) text = text.slice(1); // BOM

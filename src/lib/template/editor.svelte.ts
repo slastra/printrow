@@ -6,12 +6,13 @@ import {
 	LABEL_W,
 	LABEL_H,
 	MIN_SIZE,
+	ColumnFormatSchema,
 	type AnyElement,
+	type ColumnFormat,
 	type Template
 } from './schema';
 import { alignTargets, distributeTargets, selectionBounds, type AlignKind } from './geometry';
 import { ELEMENT_META, type ElementKind } from './elements';
-import { autoMap, extractVars } from './vars';
 import { loadImage } from './nodes';
 import { clamp } from '$lib/utils';
 
@@ -201,8 +202,34 @@ class EditorState {
 
 	// --- template ------------------------------------------------------------
 
-	setMapping(variable: string, column: string) {
-		this.commit(() => (this.template.mapping = { ...this.template.mapping, [variable]: column }));
+	/** Per-column display formatting. Merges over the column's current format. */
+	setFormat(column: string, patch: Partial<ColumnFormat>) {
+		const merged = ColumnFormatSchema.safeParse({
+			...(this.template.formats[column] ?? {}),
+			...patch
+		});
+		if (!merged.success) return;
+		this.commit(() => {
+			this.template.formats = { ...this.template.formats, [column]: merged.data };
+		});
+	}
+
+	resetFormat(column: string) {
+		this.commit(() => {
+			const { [column]: _dropped, ...rest } = this.template.formats;
+			this.template.formats = rest;
+		});
+	}
+
+	/** Insert a {{column}} placeholder into the selected text or barcode element. */
+	insertPlaceholder(column: string): boolean {
+		const el = this.single;
+		if (!el) return false;
+		const token = `{{${column}}}`;
+		if (el.type === 'text') this.updateById(el.id, { text: `${el.text}${token}` });
+		else if (el.type === 'barcode') this.updateById(el.id, { data: `${el.data}${token}` });
+		else return false;
+		return true;
 	}
 
 	/** Change label stock. Elements keep their positions; re-clamp to the new bounds. */
@@ -214,16 +241,6 @@ class EditorState {
 				el.x = this.clampX(el.x, el.w);
 				el.y = this.clampY(el.y, el.h);
 			}
-		});
-	}
-
-	/** CSV import: keep manual picks that still exist, auto-fill the rest by name. */
-	mergeMapping(columns: string[]) {
-		const kept = Object.fromEntries(
-			Object.entries(this.template.mapping).filter(([, col]) => columns.includes(col))
-		);
-		this.commit(() => {
-			this.template.mapping = { ...autoMap(extractVars(this.template), columns), ...kept };
 		});
 	}
 

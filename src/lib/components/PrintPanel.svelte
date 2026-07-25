@@ -4,18 +4,16 @@
 	import { data } from '$lib/template/data.svelte';
 	import { printer } from '$lib/printer/ble.svelte';
 	import { buildPrintStream } from '$lib/template/raster';
-	import { rowValues, unmappedVars } from '$lib/template/vars';
+	import { resolveValues, unknownVars } from '$lib/template/vars';
 	import { Button } from '$lib/components/ui/button';
 	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 
-	const unmapped = $derived(data.loaded ? unmappedVars(editor.template, data.columns) : []);
+	const unknown = $derived(data.loaded ? unknownVars(editor.template, data.columns) : []);
 
 	/** Print row N always uses the row's real values, whatever the preview toggle. */
 	function currentValues(): Record<string, string | undefined> {
-		return data.loaded && data.previewRow
-			? rowValues(editor.template.mapping, data.previewRow)
-			: {};
+		return resolveValues(data.previewRow, editor.template.formats);
 	}
 
 	async function run(builds: (() => Promise<Uint8Array>)[]) {
@@ -36,7 +34,8 @@
 	const printBatch = () =>
 		run(
 			data.rows.map(
-				(row) => () => buildPrintStream(editor.template, rowValues(editor.template.mapping, row))
+				(row) => () =>
+					buildPrintStream(editor.template, resolveValues(row, editor.template.formats))
 			)
 		);
 </script>
@@ -57,9 +56,9 @@
 		</Button>
 	</div>
 
-	{#if unmapped.length}
-		<p class="text-xs text-red-500">
-			Unmapped: {unmapped.map((v) => `{{${v}}}`).join(', ')} will print as placeholders.
+	{#if unknown.length}
+		<p class="text-xs text-amber-600 dark:text-amber-500">
+			{unknown.map((v) => `{{${v}}}`).join(', ')} has no matching column.
 		</p>
 	{/if}
 

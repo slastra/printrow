@@ -1,6 +1,16 @@
 import { describe, expect, test } from 'bun:test';
-import { autoMap, extractVars, interpolate, varsInString } from './vars';
-import { TemplateSchema } from './schema';
+import {
+	DEFAULT_FORMAT,
+	extractVars,
+	formatValue,
+	interpolate,
+	resolveValues,
+	unknownVars,
+	varsInString
+} from './vars';
+import { ColumnFormatSchema, TemplateSchema } from './schema';
+
+const fmt = (patch: Record<string, unknown>) => ColumnFormatSchema.parse(patch);
 
 describe('varsInString', () => {
 	test('finds, dedupes, and preserves order', () => {
@@ -36,11 +46,54 @@ describe('interpolate', () => {
 	});
 });
 
-describe('autoMap', () => {
-	test('matches case- and separator-insensitively', () => {
-		expect(autoMap(['lot_no', 'sku', 'missing'], ['Lot No', 'SKU'])).toEqual({
-			lot_no: 'Lot No',
-			sku: 'SKU'
+describe('formatValue', () => {
+	test('passes text through untouched by default', () => {
+		expect(formatValue('Cedar Widget', DEFAULT_FORMAT)).toBe('Cedar Widget');
+		expect(formatValue(undefined)).toBe('');
+	});
+
+	test('case transforms', () => {
+		expect(formatValue('cedar widget', fmt({ transform: 'upper' }))).toBe('CEDAR WIDGET');
+		expect(formatValue('Cedar Widget', fmt({ transform: 'lower' }))).toBe('cedar widget');
+		expect(formatValue('cedar WIDGET', fmt({ transform: 'title' }))).toBe('Cedar Widget');
+	});
+
+	test('decimals and thousands apply only to numeric text', () => {
+		expect(formatValue('4.5', fmt({ decimals: 2 }))).toBe('4.50');
+		expect(formatValue('1234.5', fmt({ decimals: 2, thousands: true }))).toBe('1,234.50');
+		expect(formatValue('Widget', fmt({ decimals: 2 }))).toBe('Widget');
+	});
+
+	test('affixes wrap the formatted value', () => {
+		expect(formatValue('4.5', fmt({ decimals: 2, prefix: '$' }))).toBe('$4.50');
+		expect(formatValue('250', fmt({ suffix: ' pcs' }))).toBe('250 pcs');
+	});
+
+	test('maxChars truncates with an ellipsis, counting affixes', () => {
+		expect(formatValue('Thermistor NTC 100K', fmt({ maxChars: 10 }))).toBe('Thermisto…');
+		expect(formatValue('short', fmt({ maxChars: 10 }))).toBe('short');
+	});
+});
+
+describe('resolveValues', () => {
+	test('formats each column and keys by column name', () => {
+		const row = { sku: 'inv-1', price: '4.5' };
+		expect(
+			resolveValues(row, { sku: fmt({ transform: 'upper' }), price: fmt({ decimals: 2 }) })
+		).toEqual({ sku: 'INV-1', price: '4.50' });
+	});
+
+	test('no row yields no values', () => {
+		expect(resolveValues(undefined)).toEqual({});
+	});
+});
+
+describe('unknownVars', () => {
+	test('flags variables with no matching column', () => {
+		const t = TemplateSchema.parse({
+			id: 't',
+			elements: [{ id: 'a', type: 'text', x: 0, y: 0, w: 80, h: 20, text: '{{sku}} {{nope}}' }]
 		});
+		expect(unknownVars(t, ['sku', 'price'])).toEqual(['nope']);
 	});
 });

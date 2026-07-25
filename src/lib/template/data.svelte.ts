@@ -1,11 +1,11 @@
 import { parseCsv } from '$lib/csv';
 import { editor } from './editor.svelte';
-import { rowValues } from './vars';
+import { extractVars, resolveValues } from './vars';
 
 /**
  * The loaded CSV. Deliberately not persisted — data files can be large and
- * change between sessions; the template's var→column mapping is what persists,
- * so re-importing next week's CSV with the same headers needs zero clicks.
+ * change between sessions. Variables bind to column names directly, so
+ * re-importing next week's CSV with the same headers just works.
  */
 class DataState {
 	fileName = $state<string | null>(null);
@@ -26,9 +26,12 @@ class DataState {
 
 	/** What the canvas should render right now: preview row values, or nothing. */
 	get previewValues(): Record<string, string | undefined> {
-		return this.preview && this.previewRow
-			? rowValues(editor.template.mapping, this.previewRow)
-			: {};
+		return this.preview ? resolveValues(this.previewRow, editor.template.formats) : {};
+	}
+
+	/** Columns that at least one element references. */
+	get usedColumns(): Set<string> {
+		return new Set(extractVars(editor.template).filter((v) => this.columns.includes(v)));
 	}
 
 	async loadFile(file: File) {
@@ -38,9 +41,6 @@ class DataState {
 		this.columns = columns;
 		this.rows = rows;
 		this.previewIndex = 0;
-		// mapping lives on the template — mutate it through the editor so the
-		// merge is an undo step and gets autosaved
-		editor.mergeMapping(columns);
 	}
 
 	clear() {

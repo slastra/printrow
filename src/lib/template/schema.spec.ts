@@ -2,12 +2,12 @@ import { describe, expect, test } from 'bun:test';
 import { blankTemplate, ElementSchema, TemplateSchema } from './schema';
 
 describe('TemplateSchema', () => {
-	test('blankTemplate carries Y50P geometry and empty mapping', () => {
+	test('blankTemplate carries Y50P geometry and no column formats', () => {
 		const t = blankTemplate();
 		expect(t.width).toBe(400);
 		expect(t.height).toBe(240);
 		expect(t.elements).toEqual([]);
-		expect(t.mapping).toEqual({});
+		expect(t.formats).toEqual({});
 	});
 
 	test('accepts free-form rotation within 0–360', () => {
