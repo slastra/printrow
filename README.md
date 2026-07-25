@@ -34,6 +34,8 @@ bun install --frozen-lockfile  →  bun run build  →  node build
 
 There is no database and nothing to persist server-side — templates live in the browser's localStorage and the printer is reached from the browser, so the server only serves assets and the SSR shell. It listens on `PORT` (Coolify sets this; the adapter defaults to 3000 on 0.0.0.0).
 
+Pushes to `main` redeploy automatically via a GitHub webhook pointed at Coolify's manual webhook endpoint.
+
 **Serve it over HTTPS.** Web Bluetooth only works in a secure context, so on a plain-http origin the Connect button can't do anything. Give the app a domain in Coolify and let it issue a certificate.
 
 ## Web Bluetooth notes
