@@ -261,20 +261,31 @@ export async function buildNode(
 		}
 		case 'image':
 			return new K.Image({ ...common, image: await imageSource(el), width: el.w, height: el.h });
-		case 'rect':
+		case 'rect': {
+			// dash lengths scale with thickness so heavier borders keep the
+			// same visual rhythm at 1-bit
+			const dash =
+				el.borderStyle === 'dashed'
+					? [el.thickness * 3, el.thickness * 2]
+					: el.borderStyle === 'dotted'
+						? [el.thickness, el.thickness * 1.5]
+						: undefined;
 			return rasterizeAtDots(
 				new K.Rect({
 					...common,
 					width: el.w,
 					height: el.h,
+					cornerRadius: el.radius,
 					fill: el.solid ? '#000' : undefined,
 					stroke: el.solid ? undefined : '#000',
 					strokeWidth: el.thickness,
+					dash: el.solid ? undefined : dash,
 					// stroke thickness is label geometry, not a UI affordance — it
 					// must not change when the editor scales the node mid-gesture
 					strokeScaleEnabled: false
 				})
 			);
+		}
 	}
 }
 

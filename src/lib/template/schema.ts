@@ -100,7 +100,10 @@ export const RectElementSchema = z.object({
 	...base,
 	type: z.literal('rect'),
 	solid: z.boolean().default(false),
-	thickness: z.number().int().min(1).max(50).default(2)
+	thickness: z.number().int().min(1).max(50).default(2),
+	borderStyle: z.enum(['solid', 'dashed', 'dotted']).default('solid'),
+	// corner radius in dots; applies to fill and border alike
+	radius: z.number().int().min(0).max(120).default(0)
 });
 
 export const ElementSchema = z.discriminatedUnion('type', [

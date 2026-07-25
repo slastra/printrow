@@ -173,7 +173,34 @@
 						oninput={(e) => editor.update({ thickness: int(e.currentTarget.value, el.thickness) })}
 					/>
 				</div>
+				<div class="space-y-1.5">
+					<Label>Border style</Label>
+					<Select.Root
+						type="single"
+						value={el.borderStyle}
+						onValueChange={(v) =>
+							editor.update({ borderStyle: v as 'solid' | 'dashed' | 'dotted' })}
+					>
+						<Select.Trigger class="w-full capitalize">{el.borderStyle}</Select.Trigger>
+						<Select.Content>
+							<Select.Item value="solid">Solid</Select.Item>
+							<Select.Item value="dashed">Dashed</Select.Item>
+							<Select.Item value="dotted">Dotted</Select.Item>
+						</Select.Content>
+					</Select.Root>
+				</div>
 			{/if}
+			<div class="space-y-1.5">
+				<Label for="radius">Corner radius</Label>
+				<Input
+					id="radius"
+					type="number"
+					min="0"
+					max="120"
+					value={el.radius}
+					oninput={(e) => editor.update({ radius: int(e.currentTarget.value, el.radius) })}
+				/>
+			</div>
 		{:else if el.type === 'image'}
 			<div class="space-y-1.5">
 				<Label>1-bit conversion</Label>
