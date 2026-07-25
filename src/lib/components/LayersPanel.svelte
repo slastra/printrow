@@ -81,7 +81,7 @@
 								<!-- green only when the loaded CSV actually has this column -->
 								<span
 									class={cn(
-										'shrink-0 rounded px-1 font-mono text-[10px]',
+										'shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px] leading-4',
 										data.columns.includes(part.text)
 											? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
 											: 'bg-muted-foreground/15 text-muted-foreground'
