@@ -262,6 +262,11 @@ class EditorState {
 		this.commit(() => (this.template.stockColor = hex));
 	}
 
+	/** Die-cut corner rounding, 0–50% of the label. Preview only. */
+	setStockRadius(pct: number) {
+		this.commit(() => (this.template.stockRadius = clamp(Math.round(pct), 0, 50)));
+	}
+
 	selectLabel() {
 		this.selectedIds = [];
 		this.labelSelected = true;

@@ -47,6 +47,7 @@
 	const setFontSize = rafThrottle((v: number) => editor.update({ fontSize: v }));
 	const setThickness = rafThrottle((v: number) => editor.update({ thickness: v }));
 	const setRadius = rafThrottle((v: number) => editor.update({ radius: v }));
+	const setStockRadius = rafThrottle((v: number) => editor.setStockRadius(v));
 
 	function int(value: string, fallback: number): number {
 		const n = Math.round(Number(value));
@@ -76,10 +77,46 @@
 					></button>
 				{/each}
 			</div>
-			<p class="text-xs text-muted-foreground">
-				Preview only. The printer burns black onto whatever stock is loaded.
-			</p>
 		</div>
+
+		<div class="space-y-2">
+			<div class="flex items-center justify-between">
+				<Label>Corner rounding</Label>
+				<span class="text-xs text-muted-foreground tabular-nums">
+					{editor.template.stockRadius === 0
+						? 'square'
+						: editor.template.stockRadius === 50
+							? 'round'
+							: `${editor.template.stockRadius}%`}
+				</span>
+			</div>
+			<Slider
+				type="single"
+				value={editor.template.stockRadius}
+				onValueChange={setStockRadius}
+				min={0}
+				max={50}
+				step={1}
+			/>
+			<div class="flex gap-1">
+				{#each [{ label: 'Square', pct: 0 }, { label: 'Rounded', pct: 8 }, { label: 'Round', pct: 50 }] as preset (preset.pct)}
+					<Button
+						variant={editor.template.stockRadius === preset.pct ? 'secondary' : 'ghost'}
+						size="sm"
+						class="flex-1 text-xs"
+						onclick={() => editor.setStockRadius(preset.pct)}
+					>
+						{preset.label}
+					</Button>
+				{/each}
+			</div>
+		</div>
+
+		<p class="text-xs text-muted-foreground">
+			Colour and shape are preview only: they describe the stock in the printer. The head prints the
+			same dots either way, so anything in a cut-away corner lands off the label.
+		</p>
+
 		<div class="flex items-center justify-between text-sm">
 			<span class="text-muted-foreground">Size</span>
 			<span class="tabular-nums">

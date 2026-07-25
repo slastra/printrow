@@ -534,8 +534,11 @@
 		     instead of letting the scroll container see it. -->
 		<!-- the stock colour is painted here, under the transparent canvas -->
 		<div
-			class="h-fit w-fit overflow-hidden rounded-sm paper-surface"
-			style="background: {editor.template.stockColor}"
+			class="h-fit w-fit overflow-hidden paper-surface"
+			style="background: {editor.template.stockColor}; border-radius: {editor.template.stockRadius >
+			0
+				? editor.template.stockRadius + '%'
+				: '2px'}"
 		>
 			<div bind:this={container}></div>
 		</div>

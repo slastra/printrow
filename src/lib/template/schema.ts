@@ -226,6 +226,10 @@ export const TemplateSchema = z.object({
 		.string()
 		.regex(/^#[0-9a-f]{6}$/i)
 		.default('#ffffff'),
+	// Preview-only: die-cut corner rounding, as a percentage of the label, so
+	// 50 is a perfect round or pill at any media size. The head prints the same
+	// raster either way — ink in a cut-away corner just lands off the label.
+	stockRadius: z.number().int().min(0).max(50).default(0),
 	// Draw order: later elements paint over earlier ones.
 	elements: z.array(ElementSchema).default([]),
 	// {{name}} binds directly to the CSV column called "name" — no mapping
