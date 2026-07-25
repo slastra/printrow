@@ -86,7 +86,10 @@
 
 			<!-- sidebar toggle, top left -->
 			<div class="absolute top-3 left-3 z-10 float-in-down">
-				<Sidebar.Trigger class="size-9 tool-surface hover:bg-accent" />
+				<!-- explicit utilities beat the trigger's own button classes reliably -->
+				<Sidebar.Trigger
+					class="size-9 rounded-lg border border-border bg-card/85 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-8px_rgb(0_0_0/0.18)] backdrop-blur-[10px] hover:bg-accent dark:bg-card/85"
+				/>
 			</div>
 
 			<!-- context toolbar, top center -->
