@@ -37,7 +37,7 @@
 				value={editor.template.name}
 				oninput={(e) => editor.rename(e.currentTarget.value)}
 			/>
-			<div class="flex gap-2">
+			<div class="flex flex-col gap-2">
 				<CsvImportButton />
 				<PrintButton />
 			</div>

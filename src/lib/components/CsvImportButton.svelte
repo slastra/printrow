@@ -17,8 +17,7 @@
 	}
 </script>
 
-<Button variant="outline" size="sm" onclick={onImport}>
+<Button variant="outline" size="sm" class="w-full" onclick={onImport}>
 	<UploadIcon />
-	<span class="hidden sm:inline">{data.loaded ? 'Replace CSV' : 'Import CSV'}</span>
-	<span class="sm:hidden">CSV</span>
+	{data.loaded ? 'Replace CSV' : 'Import CSV'}
 </Button>
