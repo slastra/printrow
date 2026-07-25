@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { toast } from 'svelte-sonner';
 	import { editor } from '$lib/template/editor.svelte';
 	import { data } from '$lib/template/data.svelte';
 	import { extractVars } from '$lib/template/vars';
+	import { cn } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
-	import { Badge } from '$lib/components/ui/badge';
+	import { Badge, badgeVariants } from '$lib/components/ui/badge';
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
 	import * as Select from '$lib/components/ui/select';
@@ -12,6 +14,14 @@
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 
 	const vars = $derived(extractVars(editor.template));
+
+	async function copyPlaceholder(col: string) {
+		const placeholder = `{{${col}}}`;
+		await navigator.clipboard.writeText(placeholder);
+		toast.success(`Copied ${placeholder}`, {
+			description: 'Paste it into a text or barcode data field.'
+		});
+	}
 </script>
 
 <div class="space-y-4">
@@ -23,6 +33,24 @@
 			<Button variant="ghost" size="icon" class="ml-auto size-7" onclick={() => data.clear()}>
 				<XIcon />
 			</Button>
+		</div>
+
+		<!-- what the CSV offers — click a column to copy its placeholder -->
+		<div class="space-y-1.5">
+			<p class="text-xs text-muted-foreground">Available columns — click to copy:</p>
+			<div class="flex flex-wrap gap-1">
+				{#each data.columns as col (col)}
+					<button
+						class={cn(
+							badgeVariants({ variant: 'outline' }),
+							'cursor-pointer font-mono hover:bg-accent'
+						)}
+						onclick={() => copyPlaceholder(col)}
+					>
+						{'{{'}{col}{'}}'}
+					</button>
+				{/each}
+			</div>
 		</div>
 	{/if}
 
