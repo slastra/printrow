@@ -19,7 +19,12 @@
 </script>
 
 <Select.Root type="single" value={current} onValueChange={onChange}>
-	<Select.Trigger class="h-9 gap-2 tool-surface">
+	<!-- explicit utilities (not the tool-surface class) so tailwind-merge
+	     reliably overrides the trigger's own border/bg/shadow defaults; the
+	     chevron flips up because the menu opens upward -->
+	<Select.Trigger
+		class="h-9 gap-2 rounded-lg border-border bg-card/85 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-8px_rgb(0_0_0/0.18)] backdrop-blur-[10px] dark:bg-card/85 dark:hover:bg-card [&>svg:last-child]:rotate-180"
+	>
 		<RulerIcon class="size-4 text-muted-foreground" />
 		{currentLabel}
 	</Select.Trigger>
