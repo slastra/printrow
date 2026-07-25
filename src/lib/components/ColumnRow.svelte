@@ -5,6 +5,7 @@
 	import { DEFAULT_FORMAT, formatValue } from '$lib/template/vars';
 	import type { ColumnFormat } from '$lib/template/schema';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { badgeVariants } from '$lib/components/ui/badge';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Switch } from '$lib/components/ui/switch';
@@ -33,21 +34,23 @@
 <div
 	class="group flex items-center gap-2 rounded-md py-1 pr-1 pl-2 transition-colors hover:bg-muted/60"
 >
-	<!-- in-use dot: filled when the template references this column -->
-	<span
-		class={cn('size-1.5 shrink-0 rounded-full', inUse ? 'bg-foreground' : 'bg-border')}
-		title={inUse ? 'Used in this template' : 'Not used yet'}
-	></span>
-
+	<!-- name badge with an in-use dot: emerald when the template references it -->
 	<button
 		class={cn(
-			'shrink-0 truncate text-left font-mono text-xs',
-			inUse ? 'text-foreground' : 'text-muted-foreground'
+			badgeVariants({ variant: inUse ? 'secondary' : 'outline' }),
+			'shrink-0 cursor-pointer gap-1.5 font-mono hover:bg-accent',
+			!inUse && 'text-muted-foreground'
 		)}
 		onclick={insert}
-		title="Add to the selected element"
+		title={inUse ? 'Used in this template. Click to add again.' : 'Add to the selected element'}
 	>
-		{column}
+		<span
+			class={cn(
+				'size-1.5 shrink-0 rounded-full',
+				inUse ? 'bg-emerald-500' : 'bg-muted-foreground/40'
+			)}
+		></span>
+		<span class="truncate">{column}</span>
 	</button>
 
 	{#if sample}
