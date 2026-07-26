@@ -41,6 +41,19 @@ describe('TemplateSchema', () => {
 		expect(el.rotation).toBe(0);
 	});
 
+	test('text vertical alignment defaults to top and rejects junk', () => {
+		// existing templates have no verticalAlign, so the default is what keeps
+		// an old autosave parsing and looking exactly as it did
+		const box = { id: 'a', type: 'text', x: 0, y: 0, w: 100, h: 40, text: '' };
+		const el = ElementSchema.parse(box);
+		if (el.type !== 'text') throw new Error('wrong branch');
+		expect(el.verticalAlign).toBe('top');
+		expect(ElementSchema.parse({ ...box, verticalAlign: 'middle' })).toMatchObject({
+			verticalAlign: 'middle'
+		});
+		expect(ElementSchema.safeParse({ ...box, verticalAlign: 'centre' }).success).toBe(false);
+	});
+
 	test('ink defaults to black on every element type', () => {
 		// every template saved before ink existed omits the field, so the default
 		// is what stops an old autosave from failing to parse

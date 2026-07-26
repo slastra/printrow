@@ -142,6 +142,10 @@ export const TextElementSchema = z.object({
 	italic: z.boolean().default(false),
 	underline: z.boolean().default(false),
 	align: z.enum(['left', 'center', 'right']).default('left'),
+	// Where the wrapped block sits inside the box. Only visible once the text
+	// is shorter than its box, which is the usual case for a fixed-height
+	// field fed from a CSV column.
+	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
 	// Shrink until the wrapped text fits the box — essential when a CSV value
 	// runs longer than the sample the template was designed around.
 	autoFit: z.boolean().default(true)

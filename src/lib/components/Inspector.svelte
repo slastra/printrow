@@ -36,6 +36,9 @@
 	import AlignLeftIcon from '@lucide/svelte/icons/align-left';
 	import AlignCenterIcon from '@lucide/svelte/icons/align-center';
 	import AlignRightIcon from '@lucide/svelte/icons/align-right';
+	import AlignStartHorizontalIcon from '@lucide/svelte/icons/align-start-horizontal';
+	import AlignCenterHorizontalIcon from '@lucide/svelte/icons/align-center-horizontal';
+	import AlignEndHorizontalIcon from '@lucide/svelte/icons/align-end-horizontal';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
@@ -90,6 +93,14 @@
 		{ value: 'left', icon: AlignLeftIcon },
 		{ value: 'center', icon: AlignCenterIcon },
 		{ value: 'right', icon: AlignRightIcon }
+	] as const;
+
+	// same icon family the canvas toolbar uses for aligning elements, so the
+	// two "align" gestures read as the same idea at different scopes
+	const vAligns = [
+		{ value: 'top', icon: AlignStartHorizontalIcon, label: 'Top' },
+		{ value: 'middle', icon: AlignCenterHorizontalIcon, label: 'Middle' },
+		{ value: 'bottom', icon: AlignEndHorizontalIcon, label: 'Bottom' }
 	] as const;
 </script>
 
@@ -244,16 +255,34 @@
 			</div>
 			<div class="space-y-1.5">
 				<Label>Align</Label>
-				<div class="flex gap-1">
-					{#each aligns as a (a.value)}
-						<Button
-							variant={el.align === a.value ? 'secondary' : 'ghost'}
-							size="icon"
-							onclick={() => editor.update({ align: a.value })}
-						>
-							<a.icon />
-						</Button>
-					{/each}
+				<!-- stacked, not one row of six: the sidebar is too narrow for six
+				     icon buttons, and a fixed two rows reads more steadily than a
+				     wrap that reflows with the panel width -->
+				<div class="flex flex-col gap-1">
+					<div class="flex gap-1">
+						{#each aligns as a (a.value)}
+							<Button
+								variant={el.align === a.value ? 'secondary' : 'ghost'}
+								size="icon"
+								title="Align {a.value}"
+								onclick={() => editor.update({ align: a.value })}
+							>
+								<a.icon />
+							</Button>
+						{/each}
+					</div>
+					<div class="flex gap-1">
+						{#each vAligns as v (v.value)}
+							<Button
+								variant={el.verticalAlign === v.value ? 'secondary' : 'ghost'}
+								size="icon"
+								title="Align {v.label.toLowerCase()}"
+								onclick={() => editor.update({ verticalAlign: v.value })}
+							>
+								<v.icon />
+							</Button>
+						{/each}
+					</div>
 				</div>
 			</div>
 			<div class="flex items-center justify-between">

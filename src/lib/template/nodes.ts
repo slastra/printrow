@@ -262,6 +262,9 @@ export async function buildNode(
 				textDecoration: el.underline ? 'underline' : '',
 				fontFamily: family,
 				align: el.align,
+				// takes effect only once height is pinned below; during the
+				// autoFit measurement height is unset, so this cannot skew it
+				verticalAlign: el.verticalAlign,
 				wrap: 'word',
 				lineHeight: LINE_HEIGHT,
 				fill: '#000'
