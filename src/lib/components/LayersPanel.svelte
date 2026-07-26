@@ -9,6 +9,7 @@
 	import { cn } from '$lib/utils';
 	import type { AnyElement } from '$lib/template/schema';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
+	import GroupIcon from '@lucide/svelte/icons/group';
 
 	interface Item {
 		id: string;
@@ -35,6 +36,24 @@
 
 	// same modifier semantics as canvas clicks
 	const isToggle = (e: MouseEvent | KeyboardEvent) => e.shiftKey || e.ctrlKey || e.metaKey;
+
+	/**
+	 * Groups numbered by first appearance, with their sizes.
+	 *
+	 * Members are not necessarily adjacent in the layer list — a group can be
+	 * split across z-order — so a bracket down the side would lie. A number is
+	 * the honest way to say which rows belong together.
+	 */
+	const groups = $derived.by(() => {
+		const m = new Map<string, { index: number; size: number }>();
+		for (const el of editor.template.elements) {
+			if (!el.groupId) continue;
+			const hit = m.get(el.groupId);
+			if (hit) hit.size++;
+			else m.set(el.groupId, { index: m.size + 1, size: 1 });
+		}
+		return m;
+	});
 </script>
 
 {#if items.length === 0}
@@ -67,14 +86,11 @@
 				}}
 			>
 				<GripVerticalIcon class="size-3.5 shrink-0 text-muted-foreground/50" />
-				{#if item.el.groupId}
-					<span class="h-3 w-0.5 shrink-0 rounded bg-ring" title="Grouped"></span>
-				{/if}
 				<Icon class="size-3.5 shrink-0 text-muted-foreground" />
 				{#if content}
 					<!-- Inline flow, not flex: the authored string's own spaces do the
 					     spacing, and chips ride the text baseline via align-middle. -->
-					<span class="min-w-0 truncate">
+					<span class="min-w-0 flex-1 truncate">
 						{#each splitVars(content) as part, i (i)}{#if part.isVar}<VarChip
 									name={part.text}
 									status={data.varStatus(part.text)}
@@ -83,8 +99,18 @@
 					</span>
 				{:else}
 					<!-- first-letter caps: names come from ids like "circle-alert" -->
-					<span class="truncate first-letter:uppercase">
+					<span class="min-w-0 flex-1 truncate first-letter:uppercase">
 						{meta.label?.(item.el) ?? meta.name}
+					</span>
+				{/if}
+				{#if item.el.groupId}
+					{@const g = groups.get(item.el.groupId)}
+					<span
+						class="flex shrink-0 items-center gap-0.5 rounded border border-border px-1 py-px text-[10px] leading-none text-muted-foreground"
+						title="Group {g?.index}, {g?.size} elements. Selects, moves and aligns as one."
+					>
+						<GroupIcon class="size-2.5" />
+						<span class="tabular-nums">{g?.index}</span>
 					</span>
 				{/if}
 			</div>
