@@ -94,6 +94,14 @@
 				anchorSize: 8
 			});
 			uiLayer.add(tr);
+			// Once an element is selected the transformer covers it, so a
+			// double-click lands on the handles rather than the node beneath and
+			// never reaches its own handler. Select-then-double-click is the
+			// natural way to reach for editing, so answer it here too.
+			tr.on('dblclick dbltap', () => {
+				const one = editor.single;
+				if (one) editor.requestEdit(one.id);
+			});
 			// The selection border must survive solid-black elements: stroke a
 			// white underlay first, then the themed dash on top — the classic
 			// marching-ants two-tone. The Transformer draws its border via an
