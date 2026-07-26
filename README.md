@@ -67,6 +67,8 @@ Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media height
 
 This hardware is white-labelled, so the printer on your desk may carry a different name. The KNAON unit here and the sibling **FlashToy U8** speak the same protocol, and the vendor Android apps that drive them all wrap the same `com.j0data.sdk` library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
 
+**Have a NIIMBOT?** That is a different protocol, and printrow cannot drive it. Use [niimblue](https://github.com/MultiMote/niimblue), a browser label designer for that family with templating and dynamic data, built on [niimbluelib](https://github.com/MultiMote/niimbluelib).
+
 ## Credits
 
 The protocol lives in **[yplib](https://github.com/slastra/yplib)**, reverse-engineered from HCI snoops of the manufacturer's Android app and verified by rebuilding whole print sessions byte for byte. Its `FINDINGS.md` is the full derivation.
