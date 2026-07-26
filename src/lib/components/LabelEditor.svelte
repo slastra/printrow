@@ -94,10 +94,27 @@
 				anchorSize: 8
 			});
 			uiLayer.add(tr);
-			// Once an element is selected the transformer covers it, so a
-			// double-click lands on the handles rather than the node beneath and
-			// never reaches its own handler. Select-then-double-click is the
-			// natural way to reach for editing, so answer it here too.
+			// A selected element's transformer covers it, so clicks in that area
+			// never reach the nodes underneath. Both of these hand the event back
+			// to the content layer.
+			//
+			// Without this, selecting a box and then clicking the text sitting
+			// inside it does nothing: the box stays selected, and the only way
+			// through is to deselect first and click the text on a bare canvas.
+			tr.on('mousedown touchstart', (e) => {
+				// anchors and the rotater own their own gestures
+				if (e.target.hasName('_anchor')) return;
+				const pos = stage?.getPointerPosition();
+				if (!pos || !layer) return;
+				const id = layer.getIntersection(pos)?.id();
+				// nothing beneath, or it is already selected and about to be
+				// dragged — leave the transformer to do its job
+				if (!id || editor.selectedIds.includes(id)) return;
+				const evt = e.evt as MouseEvent | TouchEvent;
+				editor.select(id, {
+					toggle: 'shiftKey' in evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey)
+				});
+			});
 			tr.on('dblclick dbltap', () => {
 				const one = editor.single;
 				if (one) editor.requestEdit(one.id);
