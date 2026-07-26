@@ -5,11 +5,17 @@
 	import { buttonVariants } from '$lib/components/ui/button';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import IconPicker from './IconPicker.svelte';
+	import InsertFieldMenu from './InsertFieldMenu.svelte';
+	import { data } from '$lib/template/data.svelte';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import ToolButton from './ToolButton.svelte';
 
 	// icon is inserted from the picker, so it isn't a plain tool button
 	const kinds: ElementKind[] = ['text', 'barcode', 'image', 'rect'];
+	// with a CSV loaded these two can be inserted already bound to a column,
+	// which is the whole point of the app and was otherwise a four-step detour:
+	// insert, select, find the field, type the braces by hand
+	const BINDABLE = new Set<ElementKind>(['text', 'barcode']);
 	const IconMark = ELEMENT_META.icon.icon;
 
 	async function insert(kind: ElementKind) {
@@ -24,12 +30,20 @@
 
 <div class="flex items-center gap-0.5 tool-surface p-1">
 	{#each kinds as kind (kind)}
-		<ToolButton
-			label={ELEMENT_META[kind].name}
-			icon={ELEMENT_META[kind].icon}
-			onclick={() => insert(kind)}
-			size="size-9"
-		/>
+		{#if data.loaded && BINDABLE.has(kind)}
+			<InsertFieldMenu
+				kind={kind as 'text' | 'barcode'}
+				label={ELEMENT_META[kind].name}
+				icon={ELEMENT_META[kind].icon}
+			/>
+		{:else}
+			<ToolButton
+				label={ELEMENT_META[kind].name}
+				icon={ELEMENT_META[kind].icon}
+				onclick={() => insert(kind)}
+				size="size-9"
+			/>
+		{/if}
 	{/each}
 	<IconPicker onselect={(name) => editor.add('icon', { name })}>
 		{#snippet trigger({ props })}
