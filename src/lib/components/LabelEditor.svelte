@@ -362,9 +362,8 @@
 				rotation: node.rotation()
 			});
 		});
-		node.on('dblclick dbltap', () => {
-			if (editor.byId(node.id())?.type === 'text') editor.requestTextEdit(node.id());
-		});
+		// every type reveals its properties; the Inspector decides what to focus
+		node.on('dblclick dbltap', () => editor.requestEdit(node.id()));
 	}
 
 	// model → nodes: full rebuild. A label holds a dozen elements; simplicity

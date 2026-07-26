@@ -13,6 +13,7 @@
 	import CsvImportButton from '$lib/components/CsvImportButton.svelte';
 	import LabelShortcut from '$lib/components/LabelShortcut.svelte';
 	import AboutDialog from '$lib/components/AboutDialog.svelte';
+	import EditReveal from '$lib/components/EditReveal.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
 	import SunIcon from '@lucide/svelte/icons/sun';
@@ -89,6 +90,9 @@
 		<div class="relative flex-1 overflow-hidden rounded-[inherit] bg-muted/30 workspace-dots">
 			<!-- the canvas fills the inset; everything else floats above it -->
 			<LabelEditor />
+
+			<!-- no markup: reveals the sidebar when the canvas asks to edit -->
+			<EditReveal />
 
 			<!-- sidebar toggle, top left -->
 			<div class="absolute top-3 left-3 z-10 float-in-down">

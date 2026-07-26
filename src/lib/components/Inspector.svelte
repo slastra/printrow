@@ -42,14 +42,39 @@
 	const el = $derived(editor.single);
 
 	let textField = $state<HTMLTextAreaElement | null>(null);
+	let dataField = $state<HTMLInputElement | null>(null);
+	let iconPickerOpen = $state(false);
 
-	// canvas double-click on a text element lands here
+	/**
+	 * Answer a canvas double-click by focusing the element's primary field.
+	 *
+	 * This re-runs rather than firing once, because the sidebar may still be
+	 * opening when the request arrives: the field does not exist yet on the
+	 * first pass, and clearing the request then would drop it on the floor.
+	 * Types with nothing to type into clear it immediately — revealing the
+	 * panel was the whole ask.
+	 */
+	let seenEdit = 0;
+
 	$effect(() => {
-		if (editor.textEditRequest && textField) {
-			textField.focus();
-			textField.select();
-			editor.textEditRequest = null;
-		}
+		const req = editor.editRequest;
+		if (!req || req.nonce === seenEdit || !el || el.id !== req.id) return;
+
+		const grab = (node: HTMLTextAreaElement | HTMLInputElement | null) => {
+			node?.focus();
+			node?.select();
+			return Boolean(node);
+		};
+
+		let handled: boolean;
+		if (el.type === 'text') handled = grab(textField);
+		else if (el.type === 'barcode') handled = grab(dataField);
+		else if (el.type === 'icon') handled = iconPickerOpen = true;
+		else handled = true;
+
+		// only mark it seen once the field actually existed: on the first pass
+		// the sidebar may still be opening and there is nothing to focus yet
+		if (handled) seenEdit = req.nonce;
 	});
 
 	// sliders stream values while dragging; one model commit per frame is plenty
@@ -262,6 +287,7 @@
 				<Label for="bc-data">Data</Label>
 				<Input
 					id="bc-data"
+					bind:ref={dataField}
 					value={el.data}
 					placeholder={'{{code}}'}
 					oninput={(e) => editor.update({ data: e.currentTarget.value })}
@@ -325,7 +351,11 @@
 		{:else if el.type === 'icon'}
 			<div class="space-y-1.5">
 				<Label>Icon</Label>
-				<IconPicker selected={el.name} onselect={(name) => editor.update({ name })}>
+				<IconPicker
+					bind:open={iconPickerOpen}
+					selected={el.name}
+					onselect={(name) => editor.update({ name })}
+				>
 					{#snippet trigger({ props })}
 						<button
 							{...props}

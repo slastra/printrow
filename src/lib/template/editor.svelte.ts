@@ -44,8 +44,17 @@ const INTERN_PREFIX = '@interned:';
 class EditorState {
 	template = $state<Template>(blankTemplate());
 	selectedIds = $state<string[]>([]);
-	/** Set by the canvas double-click; the Inspector focuses its text field and clears it. */
-	textEditRequest = $state<string | null>(null);
+	/**
+	 * Set by a canvas double-click. Two things answer it independently: the
+	 * sidebar opens, and the Inspector focuses that element's primary field.
+	 *
+	 * Carries a nonce rather than being cleared by whoever handles it first.
+	 * Clearing made the two racy — effects run in creation order, so the
+	 * Inspector wiped the request before the sidebar watcher ever saw it, and
+	 * the field got focus while still hidden behind a collapsed sidebar.
+	 */
+	editRequest = $state<{ id: string; nonce: number } | null>(null);
+	private editNonce = 0;
 	/** The label itself is selectable, like a bottom layer. */
 	labelSelected = $state(false);
 
@@ -218,10 +227,14 @@ class EditorState {
 		this.labelSelected = false;
 	}
 
-	/** Canvas double-click on a text element: select just it and focus the inspector field. */
-	requestTextEdit(id: string) {
+	/**
+	 * Canvas double-click: select just this element and ask for its editable
+	 * field. Deliberately not expanding the group — a double-click means "edit
+	 * this one", where a single click means "move the whole group".
+	 */
+	requestEdit(id: string) {
 		this.setSelection([id], { expand: false });
-		this.textEditRequest = id;
+		this.editRequest = { id, nonce: ++this.editNonce };
 	}
 
 	// --- template ------------------------------------------------------------

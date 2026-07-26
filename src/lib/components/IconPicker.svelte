@@ -7,15 +7,17 @@
 	let {
 		onselect,
 		trigger,
-		selected
+		selected,
+		open = $bindable(false)
 	}: {
 		onselect: (name: string) => void;
 		trigger: Snippet<[{ props: Record<string, unknown> }]>;
 		selected?: string;
+		/** Bindable so a canvas double-click can open the search directly. */
+		open?: boolean;
 	} = $props();
-
-	let open = $state(false);
 	let query = $state('');
+	let searchField = $state<HTMLInputElement | null>(null);
 	let index = $state<IconEntry[]>([]);
 	let loading = $state(false);
 
@@ -45,9 +47,20 @@
 			{@render trigger({ props })}
 		{/snippet}
 	</Popover.Trigger>
-	<Popover.Content class="w-72 p-0" align="start">
+	<Popover.Content
+		class="w-72 p-0"
+		align="start"
+		onOpenAutoFocus={(e) => {
+			// The popover's own autofocus lands on the content wrapper, leaving
+			// the caret nowhere. Take it over and put it in the search box: the
+			// only reason to open this is to look for an icon, and a canvas
+			// double-click arrives here meaning exactly that.
+			e.preventDefault();
+			searchField?.focus();
+		}}
+	>
 		<Command.Root shouldFilter={false}>
-			<Command.Input placeholder="Search icons…" bind:value={query} />
+			<Command.Input placeholder="Search icons…" bind:value={query} bind:ref={searchField} />
 			<Command.List class="max-h-72">
 				{#if loading}
 					<div class="py-6 text-center text-sm text-muted-foreground">Loading icons…</div>
