@@ -96,38 +96,6 @@
 				anchorSize: 8
 			});
 			uiLayer.add(tr);
-			// A selected element's transformer covers it, so clicks in that area
-			// never reach the nodes underneath. Both of these hand the event back
-			// to the content layer.
-			//
-			// Without this, selecting a box and then clicking the text sitting
-			// inside it does nothing: the box stays selected, and the only way
-			// through is to deselect first and click the text on a bare canvas.
-			tr.on('mousedown touchstart', (e) => {
-				// anchors and the rotater own their own gestures
-				if (e.target.hasName('_anchor')) return;
-				const pos = stage?.getPointerPosition();
-				if (!pos || !layer) return;
-				const id = layer.getIntersection(pos)?.id();
-				if (!id) return;
-				const toggle = isToggleEvent(e.evt as MouseEvent | TouchEvent);
-				// A plain click on something already selected is the start of a
-				// drag, so leave it to the transformer. Held modifiers mean the
-				// opposite — take it out of the selection — and that has to work
-				// from inside the transformer too, or a selected element can be
-				// added to a selection but never removed from one.
-				if (editor.selectedIds.includes(id) && !toggle) return;
-				editor.select(id, { toggle });
-			});
-			tr.on('dblclick dbltap', () => {
-				// Resolve from the pointer, exactly as the mousedown sibling does.
-				// Reading editor.single instead would edit nothing whenever the
-				// selection is a group or several elements, since single is null
-				// there — and clicking a grouped element always selects the group.
-				const pos = stage?.getPointerPosition();
-				const id = pos && layer ? layer.getIntersection(pos)?.id() : undefined;
-				if (id) beginEdit(id);
-			});
 			// The selection border must survive solid-black elements: stroke a
 			// white underlay first, then the themed dash on top — the classic
 			// marching-ants two-tone. The Transformer draws its border via an
@@ -154,13 +122,20 @@
 					c.stroke();
 					c.restore();
 				});
-				// keep hit detection on the Konva context API — raw strokeStyle
-				// writes would corrupt the hit graph's color keys
-				back.hitFunc((ctx, shape) => {
-					ctx.beginPath();
-					ctx.rect(0, 0, shape.width(), shape.height());
-					ctx.fillStrokeShape(shape);
-				});
+				// The interior must stay transparent to hit testing, which is also
+				// Konva's default (shouldOverdrawWholeArea is false). Filling it
+				// here made the transformer swallow every click over a selected
+				// element, so clicks never reached the nodes beneath: text nested
+				// in a selected box was unreachable, and double-click and
+				// shift-click both died on the handles. A no-op rather than no
+				// hitFunc at all, because the custom sceneFunc above writes raw
+				// strokeStyle and Konva falls back to sceneFunc for the hit graph
+				// when no hitFunc is set.
+				//
+				// Trade-off, taken deliberately: a multi-selection can no longer
+				// be dragged from empty space inside its bounding box — that space
+				// starts a marquee. Grab any member to move the whole set.
+				back.hitFunc(() => {});
 			}
 			// One outline per selected element. The transformer only frames the
 			// whole selection, so with several elements chosen there is nothing
@@ -337,8 +312,9 @@
 		});
 		node.on('dragstart transformstart', () => (gesture = true));
 		node.on('dragstart', () => {
-			// remember every selected node and where it began, so the rest of
-			// the selection follows without re-scanning the layer per pointer event
+			// remember every selected node, so dragend can write them all back to
+			// the model and dragmove can retrace the outlines, without
+			// re-scanning the layer per pointer event
 			if (editor.selectedIds.length > 1 && editor.selectedIds.includes(node.id())) {
 				dragStarts = new Map(
 					editor.selectedIds.flatMap((id) => {
@@ -349,18 +325,11 @@
 			}
 		});
 		node.on('dragmove', () => {
-			if (!dragStarts) return;
-			const start = dragStarts.get(node.id());
-			if (!start) return;
-			const dx = node.x() - start.x,
-				dy = node.y() - start.y;
-			for (const [id, s] of dragStarts) {
-				if (id === node.id()) continue;
-				s.node.position({ x: s.x + dx, y: s.y + dy });
-			}
-			// dragStarts exists so a multi-drag never re-scans the layer per
-			// pointer event; the outlines ride the same map.
-			drawMemberOutlines([...dragStarts.values()].map((d) => d.node));
+			// Konva's Transformer already carries the rest of the selection along
+			// (_proxyDrag), so moving them here too would double the delta for
+			// every follower. Only the outlines need redrawing, and dragStarts
+			// holds the nodes so this never re-scans the layer per pointer event.
+			if (dragStarts) drawMemberOutlines([...dragStarts.values()].map((d) => d.node));
 		});
 		node.on('dragend', () => {
 			gesture = false;
