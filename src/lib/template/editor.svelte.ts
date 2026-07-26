@@ -45,16 +45,15 @@ class EditorState {
 	template = $state<Template>(blankTemplate());
 	selectedIds = $state<string[]>([]);
 	/**
-	 * Set by a canvas double-click. Two things answer it independently: the
-	 * sidebar opens, and the Inspector focuses that element's primary field.
+	 * Set by a canvas double-click; the Inspector answers it by focusing that
+	 * element's primary field.
 	 *
-	 * Carries a nonce rather than being cleared by whoever handles it first.
-	 * Clearing made the two racy — effects run in creation order, so the
-	 * Inspector wiped the request before the sidebar watcher ever saw it, and
-	 * the field got focus while still hidden behind a collapsed sidebar.
+	 * A fresh object each time, and never cleared. The Inspector cannot act on
+	 * the first pass when the sidebar is still opening (the field is not mounted
+	 * yet), so it retries and remembers what it handled by identity, rather than
+	 * clearing a flag it might clear before the field exists.
 	 */
-	editRequest = $state<{ id: string; nonce: number } | null>(null);
-	private editNonce = 0;
+	editRequest = $state<{ id: string } | null>(null);
 	/** The label itself is selectable, like a bottom layer. */
 	labelSelected = $state(false);
 
@@ -234,7 +233,7 @@ class EditorState {
 	 */
 	requestEdit(id: string) {
 		this.setSelection([id], { expand: false });
-		this.editRequest = { id, nonce: ++this.editNonce };
+		this.editRequest = { id };
 	}
 
 	// --- template ------------------------------------------------------------

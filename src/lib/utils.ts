@@ -27,6 +27,17 @@ export function rafThrottle<A extends unknown[]>(fn: (...args: A) => void): (...
 	};
 }
 
+/**
+ * Does this event mean "add to / remove from the selection" rather than
+ * "replace it"? Shift, ctrl and meta all count; alt deliberately does not.
+ *
+ * One definition because the canvas, the transformer and the layers panel must
+ * agree — the marquee's additive check is intentionally narrower (shift only).
+ */
+export function isToggleEvent(e: MouseEvent | TouchEvent | KeyboardEvent): boolean {
+	return 'shiftKey' in e && (e.shiftKey || e.ctrlKey || e.metaKey);
+}
+
 /** Open the native file picker; resolves null if the user cancels. */
 export function pickFile(accept: string): Promise<File | null> {
 	return new Promise((resolve) => {

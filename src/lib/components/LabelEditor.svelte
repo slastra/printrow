@@ -12,7 +12,8 @@
 		MAX_FONT_SIZE,
 		type AnyElement
 	} from '$lib/template/schema';
-	import { clamp } from '$lib/utils';
+	import { clamp, isToggleEvent } from '$lib/utils';
+	import { useSidebar } from '$lib/components/ui/sidebar';
 	import { Button } from '$lib/components/ui/button';
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -109,8 +110,7 @@
 				if (!pos || !layer) return;
 				const id = layer.getIntersection(pos)?.id();
 				if (!id) return;
-				const evt = e.evt as MouseEvent | TouchEvent;
-				const toggle = 'shiftKey' in evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey);
+				const toggle = isToggleEvent(e.evt as MouseEvent | TouchEvent);
 				// A plain click on something already selected is the start of a
 				// drag, so leave it to the transformer. Held modifiers mean the
 				// opposite — take it out of the selection — and that has to work
@@ -120,8 +120,13 @@
 				editor.select(id, { toggle });
 			});
 			tr.on('dblclick dbltap', () => {
-				const one = editor.single;
-				if (one) editor.requestEdit(one.id);
+				// Resolve from the pointer, exactly as the mousedown sibling does.
+				// Reading editor.single instead would edit nothing whenever the
+				// selection is a group or several elements, since single is null
+				// there — and clicking a grouped element always selects the group.
+				const pos = stage?.getPointerPosition();
+				const id = pos && layer ? layer.getIntersection(pos)?.id() : undefined;
+				if (id) beginEdit(id);
 			});
 			// The selection border must survive solid-black elements: stroke a
 			// white underlay first, then the themed dash on top — the classic
@@ -207,6 +212,8 @@
 			tr?.borderStroke(c);
 			tr?.anchorStroke(c);
 			marqueeRect?.stroke(c);
+			// the member outlines bake the colour in, so redraw them from scratch
+			drawMemberOutlines(selectedNodes());
 			uiLayer?.batchDraw();
 		});
 		themeObserver.observe(document.documentElement, {
@@ -281,6 +288,31 @@
 
 	// Konva selectors aren't CSS — a UUID starting with a digit breaks the
 	// '#id' syntax, so match ids directly.
+	// LabelEditor renders inside Sidebar.Provider, so it can reveal the panel at
+	// the gesture site rather than broadcasting through global state.
+	const sidebar = useSidebar();
+
+	/** Ask for an element's field, and make sure the panel it lives in is open. */
+	function beginEdit(id: string) {
+		editor.requestEdit(id);
+		if (!sidebar.open) sidebar.setOpen(true);
+	}
+
+	function selectedNodes(): Konva.Shape[] {
+		return editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
+	}
+
+	/** A node's drawn box, with scale folded in, in Konva attribute names. */
+	function nodeBox(n: Konva.Shape) {
+		return {
+			x: n.x(),
+			y: n.y(),
+			width: n.width() * n.scaleX(),
+			height: n.height() * n.scaleY(),
+			rotation: n.rotation()
+		};
+	}
+
 	function nodeById(id: string): Konva.Shape | undefined {
 		return layer?.getChildren().find((n): n is Konva.Shape => n.id() === id);
 	}
@@ -301,9 +333,7 @@
 	function wire(node: Konva.Shape) {
 		node.draggable(true);
 		node.on('mousedown touchstart', (e) => {
-			const evt = e.evt as MouseEvent | TouchEvent;
-			const toggle = 'shiftKey' in evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey);
-			editor.select(node.id(), { toggle });
+			editor.select(node.id(), { toggle: isToggleEvent(e.evt as MouseEvent | TouchEvent) });
 		});
 		node.on('dragstart transformstart', () => (gesture = true));
 		node.on('dragstart', () => {
@@ -328,7 +358,9 @@
 				if (id === node.id()) continue;
 				s.node.position({ x: s.x + dx, y: s.y + dy });
 			}
-			updateMemberOutlines();
+			// dragStarts exists so a multi-drag never re-scans the layer per
+			// pointer event; the outlines ride the same map.
+			drawMemberOutlines([...dragStarts.values()].map((d) => d.node));
 		});
 		node.on('dragend', () => {
 			gesture = false;
@@ -400,7 +432,7 @@
 			});
 		});
 		// every type reveals its properties; the Inspector decides what to focus
-		node.on('dblclick dbltap', () => editor.requestEdit(node.id()));
+		node.on('dblclick dbltap', () => beginEdit(node.id()));
 	}
 
 	// model → nodes: full rebuild. A label holds a dozen elements; simplicity
@@ -439,7 +471,7 @@
 
 	function syncTransformer() {
 		if (!stage || !tr) return;
-		const nodes = editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
+		const nodes = selectedNodes();
 		tr.nodes(nodes);
 		if (nodes.length === 1) {
 			const el = editor.byId(nodes[0].id());
@@ -449,7 +481,7 @@
 		} else {
 			tr.keepRatio(true);
 		}
-		drawMemberOutlines();
+		drawMemberOutlines(nodes);
 		uiLayer?.batchDraw();
 	}
 
@@ -459,47 +491,28 @@
 	 * Read from the nodes rather than the model so the outlines track a drag or
 	 * transform live — the model only catches up when the gesture ends.
 	 */
-	/** Per-frame path: move the existing outlines instead of rebuilding them. */
-	function updateMemberOutlines() {
-		if (!memberOutlines) return;
-		const nodes = editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
-		const kids = memberOutlines.getChildren();
-		// selection changed under us — fall back to a full rebuild
-		if (kids.length !== nodes.length * 2) return drawMemberOutlines();
-		nodes.forEach((n, i) => {
-			const box = {
-				x: n.x(),
-				y: n.y(),
-				width: n.width() * n.scaleX(),
-				height: n.height() * n.scaleY(),
-				rotation: n.rotation()
-			};
-			kids[i * 2]?.setAttrs(box);
-			kids[i * 2 + 1]?.setAttrs(box);
-		});
-	}
-
-	function drawMemberOutlines() {
+	/**
+	 * Outline each element in a multi-selection.
+	 *
+	 * The transformer frames only the outer bounds, so several selected
+	 * elements look the same as one — especially when they overlap or nest.
+	 * Handles stay on the outer box; these only say "this one too".
+	 *
+	 * Takes the nodes rather than re-deriving them, and reads nodes rather than
+	 * the model, so a drag is tracked live (the model only catches up when the
+	 * gesture ends).
+	 */
+	function drawMemberOutlines(nodes: Konva.Shape[]) {
 		if (!K || !memberOutlines) return;
 		memberOutlines.destroyChildren();
-		const nodes = editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
 		if (nodes.length < 2) return;
 		const color = handleColor();
 		for (const n of nodes) {
-			const box = {
-				x: n.x(),
-				y: n.y(),
-				width: n.width() * n.scaleX(),
-				height: n.height() * n.scaleY(),
-				rotation: n.rotation(),
-				strokeWidth: 1,
-				strokeScaleEnabled: false,
-				listening: false
-			};
-			// Same two-tone marching ants the transformer border uses: a solid
-			// white underlay, then the themed dash on top. A single-colour dash
-			// disappears against a solid black element, which is exactly the
-			// case where knowing what is selected matters most.
+			const box = { ...nodeBox(n), strokeWidth: 1, strokeScaleEnabled: false, listening: false };
+			// Same two-tone marching ants as the transformer border: a solid
+			// white underlay, then the themed dash. A single-colour dash
+			// disappears against a solid black element, which is exactly when
+			// knowing what is selected matters most.
 			memberOutlines.add(new K.Rect({ ...box, stroke: '#fff', opacity: 0.9 }));
 			memberOutlines.add(new K.Rect({ ...box, stroke: color, dash: [3, 3] }));
 		}

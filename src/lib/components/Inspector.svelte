@@ -45,20 +45,18 @@
 	let dataField = $state<HTMLInputElement | null>(null);
 	let iconPickerOpen = $state(false);
 
+	let seenEdit: { id: string } | null = null;
+
 	/**
 	 * Answer a canvas double-click by focusing the element's primary field.
 	 *
-	 * This re-runs rather than firing once, because the sidebar may still be
-	 * opening when the request arrives: the field does not exist yet on the
-	 * first pass, and clearing the request then would drop it on the floor.
-	 * Types with nothing to type into clear it immediately — revealing the
-	 * panel was the whole ask.
+	 * Re-runs rather than firing once: the sidebar may still be opening when
+	 * the request arrives, so the field does not exist on the first pass. The
+	 * request is only ticked off once there was actually a field to focus.
 	 */
-	let seenEdit = 0;
-
 	$effect(() => {
 		const req = editor.editRequest;
-		if (!req || req.nonce === seenEdit || !el || el.id !== req.id) return;
+		if (!req || req === seenEdit || !el || el.id !== req.id) return;
 
 		const grab = (node: HTMLTextAreaElement | HTMLInputElement | null) => {
 			node?.focus();
@@ -66,15 +64,14 @@
 			return Boolean(node);
 		};
 
-		let handled: boolean;
+		// image and rect have nothing to type into — revealing the panel was the
+		// whole ask, so they are done the moment they arrive
+		let handled = true;
 		if (el.type === 'text') handled = grab(textField);
 		else if (el.type === 'barcode') handled = grab(dataField);
-		else if (el.type === 'icon') handled = iconPickerOpen = true;
-		else handled = true;
+		else if (el.type === 'icon') iconPickerOpen = true;
 
-		// only mark it seen once the field actually existed: on the first pass
-		// the sidebar may still be opening and there is nothing to focus yet
-		if (handled) seenEdit = req.nonce;
+		if (handled) seenEdit = req;
 	});
 
 	// sliders stream values while dragging; one model commit per frame is plenty
