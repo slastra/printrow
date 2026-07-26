@@ -107,13 +107,16 @@
 				const pos = stage?.getPointerPosition();
 				if (!pos || !layer) return;
 				const id = layer.getIntersection(pos)?.id();
-				// nothing beneath, or it is already selected and about to be
-				// dragged — leave the transformer to do its job
-				if (!id || editor.selectedIds.includes(id)) return;
+				if (!id) return;
 				const evt = e.evt as MouseEvent | TouchEvent;
-				editor.select(id, {
-					toggle: 'shiftKey' in evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey)
-				});
+				const toggle = 'shiftKey' in evt && (evt.shiftKey || evt.ctrlKey || evt.metaKey);
+				// A plain click on something already selected is the start of a
+				// drag, so leave it to the transformer. Held modifiers mean the
+				// opposite — take it out of the selection — and that has to work
+				// from inside the transformer too, or a selected element can be
+				// added to a selection but never removed from one.
+				if (editor.selectedIds.includes(id) && !toggle) return;
+				editor.select(id, { toggle });
 			});
 			tr.on('dblclick dbltap', () => {
 				const one = editor.single;
