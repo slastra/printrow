@@ -31,6 +31,7 @@
 	let uiLayer: Konva.Layer | undefined;
 	let tr: Konva.Transformer | undefined;
 	let marqueeRect: Konva.Rect | undefined;
+	let memberOutlines: Konva.Group | undefined;
 	// Konva owns node state mid-gesture; rebuilding under the pointer would
 	// yank the object out of the user's hand.
 	let gesture = false;
@@ -156,6 +157,13 @@
 					ctx.fillStrokeShape(shape);
 				});
 			}
+			// One outline per selected element. The transformer only frames the
+			// whole selection, so with several elements chosen there is nothing
+			// saying WHICH ones — especially when they overlap or sit inside one
+			// another. Handles stay on the outer box; these only say "this too".
+			memberOutlines = new K.Group({ listening: false });
+			uiLayer.add(memberOutlines);
+
 			marqueeRect = new K.Rect({
 				visible: false,
 				stroke: color,
@@ -320,6 +328,7 @@
 				if (id === node.id()) continue;
 				s.node.position({ x: s.x + dx, y: s.y + dy });
 			}
+			updateMemberOutlines();
 		});
 		node.on('dragend', () => {
 			gesture = false;
@@ -440,7 +449,60 @@
 		} else {
 			tr.keepRatio(true);
 		}
+		drawMemberOutlines();
 		uiLayer?.batchDraw();
+	}
+
+	/**
+	 * Outline each element in a multi-selection.
+	 *
+	 * Read from the nodes rather than the model so the outlines track a drag or
+	 * transform live — the model only catches up when the gesture ends.
+	 */
+	/** Per-frame path: move the existing outlines instead of rebuilding them. */
+	function updateMemberOutlines() {
+		if (!memberOutlines) return;
+		const nodes = editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
+		const kids = memberOutlines.getChildren();
+		// selection changed under us — fall back to a full rebuild
+		if (kids.length !== nodes.length * 2) return drawMemberOutlines();
+		nodes.forEach((n, i) => {
+			const box = {
+				x: n.x(),
+				y: n.y(),
+				width: n.width() * n.scaleX(),
+				height: n.height() * n.scaleY(),
+				rotation: n.rotation()
+			};
+			kids[i * 2]?.setAttrs(box);
+			kids[i * 2 + 1]?.setAttrs(box);
+		});
+	}
+
+	function drawMemberOutlines() {
+		if (!K || !memberOutlines) return;
+		memberOutlines.destroyChildren();
+		const nodes = editor.selectedIds.map(nodeById).filter((n): n is Konva.Shape => Boolean(n));
+		if (nodes.length < 2) return;
+		const color = handleColor();
+		for (const n of nodes) {
+			const box = {
+				x: n.x(),
+				y: n.y(),
+				width: n.width() * n.scaleX(),
+				height: n.height() * n.scaleY(),
+				rotation: n.rotation(),
+				strokeWidth: 1,
+				strokeScaleEnabled: false,
+				listening: false
+			};
+			// Same two-tone marching ants the transformer border uses: a solid
+			// white underlay, then the themed dash on top. A single-colour dash
+			// disappears against a solid black element, which is exactly the
+			// case where knowing what is selected matters most.
+			memberOutlines.add(new K.Rect({ ...box, stroke: '#fff', opacity: 0.9 }));
+			memberOutlines.add(new K.Rect({ ...box, stroke: color, dash: [3, 3] }));
+		}
 	}
 
 	function stepZoom(dir: 1 | -1) {
