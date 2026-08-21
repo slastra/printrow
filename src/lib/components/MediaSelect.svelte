@@ -12,7 +12,27 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { fitsPrinter, printableWidthMm } from '$lib/printer/models';
 	import RulerIcon from '@lucide/svelte/icons/ruler';
+
+	const model = $derived(editor.model);
+	const headMm = $derived(printableWidthMm(model));
+
+	/**
+	 * Presets are listed whole, with the ones this printer cannot take marked
+	 * rather than hidden: a 50 mm size vanishing from the list would read as a
+	 * bug, where "too wide for the B1" reads as the hardware fact it is.
+	 */
+	const presets = $derived(
+		MEDIA_PRESETS.map((p) => ({
+			...p,
+			fits: fitsPrinter(
+				{ width: p.wMm * DOTS_PER_MM, height: p.hMm * DOTS_PER_MM },
+				editor.template.printDirection,
+				model
+			).fits
+		}))
+	);
 
 	const current = $derived(
 		`${editor.template.width / DOTS_PER_MM}×${editor.template.height / DOTS_PER_MM}`
@@ -51,8 +71,15 @@
 		{currentLabel}
 	</Select.Trigger>
 	<Select.Content>
-		{#each MEDIA_PRESETS as p (p.label)}
-			<Select.Item value={`${p.wMm}×${p.hMm}`}>{p.label}</Select.Item>
+		{#each presets as p (p.label)}
+			<Select.Item value={`${p.wMm}×${p.hMm}`} disabled={!p.fits}>
+				<span class="flex w-full items-center justify-between gap-3">
+					<span>{p.label}</span>
+					{#if !p.fits}
+						<span class="text-xs text-muted-foreground">too wide for {model.name}</span>
+					{/if}
+				</span>
+			</Select.Item>
 		{/each}
 		<Select.Item value="custom">Custom…</Select.Item>
 	</Select.Content>
@@ -94,8 +121,9 @@
 				</div>
 			</div>
 			<p class="text-xs text-muted-foreground">
-				Width is limited to {MEDIA_MAX_W_MM} mm by the print head. {MEDIA_MAX_W_MM} mm-wide stock is hardware-verified;
-				other widths follow the protocol spec.
+				The {model.name} prints {headMm} mm across the head, so that is the limit on
+				{editor.template.printDirection === 'left' ? 'height' : 'width'} — whichever dimension feeds across
+				it. The other is free: the printer takes rows until the raster ends.
 			</p>
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={() => (customOpen = false)}>Cancel</Button>

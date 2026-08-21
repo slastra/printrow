@@ -71,10 +71,20 @@
 		<div class="space-y-3">
 			<div class="space-y-1">
 				<h3 class="text-sm font-medium">Supported printers</h3>
+				<ul class="space-y-1.5 text-xs text-muted-foreground">
+					<li>
+						<strong class="font-medium text-foreground">KNAON Y50P</strong> — verified at 50 × 30 mm.
+						The same hardware is white-labelled under other names, so the badge on the case is not the
+						giveaway. If the vendor app pairs over Bluetooth and it takes 50 mm stock, it is worth a try.
+					</li>
+					<li>
+						<strong class="font-medium text-foreground">NIIMBOT B1</strong> — prints 48 mm across the
+						head, not the 50 mm its stock is, so design to 48 mm or feed the label left edge first.
+					</li>
+				</ul>
 				<p class="text-xs text-muted-foreground">
-					Verified on a <strong class="font-medium text-foreground">KNAON Y50P</strong> at 50 × 30 mm.
-					The same hardware is white-labelled under other names, so the badge on the case is not the giveaway.
-					If the vendor app pairs over Bluetooth and the printer takes 50 mm stock, it is worth a try.
+					Pick the target printer in the label panel: it sets the printable width, and the two
+					models disagree by 2 mm.
 				</p>
 			</div>
 

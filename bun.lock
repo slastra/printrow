@@ -16,6 +16,7 @@
         "@fontsource/bebas-neue": "^5.3.0",
         "@fontsource/ibm-plex-mono": "^5.3.0",
         "@fontsource/pacifico": "^5.3.0",
+        "@slastra/nblib": "^0.1.0",
         "@slastra/yplib": "^0.1.0",
         "bwip-js": "^4.11.2",
         "konva": "^10.3.0",
@@ -200,6 +201,8 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.62.2", "", { "os": "win32", "cpu": "x64" }, "sha512-T6xr6ucWSFto+VGajA8YH26LdpHRuP4YLHEKAtCWvJDOlnmWcDZVCI2Jmjr+IFHDlt2zRaTAKE4tfjTaWLgJBg=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.62.2", "", { "os": "win32", "cpu": "x64" }, "sha512-BfzEnDJOt9T8M989/lA37EcJgat01wLRnoi5dQf3QzOH7jzpqTAzdDbVfRljVr5r+jzKqpbHeyOfAaXxAd0PAA=="],
+
+    "@slastra/nblib": ["@slastra/nblib@0.1.0", "", {}, "sha512-lkLH2U8JIPzWQbAlCTt4st3O6oJJaCb3mDRWNlx8bKAN7fpKryusUISsj4wNmoEtttRsaDS9xvIJyw280oU6Jw=="],
 
     "@slastra/yplib": ["@slastra/yplib@0.1.0", "", {}, "sha512-oImIsu+QkRTJGCBIIPw5hv/n1pCzRk+QSaXSsh0CbRlbJ0hOmo3vH8XlXTqe7svHfknmjkPietkNoXM+EGKpEw=="],
 

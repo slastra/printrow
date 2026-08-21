@@ -19,6 +19,12 @@
 		type Ink
 	} from '$lib/template/schema';
 	import { rafThrottle, cn } from '$lib/utils';
+	import {
+		MODEL_LIST,
+		printableWidthMm,
+		type PrintDirection,
+		type PrinterId
+	} from '$lib/printer/models';
 	import IconPicker from './IconPicker.svelte';
 	import MediaSelect from './MediaSelect.svelte';
 	import { buttonVariants } from '$lib/components/ui/button';
@@ -40,6 +46,8 @@
 	import AlignCenterHorizontalIcon from '@lucide/svelte/icons/align-center-horizontal';
 	import AlignEndHorizontalIcon from '@lucide/svelte/icons/align-end-horizontal';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import PrinterIcon from '@lucide/svelte/icons/printer';
+	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	const el = $derived(editor.single);
@@ -107,6 +115,72 @@
 {#if editor.labelSelected}
 	<div class="space-y-4">
 		<div class="space-y-1.5">
+			<Label>Printer</Label>
+			<Select.Root
+				type="single"
+				value={editor.template.printer}
+				onValueChange={(v) => editor.setPrinter(v as PrinterId)}
+			>
+				<Select.Trigger class="w-full">
+					<PrinterIcon class="size-4 text-muted-foreground" />
+					{editor.model.name}
+				</Select.Trigger>
+				<Select.Content>
+					{#each MODEL_LIST as m (m.id)}
+						<Select.Item value={m.id} label={m.name} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<p class="text-xs text-muted-foreground">{editor.model.blurb}</p>
+		</div>
+
+		<div class="space-y-1.5">
+			<Label>Size</Label>
+			<MediaSelect />
+		</div>
+
+		{#if editor.model.features.direction}
+			<div class="space-y-1.5">
+				<Label>Feed direction</Label>
+				<ToggleGroup.Root
+					type="single"
+					variant="outline"
+					size="sm"
+					class="w-full"
+					value={editor.template.printDirection}
+					onValueChange={(v) => v && editor.setPrintDirection(v as PrintDirection)}
+				>
+					<ToggleGroup.Item value="top" class="flex-1 text-xs">Top edge</ToggleGroup.Item>
+					<ToggleGroup.Item value="left" class="flex-1 text-xs">Left edge</ToggleGroup.Item>
+				</ToggleGroup.Root>
+				<p class="text-xs text-muted-foreground">
+					Which edge of the label leaves the printer first, so it decides which side has to fit
+					across the {printableWidthMm(editor.model)} mm head — currently the {editor.template
+						.printDirection === 'left'
+						? 'height'
+						: 'width'}. Get it wrong and the label prints a quarter turn off.
+				</p>
+			</div>
+		{/if}
+
+		{#if !editor.fit.fits}
+			<div class="space-y-2 rounded-md border border-destructive/40 bg-destructive/5 p-2.5">
+				<p class="flex items-start gap-1.5 text-xs text-destructive">
+					<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
+					<span>This label is {editor.fit.reason}, so it cannot be printed as it is.</span>
+				</p>
+				<Button
+					variant="outline"
+					size="sm"
+					class="w-full text-xs"
+					onclick={() => editor.fitToPrinter()}
+				>
+					Resize to {printableWidthMm(editor.model)} mm
+				</Button>
+			</div>
+		{/if}
+
+		<div class="space-y-1.5">
 			<Label>Stock colour</Label>
 			<div class="flex flex-wrap gap-1.5">
 				{#each STOCK_COLORS as c (c.value)}
@@ -159,11 +233,6 @@
 			Colour and shape are preview only: they describe the stock in the printer. The head prints the
 			same dots either way, so anything in a cut-away corner lands off the label.
 		</p>
-
-		<div class="space-y-1.5">
-			<Label>Size</Label>
-			<MediaSelect />
-		</div>
 	</div>
 {:else if editor.selectedIds.length > 1}
 	<div class="space-y-3">

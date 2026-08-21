@@ -1,16 +1,6 @@
-import { buildStream, imageDataToRows, THRESHOLD, WIDTH, type RasterRow } from '@slastra/yplib';
-import { DOTS_PER_MM, type Template } from './schema';
+import { fitsPrinter, MODELS } from '$lib/printer/models';
+import type { Template } from './schema';
 import { buildNode } from './nodes';
-
-/**
- * Threshold a rendered canvas to the printer's 1-bit rows, using the same
- * luma formula as every preview conversion.
- */
-export function canvasToRows(cv: HTMLCanvasElement, threshold = THRESHOLD): RasterRow[] {
-	const ctx = cv.getContext('2d', { willReadFrequently: true });
-	if (!ctx) throw new Error('canvas has no 2d context');
-	return imageDataToRows(ctx.getImageData(0, 0, cv.width, cv.height), threshold);
-}
 
 /**
  * Render a template with a CSV row's values at exactly width×height device
@@ -63,20 +53,27 @@ export async function renderTemplateToCanvas(
 	}
 }
 
-/** The full pipeline: template + CSV row → framed byte stream for the printer. */
-export async function buildPrintStream(
+/**
+ * One label, rendered and checked: template + CSV row → a canvas at exactly
+ * the label's dot size, ready for whichever driver is connected.
+ *
+ * Both wire formats are unforgiving about width in the same way — a row that
+ * is not the size the printer was told to expect shifts everything after it
+ * and can hang the firmware — so the guard lives here, above the seam, and
+ * runs whichever printer is selected.
+ */
+export async function buildPrintCanvas(
 	template: Template,
 	values: Record<string, string | undefined>
-): Promise<Uint8Array> {
+): Promise<HTMLCanvasElement> {
 	const cv = await renderTemplateToCanvas(template, values);
-	// The wire format is unforgiving: rows must be exactly the media width in
-	// dots, or the printer misreads the next row marker and can hang. Fail
-	// loudly here rather than emit a stream that wedges the hardware.
 	if (cv.width !== template.width || cv.height !== template.height) {
 		throw new Error(
 			`render is ${cv.width}×${cv.height}, expected ${template.width}×${template.height}`
 		);
 	}
-	if (cv.width > WIDTH) throw new Error(`template width ${cv.width} exceeds print head ${WIDTH}`);
-	return buildStream(canvasToRows(cv), Math.round(cv.width / DOTS_PER_MM));
+	const model = MODELS[template.printer];
+	const fit = fitsPrinter(cv, template.printDirection, model);
+	if (!fit.fits) throw new Error(`this label is ${fit.reason}`);
+	return cv;
 }

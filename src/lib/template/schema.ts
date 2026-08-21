@@ -1,13 +1,17 @@
 import { z } from 'zod';
-import { WIDTH, HEIGHT } from '@slastra/yplib';
+import { HEIGHT } from '@slastra/yplib';
+import { MAX_PRINTHEAD_DOTS, MODELS, type PrinterId } from '$lib/printer/models';
 
-// The Y50P takes a fixed 400×240 1-bit framebuffer (50×30 mm at 8 dots/mm).
 // All geometry is in printer dots — the editor stage, print renderer, and wire
 // format share one coordinate space, with zoom applied only at display time.
-// The wire format (protocol.ts) owns the physical constants; re-exported here
-// so one definition serves both sides of the raster boundary.
+// Both supported printers run at 8 dots/mm, so one grid serves both.
+//
+// The SCHEMA's width bound is the widest head of any supported model; the
+// selected printer's own, narrower bound is enforced by the media picker and
+// again at print time. Storing the looser bound means switching a template
+// from the 50 mm printer to the 48 mm one flags it rather than discarding it.
 export const DOTS_PER_MM = 8;
-export const LABEL_W = WIDTH;
+export const LABEL_W = MODELS.y50p.printheadDots;
 export const LABEL_H = HEIGHT;
 
 // Shared bounds: the zod schema and every gesture/mutation clamp must agree,
@@ -23,10 +27,10 @@ export const INKS = ['black', 'clear'] as const;
 export type Ink = (typeof INKS)[number];
 export type BorderStyle = (typeof BORDER_STYLES)[number];
 
-// Media bounds in mm, derived from the print head so one protocol change
+// Media bounds in mm, derived from the print heads so one model change
 // propagates to the picker, the schema, and the clamps.
 export const MEDIA_MIN_MM = 10;
-export const MEDIA_MAX_W_MM = WIDTH / DOTS_PER_MM;
+export const MEDIA_MAX_W_MM = MAX_PRINTHEAD_DOTS / DOTS_PER_MM;
 export const MEDIA_MAX_H_MM = 200;
 
 /**
@@ -53,8 +57,9 @@ export const MIN_THICKNESS = 1;
 export const MAX_THICKNESS = 50;
 export const MAX_RADIUS = 120;
 
-// Height is safe to vary — the printer takes rows until the raster ends.
-// Width rides in the setup frames in mm; only 50 mm is hardware-verified.
+// Height is safe to vary — both printers take rows until the raster ends.
+// Width is capped by the selected printer's head, which is why the 48 mm
+// entries exist alongside the 50 mm ones rather than replacing them.
 export interface MediaPreset {
 	label: string;
 	wMm: number;
@@ -65,10 +70,17 @@ export const MEDIA_PRESETS: MediaPreset[] = [
 	{ label: '50 × 40 mm', wMm: 50, hMm: 40 },
 	{ label: '50 × 50 mm', wMm: 50, hMm: 50 },
 	{ label: '50 × 80 mm', wMm: 50, hMm: 80 },
+	{ label: '48 × 30 mm', wMm: 48, hMm: 30 },
+	{ label: '48 × 40 mm', wMm: 48, hMm: 40 },
+	{ label: '48 × 50 mm', wMm: 48, hMm: 50 },
+	{ label: '48 × 80 mm', wMm: 48, hMm: 80 },
 	{ label: '40 × 30 mm', wMm: 40, hMm: 30 },
 	{ label: '40 × 60 mm', wMm: 40, hMm: 60 },
 	{ label: '30 × 20 mm', wMm: 30, hMm: 20 }
 ];
+
+export const PRINTER_IDS = ['y50p', 'b1'] as const satisfies readonly PrinterId[];
+export const PRINT_DIRECTIONS = ['top', 'left'] as const;
 
 /**
  * Bundled faces, so every machine rasterizes text identically — a system font
@@ -266,7 +278,7 @@ export const TemplateSchema = z.object({
 	id: z.string(),
 	name: z.string().min(1).default('Untitled label'),
 	// dots; width is capped by the 50 mm print head
-	width: z.number().int().min(MIN_SIZE).max(WIDTH).default(LABEL_W),
+	width: z.number().int().min(MIN_SIZE).max(MAX_PRINTHEAD_DOTS).default(LABEL_W),
 	height: z
 		.number()
 		.int()
@@ -283,6 +295,15 @@ export const TemplateSchema = z.object({
 	// 50 is a perfect round or pill at any media size. The head prints the same
 	// raster either way — ink in a cut-away corner just lands off the label.
 	stockRadius: z.number().int().min(0).max(50).default(0),
+	// Which printer this label is designed for. Stored on the template because
+	// the printable width differs between models, so the same design is not
+	// valid on both — switching printers is a decision about the label, not a
+	// transient connection detail.
+	printer: z.enum(PRINTER_IDS).default('y50p'),
+	// Which edge of the label feeds first. `left` rotates the raster a quarter
+	// turn on the way out, so it is the HEIGHT that must fit across the head.
+	// Only the NIIMBOT protocol carries this; YPL always feeds top-first.
+	printDirection: z.enum(PRINT_DIRECTIONS).default('top'),
 	// Draw order: later elements paint over earlier ones.
 	elements: z.array(ElementSchema).default([]),
 	// {{name}} binds directly to the CSV column called "name" — no mapping

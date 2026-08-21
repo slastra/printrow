@@ -3,12 +3,14 @@
 	import { editor } from '$lib/template/editor.svelte';
 	import { data } from '$lib/template/data.svelte';
 	import { printer } from '$lib/printer/ble.svelte';
-	import { buildPrintStream } from '$lib/template/raster';
+	import { buildPrintCanvas } from '$lib/template/raster';
+	import { MODELS } from '$lib/printer/models';
 	import { parseRowSpec, describeRows } from '$lib/template/rows';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as Select from '$lib/components/ui/select';
 	import { cn } from '$lib/utils';
 	import BluetoothIcon from '@lucide/svelte/icons/bluetooth';
 	import BluetoothOffIcon from '@lucide/svelte/icons/bluetooth-off';
@@ -21,6 +23,28 @@
 
 	let connecting = $state(false);
 	const unknown = $derived(data.unknownVars);
+	const model = $derived(MODELS[editor.template.printer]);
+	const fit = $derived(editor.fit);
+	const mismatched = $derived(printer.mismatched(editor.template.printer));
+	/** Nothing may print while the label cannot be rasterized for this head. */
+	const blocked = $derived(!fit.fits || mismatched);
+	const densities = $derived(
+		Array.from(
+			{ length: model.densityRange[1] - model.densityRange[0] + 1 },
+			(_, i) => model.densityRange[0] + i
+		)
+	);
+
+	// Session settings, not template ones: density is a preference and label
+	// type describes the roll currently loaded, both of which can differ from
+	// one print run to the next. They reset to the model's defaults when the
+	// target printer changes.
+	let density = $state(3);
+	let labelType = $state(1);
+	$effect(() => {
+		density = model.defaultDensity;
+		labelType = model.defaultLabelType;
+	});
 
 	async function connect() {
 		if (!printer.supported) {
@@ -32,7 +56,7 @@
 		}
 		connecting = true;
 		try {
-			await printer.connect();
+			await printer.connect(editor.template.printer);
 			toast.success(`Connected to ${printer.deviceName}`);
 		} catch (e) {
 			toast.error(e instanceof Error ? e.message : 'connection failed');
@@ -41,9 +65,13 @@
 		}
 	}
 
-	async function run(builds: (() => Promise<Uint8Array>)[]) {
+	async function run(builds: (() => Promise<HTMLCanvasElement>)[]) {
 		try {
-			const done = await printer.printJob(builds);
+			const done = await printer.printJob(builds, {
+				density,
+				labelType,
+				direction: editor.template.printDirection
+			});
 			if (done === builds.length) {
 				toast.success(done === 1 ? 'Label printed' : `Printed ${done} labels`);
 			} else {
@@ -55,7 +83,7 @@
 	}
 
 	const build = (row: Record<string, string> | undefined) => () =>
-		buildPrintStream(editor.template, data.valuesFor(row));
+		buildPrintCanvas(editor.template, data.valuesFor(row));
 
 	/** Print row N always uses the row's real values, whatever the preview toggle. */
 	const printOne = () => run([build(data.previewRow)]);
@@ -79,7 +107,7 @@
 				{#if printer.connected}
 					Connected over Bluetooth.
 				{:else}
-					Connect to a Y50P label printer over Bluetooth.
+					Connect to a {model.name} over Bluetooth.
 				{/if}
 			</Dialog.Description>
 		</Dialog.Header>
@@ -127,6 +155,64 @@
 					</p>
 				{/if}
 
+				{#if !fit.fits}
+					<p class="flex items-start gap-1.5 text-xs text-destructive">
+						<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
+						<span>This label is {fit.reason}. Resize it in the label panel.</span>
+					</p>
+				{/if}
+
+				{#if mismatched}
+					<p class="flex items-start gap-1.5 text-xs text-destructive">
+						<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
+						<span>
+							Connected to a {MODELS[printer.connectedTo ?? 'y50p'].name}, but this label is
+							designed for a {model.name}. Disconnect, or switch the label's printer.
+						</span>
+					</p>
+				{/if}
+
+				{#if model.features.density || model.features.labelType}
+					<div class="grid grid-cols-2 gap-3">
+						{#if model.features.density}
+							<div class="space-y-1.5">
+								<Label class="text-xs text-muted-foreground">Density</Label>
+								<Select.Root
+									type="single"
+									value={String(density)}
+									onValueChange={(v) => (density = Number(v))}
+								>
+									<Select.Trigger class="h-8 text-xs">{density}</Select.Trigger>
+									<Select.Content>
+										{#each densities as d (d)}
+											<Select.Item value={String(d)} label={String(d)} />
+										{/each}
+									</Select.Content>
+								</Select.Root>
+							</div>
+						{/if}
+						{#if model.features.labelType}
+							<div class="space-y-1.5">
+								<Label class="text-xs text-muted-foreground">Stock</Label>
+								<Select.Root
+									type="single"
+									value={String(labelType)}
+									onValueChange={(v) => (labelType = Number(v))}
+								>
+									<Select.Trigger class="h-8 text-xs">
+										{model.labelTypes.find((t) => t.value === labelType)?.label ?? 'Gap'}
+									</Select.Trigger>
+									<Select.Content>
+										{#each model.labelTypes as t (t.value)}
+											<Select.Item value={String(t.value)} label={t.label} />
+										{/each}
+									</Select.Content>
+								</Select.Root>
+							</div>
+						{/if}
+					</div>
+				{/if}
+
 				{#if printer.progress}
 					<div class="space-y-2">
 						<div class="flex items-center justify-between text-sm">
@@ -147,7 +233,7 @@
 					</div>
 				{:else}
 					<div class="space-y-2">
-						<Button class="w-full" disabled={printer.busy} onclick={printOne}>
+						<Button class="w-full" disabled={printer.busy || blocked} onclick={printOne}>
 							<PrinterIcon />
 							{data.loaded ? `Print row ${data.previewIndex + 1}` : 'Print label'}
 						</Button>
@@ -155,7 +241,7 @@
 							<Button
 								variant="secondary"
 								class="w-full"
-								disabled={printer.busy}
+								disabled={printer.busy || blocked}
 								onclick={printBatch}
 							>
 								<LayersIcon />
@@ -180,7 +266,7 @@
 									<Button
 										variant="outline"
 										class="shrink-0"
-										disabled={printer.busy || !count}
+										disabled={printer.busy || blocked || !count}
 										onclick={printSubset}
 									>
 										<PrinterIcon />

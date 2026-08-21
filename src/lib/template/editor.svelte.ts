@@ -24,6 +24,14 @@ import {
 	type AlignKind
 } from './geometry';
 import { ELEMENT_META, type ElementKind } from './elements';
+import {
+	MODELS,
+	fitsPrinter,
+	printableWidthMm,
+	type PrintDirection,
+	type PrinterId,
+	type PrinterModel
+} from '$lib/printer/models';
 import { loadImage } from './nodes';
 import { clamp } from '$lib/utils';
 
@@ -292,6 +300,57 @@ class EditorState {
 	/** Die-cut corner rounding, 0–50% of the label. Preview only. */
 	setStockRadius(pct: number) {
 		this.commit(() => (this.template.stockRadius = clamp(Math.round(pct), 0, 50)));
+	}
+
+	// --- printer -------------------------------------------------------------
+
+	/** The model this label is designed for. */
+	get model(): PrinterModel {
+		return MODELS[this.template.printer];
+	}
+
+	/**
+	 * Whether the label fits the selected printer's head, and why not when it
+	 * does not. Read by the label panel and again before a job starts, because
+	 * a template that does not fit cannot be rasterized at all.
+	 */
+	get fit(): { fits: boolean; across: number; reason?: string } {
+		return fitsPrinter(
+			{ width: this.template.width, height: this.template.height },
+			this.template.printDirection,
+			this.model
+		);
+	}
+
+	setPrinter(id: PrinterId) {
+		const model = MODELS[id];
+		this.commit(() => {
+			this.template.printer = id;
+			// A model that cannot rotate its raster must not keep a rotated
+			// setting: it would be an invisible property with no control to
+			// change it, and the label would print the way it always did.
+			if (!model.features.direction) this.template.printDirection = 'top';
+		});
+	}
+
+	setPrintDirection(direction: PrintDirection) {
+		this.commit(() => (this.template.printDirection = direction));
+	}
+
+	/**
+	 * Shrink whichever dimension crosses the head down to what the printer can
+	 * actually burn, leaving the other alone. Elements keep their positions and
+	 * are re-clamped, so nothing is lost — it just may need nudging back in.
+	 */
+	fitToPrinter() {
+		if (this.fit.fits) return;
+		const mm = printableWidthMm(this.model);
+		const { width, height } = this.template;
+		if (this.template.printDirection === 'left') {
+			this.setMedia(width / DOTS_PER_MM, mm);
+		} else {
+			this.setMedia(mm, height / DOTS_PER_MM);
+		}
 	}
 
 	selectLabel() {
