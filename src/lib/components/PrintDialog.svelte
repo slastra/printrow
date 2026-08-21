@@ -11,6 +11,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
+	import { Slider } from '$lib/components/ui/slider';
 	import { cn } from '$lib/utils';
 	import BluetoothIcon from '@lucide/svelte/icons/bluetooth';
 	import BluetoothOffIcon from '@lucide/svelte/icons/bluetooth-off';
@@ -28,12 +29,6 @@
 	const mismatched = $derived(printer.mismatched(editor.template.printer));
 	/** Nothing may print while the label cannot be rasterized for this head. */
 	const blocked = $derived(!fit.fits || mismatched);
-	const densities = $derived(
-		Array.from(
-			{ length: model.densityRange[1] - model.densityRange[0] + 1 },
-			(_, i) => model.densityRange[0] + i
-		)
-	);
 
 	// Session settings, not template ones: density is a preference and label
 	// type describes the roll currently loaded, both of which can differ from
@@ -176,19 +171,22 @@
 					<div class="grid grid-cols-2 gap-3">
 						{#if model.features.density}
 							<div class="space-y-1.5">
-								<Label class="text-xs text-muted-foreground">Density</Label>
-								<Select.Root
-									type="single"
-									value={String(density)}
-									onValueChange={(v) => (density = Number(v))}
-								>
-									<Select.Trigger class="h-8 text-xs">{density}</Select.Trigger>
-									<Select.Content>
-										{#each densities as d (d)}
-											<Select.Item value={String(d)} label={String(d)} />
-										{/each}
-									</Select.Content>
-								</Select.Root>
+								<div class="flex items-center justify-between">
+									<Label class="text-xs text-muted-foreground">Density</Label>
+									<span class="text-xs text-muted-foreground tabular-nums">{density}</span>
+								</div>
+								<!-- the slider has no room for its own value, so the label row
+								     carries it, the way the inspector's sliders do -->
+								<div class="flex h-8 items-center">
+									<Slider
+										type="single"
+										value={density}
+										onValueChange={(v) => (density = v)}
+										min={model.densityRange[0]}
+										max={model.densityRange[1]}
+										step={1}
+									/>
+								</div>
 							</div>
 						{/if}
 						{#if model.features.labelType}
@@ -199,7 +197,7 @@
 									value={String(labelType)}
 									onValueChange={(v) => (labelType = Number(v))}
 								>
-									<Select.Trigger class="h-8 text-xs">
+									<Select.Trigger class="h-8 w-full text-xs">
 										{model.labelTypes.find((t) => t.value === labelType)?.label ?? 'Gap'}
 									</Select.Trigger>
 									<Select.Content>
