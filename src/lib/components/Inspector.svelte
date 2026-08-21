@@ -203,7 +203,11 @@
 					{editor.template.stockRadius === 0
 						? 'square'
 						: editor.template.stockRadius === 50
-							? 'round'
+							? // at full rounding the short axis is used up entirely, which is a
+								// circle only when the label is square and a stadium otherwise
+								editor.template.width === editor.template.height
+								? 'round'
+								: 'pill'
 							: `${editor.template.stockRadius}%`}
 				</span>
 			</div>

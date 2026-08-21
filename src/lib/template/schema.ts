@@ -291,9 +291,13 @@ export const TemplateSchema = z.object({
 		.string()
 		.regex(/^#[0-9a-f]{6}$/i)
 		.default('#ffffff'),
-	// Preview-only: die-cut corner rounding, as a percentage of the label, so
-	// 50 is a perfect round or pill at any media size. The head prints the same
-	// raster either way — ink in a cut-away corner just lands off the label.
+	// Preview-only: die-cut corner rounding, as a percentage of the label's
+	// SHORTER side, so the corner is a circular arc rather than an ellipse
+	// stretched to the label's proportions — which is what a percentage
+	// border-radius would draw, and not what a cutting die makes. 50 uses that
+	// axis up entirely: a stadium on a rectangle, a circle on a square. The
+	// head prints the same raster either way — ink in a cut-away corner just
+	// lands off the label.
 	stockRadius: z.number().int().min(0).max(50).default(0),
 	// Which printer this label is designed for. Stored on the template because
 	// the printable width differs between models, so the same design is not

@@ -46,6 +46,28 @@
 	let fitZoom = $state(1.5);
 	const zoom = $derived(zoomChoice === 'fit' ? fitZoom : zoomChoice);
 
+	/**
+	 * Die-cut corner radius, in CSS pixels.
+	 *
+	 * A percentage border-radius resolves each axis against its OWN edge, so
+	 * 20% on a 400×240 label draws an 80×48 elliptical corner — visibly
+	 * stretched, and nothing like a real die cut, which is a circular arc.
+	 * Taking the radius from the shorter side and applying it to both axes
+	 * gives back the circle.
+	 *
+	 * 50 still reaches the shape it promises: half the short side rounds that
+	 * axis away entirely, so a rectangle becomes a stadium and a square becomes
+	 * a circle. Scaled by zoom because the box it styles is in screen pixels
+	 * while the template is in printer dots.
+	 */
+	const stockRadiusPx = $derived(
+		editor.template.stockRadius > 0
+			? ((Math.min(editor.template.width, editor.template.height) * editor.template.stockRadius) /
+					100) *
+					zoom
+			: 2
+	);
+
 	// The stage is always white paper, even when the app is in dark mode — so
 	// take whichever of the theme's primary pair is darker. In shadcn neutral
 	// that's --primary in light mode and --primary-foreground in dark, keeping
@@ -610,10 +632,7 @@
 		<!-- the stock colour is painted here, under the transparent canvas -->
 		<div
 			class="h-fit w-fit overflow-hidden paper-surface"
-			style="background: {editor.template.stockColor}; border-radius: {editor.template.stockRadius >
-			0
-				? editor.template.stockRadius + '%'
-				: '2px'}"
+			style="background: {editor.template.stockColor}; border-radius: {stockRadiusPx}px"
 		>
 			<div bind:this={container}></div>
 		</div>
