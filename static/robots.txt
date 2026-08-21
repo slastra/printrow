@@ -1,3 +1,5 @@
-# allow crawling everything by default
+# Everything here is public and safe to index.
 User-agent: *
 Disallow:
+
+Sitemap: https://printrow.lastra.us/sitemap.xml

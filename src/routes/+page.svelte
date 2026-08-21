@@ -17,6 +17,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import MoonIcon from '@lucide/svelte/icons/moon';
+	import { SEO } from '$lib/seo';
 	import type { PageData } from './$types.js';
 
 	let { data }: { data: PageData } = $props();
@@ -24,7 +25,41 @@
 	onMount(() => editor.load());
 </script>
 
-<svelte:head><title>printrow</title></svelte:head>
+<!--
+	Search and link-preview metadata. Everything here is static because the app
+	is a single page: there is nothing per-route to vary, and the crawler only
+	ever sees the SSR shell (the editor itself is client-side).
+
+	The claims are deliberately the factual ones — no install, no driver, no
+	account, nothing leaving the browser — rather than comparisons against the
+	vendor apps, which would be unverifiable and would age badly.
+-->
+<svelte:head>
+	<title>{SEO.title}</title>
+	<meta name="description" content={SEO.description} />
+	<link rel="canonical" href={SEO.url} />
+
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="printrow" />
+	<meta property="og:url" content={SEO.url} />
+	<meta property="og:title" content={SEO.title} />
+	<meta property="og:description" content={SEO.description} />
+	<meta property="og:image" content="{SEO.url}og.jpg" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content={SEO.imageAlt} />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content={SEO.title} />
+	<meta name="twitter:description" content={SEO.description} />
+	<meta name="twitter:image" content="{SEO.url}og.jpg" />
+
+	<!-- matches the dark shell the app boots into, so mobile chrome does not
+	     flash white around it -->
+	<meta name="theme-color" content="#0a0a0a" />
+
+	{@html `<script type="application/ld+json">${JSON.stringify(SEO.schema)}</script>`}
+</svelte:head>
 
 <Sidebar.Provider open={data.sidebarOpen}>
 	<Sidebar.Root variant="inset" class="border-none">
