@@ -86,6 +86,15 @@
 					Pick the target printer in the label panel: it sets the printable width, and the two
 					models disagree by 2 mm.
 				</p>
+				<p class="text-xs text-muted-foreground">
+					The NIIMBOT protocol was reverse-engineered by
+					<a
+						href="https://github.com/MultiMote/niimbluelib"
+						target="_blank"
+						rel="noreferrer"
+						class="underline-offset-4 hover:text-foreground hover:underline">MultiMote</a
+					>, whose niimbluelib the B1 support here is ported from.
+				</p>
 			</div>
 
 			<Separator />
