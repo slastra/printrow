@@ -1,6 +1,7 @@
 # printrow
 
 [![protocol](https://img.shields.io/badge/protocol-yplib-blue)](https://github.com/slastra/yplib)
+[![protocol](https://img.shields.io/badge/protocol-nblib-blue)](https://github.com/slastra/nblib)
 [![license](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
 **[printrow.lastra.us](https://printrow.lastra.us)** is a label designer that prints against CSV data over Web Bluetooth. No drivers, no installs, no print server: design a label in the browser, bind `{{variables}}` to CSV columns, and batch-print to a **KNAON Y50P** or a **NIIMBOT B1** thermal printer directly from the page.
@@ -23,7 +24,6 @@ Both printers speak proprietary framed binary protocols — the Y50P through [yp
 - **Barcodes snap their module grid to whole printer dots** at any element size. Fractional modules are what make scaled barcodes both blurry and marginal under a scanner.
 - **Stock colour and die-cut shape are preview-only.** The head burns black onto whatever stock is loaded; a coloured background reaching the thresholder would print the label solid black.
 - **Transport**: BLE GATT writes in 20-byte chunks with pacing, with bidirectional status (ready / cover open / out of paper) polled between labels.
-
 - **One driver seam** covers both printers, because below it they are shaped nothing alike: YPL streams a framed raster one way, NIIMBOT holds a request/response conversation with a reply expected per command. The app hands a driver a canvas; everything under that belongs to the protocol library.
 
 Both wire formats are unforgiving in the same specific way, worth knowing if you fork this: a raster row that isn't the width the printer was told to expect shifts everything after it and can hang the firmware. Both libraries refuse to encode one rather than transmit it.
@@ -69,11 +69,19 @@ Discovery deliberately filters by device name, never by service UUID: a service-
   <img src="src/lib/assets/printer.png" alt="A KNAON Y50P thermal printer, lid closed, presenting a freshly printed label that reads PRINTROW above a barcode" width="440">
 </p>
 
-Verified on a **KNAON Y50P**, 50 × 30 mm stock at 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
+Both printers below have printed real labels from this app.
 
-The **NIIMBOT B1** is also supported: 203 dpi, a 384-dot (48 mm) head, gap / black-mark / transparent stock, and density 1–5.
+### KNAON Y50P
+
+Verified at 50 × 30 mm stock, 8 dots/mm. Other media heights are safe, because the protocol never transmits height: the printer simply takes rows until the raster ends. Widths other than 50 mm follow the captured frame format but have not been tested on real stock.
 
 This hardware is white-labelled, so the printer on your desk may carry a different name. The KNAON unit here and the sibling **FlashToy U8** speak the same protocol, and the vendor Android apps that drive them all wrap the same `com.j0data.sdk` library. Branding is not the discriminator and neither is the USB vendor ID: `0x5958` is unregistered and shared with printers that speak TSPL instead. What settles it is the wire format. Frames that start `1a 01`, end `a1`, and checksum as CRC-32 with init `0xCA896ADE` are this protocol, whatever the label on the case says.
+
+### NIIMBOT B1
+
+203 dpi with a **384-dot (48 mm) head** — narrower than the 50 mm stock it takes, which is the thing that catches people out. Gap, black-mark and transparent stock, density 1–5.
+
+Confirmed printing with the top-edge feed direction. The `left` direction, and the full range of stock types and densities, follow the protocol but have not each been run on real hardware.
 
 **Have a different NIIMBOT?** Only the B1 is supported here. For the rest of the family use [niimblue](https://github.com/MultiMote/niimblue), a browser label designer built on [niimbluelib](https://github.com/MultiMote/niimbluelib).
 
