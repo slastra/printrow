@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { HEIGHT } from '@slastra/yplib';
+import { HEIGHT, THRESHOLD } from '@slastra/yplib';
 import { MAX_PRINTHEAD_DOTS, MODELS, type PrinterId } from '$lib/printer/models';
 
 // All geometry is in printer dots — the editor stage, print renderer, and wire
@@ -56,6 +56,28 @@ export const MAX_STROKE = 6;
 export const MIN_THICKNESS = 1;
 export const MAX_THICKNESS = 50;
 export const MAX_RADIUS = 120;
+
+// Text metrics. Line height is a multiple of the font size, matching Konva;
+// letter spacing is absolute dots, like every other geometry number here.
+//
+// Below about 0.6 the descenders of one line merge into the caps of the next
+// once thresholded to 1-bit. Above 3 there is nothing left to gain: with
+// shrink-to-fit on, more leading only shrinks the type, and with it off Konva
+// starts dropping lines at the box edge instead.
+export const MIN_LINE_HEIGHT = 0.5;
+export const MAX_LINE_HEIGHT = 3;
+export const DEFAULT_LINE_HEIGHT = 1.15;
+// Negative tightens. It has to be allowed — every other element number here is
+// non-negative, and a reflexive min of 0 would make each tightening edit vanish
+// silently at the mutation funnel, which validates rather than clamps.
+export const MIN_LETTER_SPACING = -10;
+export const MAX_LETTER_SPACING = 40;
+
+// Per-image 1-bit cutoff, in luma. Stops short of 0 and 255 because both ends
+// are degenerate — nothing fires at all, or every pixel but pure white does —
+// and they are the first places a slider gets dragged to.
+export const MIN_CUTOFF = 16;
+export const MAX_CUTOFF = 240;
 
 // Height is safe to vary — both printers take rows until the raster ends.
 // Width is capped by the selected printer's head, which is why the 48 mm
@@ -160,7 +182,14 @@ export const TextElementSchema = z.object({
 	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
 	// Shrink until the wrapped text fits the box — essential when a CSV value
 	// runs longer than the sample the template was designed around.
-	autoFit: z.boolean().default(true)
+	autoFit: z.boolean().default(true),
+	// Leading, as a multiple of the font size. Tightening it is often what lets
+	// a two-line field fit its box instead of autoFit shrinking the type.
+	lineHeight: z.number().min(MIN_LINE_HEIGHT).max(MAX_LINE_HEIGHT).default(DEFAULT_LINE_HEIGHT),
+	// Tracking, in dots. Whole dots only: a fractional advance moves nothing but
+	// antialiasing, which the 1-bit pass then throws away. Condensed faces need
+	// this most — their stems sit close enough to bridge under a hard threshold.
+	letterSpacing: z.number().int().min(MIN_LETTER_SPACING).max(MAX_LETTER_SPACING).default(0)
 });
 
 export const BarcodeElementSchema = z.object({
@@ -178,7 +207,13 @@ export const ImageElementSchema = z.object({
 	dataUrl: z.string(),
 	// threshold keeps logos/line art crisp; dither is for photos and gradients,
 	// which a hard threshold annihilates.
-	mode: z.enum(['threshold', 'dither']).default('threshold')
+	mode: z.enum(['threshold', 'dither']).default('threshold'),
+	// The luma below which a pixel fires the head, so HIGHER lays down more ink.
+	// Named cutoff rather than threshold because `mode` already owns that word
+	// here and the two would read as related. Feeds both conversions: a hard
+	// cutoff under threshold, the dither's own decision point under dither,
+	// where it behaves as a darkness control.
+	cutoff: z.number().int().min(MIN_CUTOFF).max(MAX_CUTOFF).default(THRESHOLD)
 });
 
 export const IconElementSchema = z.object({

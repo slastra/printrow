@@ -9,6 +9,12 @@
 		MAX_RADIUS,
 		MIN_STROKE,
 		MAX_STROKE,
+		MIN_LINE_HEIGHT,
+		MAX_LINE_HEIGHT,
+		MIN_LETTER_SPACING,
+		MAX_LETTER_SPACING,
+		MIN_CUTOFF,
+		MAX_CUTOFF,
 		BORDER_STYLES,
 		FONTS,
 		type FontKey,
@@ -18,6 +24,7 @@
 		type BarcodeType,
 		type Ink
 	} from '$lib/template/schema';
+	import { THRESHOLD } from '$lib/template/nodes';
 	import { rafThrottle, cn } from '$lib/utils';
 	import {
 		MODEL_LIST,
@@ -91,6 +98,9 @@
 	const setRadius = rafThrottle((v: number) => editor.update({ radius: v }));
 	const setStockRadius = rafThrottle((v: number) => editor.setStockRadius(v));
 	const setStroke = rafThrottle((v: number) => editor.update({ strokeWidth: v }));
+	const setLineHeight = rafThrottle((v: number) => editor.update({ lineHeight: v }));
+	const setLetterSpacing = rafThrottle((v: number) => editor.update({ letterSpacing: v }));
+	const setCutoff = rafThrottle((v: number) => editor.update({ cutoff: v }));
 
 	function int(value: string, fallback: number): number {
 		const n = Math.round(Number(value));
@@ -358,6 +368,47 @@
 					</div>
 				</div>
 			</div>
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<Label>Line height</Label>
+					<span class="text-xs text-muted-foreground tabular-nums">
+						{el.lineHeight.toFixed(2)}
+					</span>
+				</div>
+				<Slider
+					type="single"
+					value={el.lineHeight}
+					onValueChange={setLineHeight}
+					min={MIN_LINE_HEIGHT}
+					max={MAX_LINE_HEIGHT}
+					step={0.05}
+				/>
+				<p class="text-xs text-muted-foreground">
+					Leading sits above the first line as well as between lines, so raising it moves the whole
+					block down. With shrink to fit on, more leading shrinks the type rather than growing the
+					box.
+				</p>
+			</div>
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<Label>Letter spacing</Label>
+					<span class="text-xs text-muted-foreground tabular-nums">
+						{el.letterSpacing > 0 ? '+' : ''}{el.letterSpacing}
+					</span>
+				</div>
+				<Slider
+					type="single"
+					value={el.letterSpacing}
+					onValueChange={setLetterSpacing}
+					min={MIN_LETTER_SPACING}
+					max={MAX_LETTER_SPACING}
+					step={1}
+				/>
+				<p class="text-xs text-muted-foreground">
+					Dots between characters. Negative tightens, which condensed faces take well until the
+					stems start touching at 1-bit.
+				</p>
+			</div>
 			<div class="flex items-center justify-between">
 				<Label for="autofit">Shrink to fit</Label>
 				<Switch
@@ -504,6 +555,44 @@
 						<Select.Item value="dither">Dither (photos)</Select.Item>
 					</Select.Content>
 				</Select.Root>
+			</div>
+			<div class="space-y-2">
+				<div class="flex items-center justify-between">
+					<!-- one value, two jobs: a hard cutoff for threshold, the dither's
+					     own decision point for dither, where it reads as darkness -->
+					<Label>{el.mode === 'dither' ? 'Darkness' : 'Cutoff'}</Label>
+					<div class="flex items-center gap-2">
+						{#if el.cutoff !== THRESHOLD}
+							<!-- 128 is what the printer itself uses everywhere else, and
+							     it is near impossible to land on by dragging -->
+							<Button
+								variant="ghost"
+								size="sm"
+								class="h-5 px-1.5 text-xs text-muted-foreground"
+								onclick={() => editor.update({ cutoff: THRESHOLD })}
+							>
+								Reset
+							</Button>
+						{/if}
+						<span class="text-xs text-muted-foreground tabular-nums">{el.cutoff}</span>
+					</div>
+				</div>
+				<Slider
+					type="single"
+					value={el.cutoff}
+					onValueChange={setCutoff}
+					min={MIN_CUTOFF}
+					max={MAX_CUTOFF}
+					step={1}
+				/>
+				<p class="text-xs text-muted-foreground">
+					{#if el.mode === 'dither'}
+						Higher lays down more ink. The shift is strongest in the near-white and near-black
+						areas, because dithering partly corrects itself through the midtones.
+					{:else}
+						Higher burns more of the image; lower keeps only the darkest parts.
+					{/if}
+				</p>
 			</div>
 		{/if}
 

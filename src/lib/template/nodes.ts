@@ -14,8 +14,6 @@ import { interpolate } from './vars';
 
 export type KonvaNS = (typeof import('konva'))['default'];
 
-export const LINE_HEIGHT = 1.15;
-
 // The threshold and the luma formula come from yplib, so this app and the wire
 // rasterizer cannot drift apart. A second copy is exactly how a preview and
 // the paper start disagreeing.
@@ -69,8 +67,15 @@ export function loadImage(src: string): Promise<HTMLImageElement> {
  * Atkinson dithering, in place. Chosen over Floyd–Steinberg for thermal
  * printing: it diffuses only 6/8 of the error, which keeps midtones lighter
  * and edges cleaner on a printer that can't do gray at all.
+ *
+ * `cutoff` moves the point each pixel snaps to, which is more than a per-pixel
+ * decision: the error term is measured against the SNAPPED output, so shifting
+ * it re-signs the whole diffusion field. That is what makes it read as darkness
+ * rather than as a hard threshold. The effect is strongest near white and near
+ * black — through the midtones, diffusion partly corrects for it, because a
+ * pixel that fires pushes more error into neighbours that then do not.
  */
-export function ditherAtkinson(cv: HTMLCanvasElement): HTMLCanvasElement {
+export function ditherAtkinson(cv: HTMLCanvasElement, cutoff = THRESHOLD): HTMLCanvasElement {
 	const ctx = cv.getContext('2d', { willReadFrequently: true });
 	if (!ctx) return cv;
 	const img = ctx.getImageData(0, 0, cv.width, cv.height);
@@ -88,7 +93,7 @@ export function ditherAtkinson(cv: HTMLCanvasElement): HTMLCanvasElement {
 	for (let y = 0; y < height; y++) {
 		for (let x = 0; x < width; x++) {
 			const i = y * width + x;
-			const out = gray[i] < 128 ? 0 : 255;
+			const out = gray[i] < cutoff ? 0 : 255;
 			const err = (gray[i] - out) / 8;
 			gray[i] = out;
 			for (const [dx, dy] of spread) {
@@ -142,23 +147,42 @@ export function thresholdCanvas(cv: HTMLCanvasElement, cutoff = THRESHOLD): HTML
 }
 
 // Baked 1-bit canvases, keyed by conversion + placed size + source so two
-// elements sharing one image at different sizes don't evict each other.
-const bakedImages = new Map<string, HTMLCanvasElement>();
+// elements sharing one image at different sizes don't evict each other, then
+// by cutoff within that.
+//
+// Nested rather than one flat key, because the canvas rebuilds every node on
+// every model write: dragging the cutoff slider would otherwise push ~60 new
+// keys a second into a cache of 32 that evicts oldest-first, throwing out every
+// OTHER image on the label and re-baking them all on each frame of the drag.
+const bakedImages = new Map<string, Map<string, HTMLCanvasElement>>();
 
 async function imageSource(el: ImageElement): Promise<CanvasImageSource> {
 	const key = `${el.mode}|${el.w}x${el.h}|${el.dataUrl}`;
-	const hit = bakedImages.get(key);
+	// string keys so evict() serves both maps unchanged
+	const cut = String(el.cutoff);
+	let byCutoff = bakedImages.get(key);
+	const hit = byCutoff?.get(cut);
 	if (hit) return hit;
 	const img = await loadImage(el.dataUrl);
 	// Bake the 1-bit conversion at the placed size so the editor shows the
 	// exact dot pattern that prints — converting after scaling would differ.
+	// The result is pure black or pure transparent, which is why the print
+	// path's own threshold pass is an identity over these pixels. A ROTATED
+	// placement is the one exception: its antialiased edge is decided there,
+	// not here.
 	const cv = document.createElement('canvas');
 	cv.width = el.w;
 	cv.height = el.h;
 	cv.getContext('2d')?.drawImage(img, 0, 0, el.w, el.h);
-	if (el.mode === 'dither') ditherAtkinson(cv);
-	else thresholdCanvas(cv);
-	bakedImages.set(key, cv);
+	if (el.mode === 'dither') ditherAtkinson(cv, el.cutoff);
+	else thresholdCanvas(cv, el.cutoff);
+	if (!byCutoff) {
+		byCutoff = new Map();
+		bakedImages.set(key, byCutoff);
+	}
+	byCutoff.set(cut, cv);
+	// the value being dragged, plus the one before it
+	evict(byCutoff, 2);
 	evict(bakedImages, 32);
 	return cv;
 }
@@ -266,7 +290,13 @@ export async function buildNode(
 				// autoFit measurement height is unset, so this cannot skew it
 				verticalAlign: el.verticalAlign,
 				wrap: 'word',
-				lineHeight: LINE_HEIGHT,
+				// Both metrics must be set HERE, in the config, not after the
+				// autoFit search below: the search measures node.height(), which
+				// is fontSize x line count x lineHeight, and letterSpacing widens
+				// each measured run and so decides where the text wraps. Set
+				// afterwards, the fit would be computed against stale metrics.
+				lineHeight: el.lineHeight,
+				letterSpacing: el.letterSpacing,
 				fill: '#000'
 			});
 			if (el.autoFit) {
