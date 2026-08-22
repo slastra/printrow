@@ -383,11 +383,6 @@
 					max={MAX_LINE_HEIGHT}
 					step={0.05}
 				/>
-				<p class="text-xs text-muted-foreground">
-					Leading sits above the first line as well as between lines, so raising it moves the whole
-					block down. With shrink to fit on, more leading shrinks the type rather than growing the
-					box.
-				</p>
 			</div>
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
@@ -404,10 +399,6 @@
 					max={MAX_LETTER_SPACING}
 					step={1}
 				/>
-				<p class="text-xs text-muted-foreground">
-					Dots between characters. Negative tightens, which condensed faces take well until the
-					stems start touching at 1-bit.
-				</p>
 			</div>
 			<div class="flex items-center justify-between">
 				<Label for="autofit">Shrink to fit</Label>
