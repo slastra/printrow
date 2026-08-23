@@ -21,7 +21,8 @@ import { MODELS, type PrintDirection, type PrinterId, type PrinterModel } from '
 
 /** What the status dot and its caption say. */
 export interface PrinterStatus {
-	ready: boolean;
+	/** null when the printer did not answer — unknown is not the same as faulted. */
+	ready: boolean | null;
 	text: string;
 }
 
@@ -77,7 +78,9 @@ const y50p: PrinterDriver = {
 			disconnect: () => link.disconnect(),
 			async readStatus() {
 				const v = await link.readStatus();
-				return { ready: v === 0, text: v === null ? 'unknown' : describeStatus(v) };
+				// silence is unknown, not a fault: the dot stays grey rather than red
+				if (v === null) return { ready: null, text: 'unknown' };
+				return { ready: v === 0, text: describeStatus(v) };
 			},
 			print(builds, { onProgress, signal }) {
 				return ypPrint(
@@ -110,8 +113,9 @@ const b1: PrinterDriver = {
 					const text = describeHeartbeat(hb);
 					return { ready: text === 'ready', text };
 				} catch {
-					// a printer mid-job answers its heartbeat late; unknown beats a lie
-					return { ready: false, text: 'unknown' };
+					// a printer mid-job answers its heartbeat late; unknown beats a lie,
+					// and it must not read as a fault either
+					return { ready: null, text: 'unknown' };
 				}
 			},
 			print(builds, { density, labelType, direction, onProgress, signal }) {

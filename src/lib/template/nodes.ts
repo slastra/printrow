@@ -181,8 +181,9 @@ async function imageSource(el: ImageElement): Promise<CanvasImageSource> {
 		bakedImages.set(key, byCutoff);
 	}
 	byCutoff.set(cut, cv);
-	// the value being dragged, plus the one before it
-	evict(byCutoff, 2);
+	// enough for several elements sharing one source at different cutoffs, and
+	// still small: a drag only ever adds to the one entry it is dragging
+	evict(byCutoff, 4);
 	evict(bakedImages, 32);
 	return cv;
 }

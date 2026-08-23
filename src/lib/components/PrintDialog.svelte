@@ -258,7 +258,7 @@
 										aria-invalid={Boolean(selection.error)}
 										class="font-mono text-xs"
 										onkeydown={(e) => {
-											if (e.key === 'Enter' && count && !printer.busy) printSubset();
+											if (e.key === 'Enter' && count && !printer.busy && !blocked) printSubset();
 										}}
 									/>
 									<Button

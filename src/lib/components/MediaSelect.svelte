@@ -1,22 +1,22 @@
 <script lang="ts">
 	import { editor } from '$lib/template/editor.svelte';
-	import {
-		DOTS_PER_MM,
-		MEDIA_PRESETS,
-		MEDIA_MIN_MM,
-		MEDIA_MAX_W_MM,
-		MEDIA_MAX_H_MM
-	} from '$lib/template/schema';
+	import { DOTS_PER_MM, MEDIA_PRESETS, MEDIA_MIN_MM, MEDIA_MAX_H_MM } from '$lib/template/schema';
 	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { fitsPrinter, printableWidthMm } from '$lib/printer/models';
+	import { clamp } from '$lib/utils';
 	import RulerIcon from '@lucide/svelte/icons/ruler';
 
 	const model = $derived(editor.model);
 	const headMm = $derived(printableWidthMm(model));
+	// `left` feeds the label's left edge first, so it is the HEIGHT that has to
+	// cross the head. Everything below keys off this rather than assuming width.
+	const acrossIsHeight = $derived(editor.template.printDirection === 'left');
+	const maxWmm = $derived(acrossIsHeight ? MEDIA_MAX_H_MM : headMm);
+	const maxHmm = $derived(acrossIsHeight ? headMm : MEDIA_MAX_H_MM);
 
 	/**
 	 * Presets are listed whole, with the ones this printer cannot take marked
@@ -59,8 +59,13 @@
 	}
 
 	function applyCustom() {
-		// editor.setMedia clamps to the print head's limits
-		editor.setMedia(Number(wMm) || 0, Number(hMm) || 0);
+		// setMedia clamps to the SCHEMA's bounds, which span every model; the
+		// selected printer's own, narrower head is enforced here so the dialog
+		// cannot accept a size it just said was illegal
+		editor.setMedia(
+			clamp(Number(wMm) || 0, MEDIA_MIN_MM, maxWmm),
+			clamp(Number(hMm) || 0, MEDIA_MIN_MM, maxHmm)
+		);
 		customOpen = false;
 	}
 </script>
@@ -76,7 +81,9 @@
 				<span class="flex w-full items-center justify-between gap-3">
 					<span>{p.label}</span>
 					{#if !p.fits}
-						<span class="text-xs text-muted-foreground">too wide for {model.name}</span>
+						<span class="text-xs text-muted-foreground">
+							too {acrossIsHeight ? 'tall' : 'wide'} for {model.name}
+						</span>
 					{/if}
 				</span>
 			</Select.Item>
@@ -101,23 +108,11 @@
 			<div class="grid grid-cols-2 gap-3">
 				<div class="space-y-1.5">
 					<Label for="media-w">Width (mm)</Label>
-					<Input
-						id="media-w"
-						type="number"
-						min={MEDIA_MIN_MM}
-						max={MEDIA_MAX_W_MM}
-						bind:value={wMm}
-					/>
+					<Input id="media-w" type="number" min={MEDIA_MIN_MM} max={maxWmm} bind:value={wMm} />
 				</div>
 				<div class="space-y-1.5">
 					<Label for="media-h">Height (mm)</Label>
-					<Input
-						id="media-h"
-						type="number"
-						min={MEDIA_MIN_MM}
-						max={MEDIA_MAX_H_MM}
-						bind:value={hMm}
-					/>
+					<Input id="media-h" type="number" min={MEDIA_MIN_MM} max={maxHmm} bind:value={hMm} />
 				</div>
 			</div>
 			<p class="text-xs text-muted-foreground">

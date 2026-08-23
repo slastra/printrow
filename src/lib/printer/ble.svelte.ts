@@ -42,7 +42,9 @@ class PrinterState {
 
 	/** Shared status-dot color so every surface renders "unknown" the same way. */
 	get statusColor(): string {
-		if (!this.connected || !this.status) return 'bg-muted-foreground';
+		if (!this.connected || !this.status || this.status.ready === null) {
+			return 'bg-muted-foreground';
+		}
 		return this.status.ready ? 'bg-emerald-500' : 'bg-red-500';
 	}
 
