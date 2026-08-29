@@ -291,31 +291,45 @@ export async function buildNode(
 				// takes effect only once height is pinned below; during the
 				// fitting measurement height is unset, so this cannot skew it
 				verticalAlign: el.verticalAlign,
-				wrap: 'word',
-				// Both metrics must be set HERE, in the config, not after the
-				// fitting search below: the search measures node.height(), which
-				// is fontSize x line count x lineHeight, and letterSpacing widens
-				// each measured run and so decides where the text wraps. Set
+				// Only `fixed` reflows. In that mode the size is locked, so
+				// wrapping is the only way content can fit the box. The fitting
+				// modes adapt the size instead, so they keep the line breaks that
+				// were typed and nothing else — a two-line field stays two lines
+				// however long the value coming out of the CSV turns out to be.
+				//
+				// `none` does not mean "spill outside the box": Konva still
+				// breaks on a fixed width, then stops after one line per
+				// paragraph and drops the rest. Truncation, not overflow — which
+				// is what the coverage check below detects.
+				wrap: el.sizing === 'fixed' ? 'word' : 'none',
+				// These must be set HERE, in the config, not after the fitting
+				// search below: the search measures node.height(), which is
+				// fontSize x line count x lineHeight, and letterSpacing widens
+				// each measured run and so decides where a line gets cut. Set
 				// afterwards, the fit would be computed against stale metrics.
 				lineHeight: el.lineHeight,
 				letterSpacing: el.letterSpacing,
 				fill: '#000'
 			});
 			if (el.sizing !== 'fixed') {
-				// While height is unset, node.height() measures the wrapped content.
-				// Binary search — each fontSize() call re-runs Konva's wrapping, so
-				// a linear walk from 200 would cost ~190 layout passes per rebuild.
-				// +1 absorbs the rounding between a transform gesture's stored box
-				// height and the re-rendered text height — without it, resizing can
-				// nudge the font down a step it doesn't need.
+				// While height is unset, node.height() measures the laid-out
+				// content. Binary search — each fontSize() call re-runs Konva's
+				// layout, so a linear walk from 200 would cost ~190 passes per
+				// rebuild. +1 absorbs the rounding between a transform gesture's
+				// stored box height and the re-rendered text height — without it,
+				// resizing can nudge the font down a step it doesn't need.
 				//
-				// The second term is what makes the search safe in the GROWING
-				// direction. When a single glyph is wider than the box, Konva
-				// stops wrapping and emits no line at all for that paragraph, so
-				// the measured height FALLS — an absurdly large size reports as
-				// fitting. Checking node.textWidth does not catch it either: that
-				// is left at its 0 initialiser on exactly the path that drops the
-				// text. Counting the glyphs that survived wrapping does.
+				// Height alone is not a sufficient test. Konva truncates a line
+				// that will not fit the width and drops the remainder, so an
+				// oversized font reports a SMALLER height, not a larger one, and
+				// the search would happily pick it. node.textWidth cannot catch
+				// that either — it only ever records lines that were emitted, so
+				// it reads at or below the box by construction, and 0 when
+				// everything was dropped. Counting the glyphs that survived is
+				// what actually says "all of this text fits at this size".
+				//
+				// With wrapping off the line count no longer moves with the font
+				// size, so height is strictly monotonic and this search is exact.
 				const inked = (s: string) => s.replace(/\s+/g, '').length;
 				const want = inked(node.text());
 				const fits = (size: number) => {

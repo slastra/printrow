@@ -419,12 +419,14 @@
 				</ToggleGroup.Root>
 				<p class="text-xs text-muted-foreground">
 					{#if el.sizing === 'fill'}
-						The box sets the size, growing as well as shrinking. A field bound to a column sizes
-						itself to whatever is on screen, so turn preview on to size it against real data.
+						The box sets the size, growing as well as shrinking, and lines break only where you
+						typed them. A field bound to a column sizes itself to what is on screen, so turn preview
+						on to size it against real data.
 					{:else if el.sizing === 'shrink'}
-						Only ever comes down from the size above, so a long value still lands inside the box.
+						Only ever comes down from the size above, and lines break only where you typed them — so
+						a long value gets smaller rather than reflowing.
 					{:else}
-						Keeps the size above, and anything past the box is cut off.
+						Keeps the size above and wraps to fit the box, cutting off whatever still runs past it.
 					{/if}
 				</p>
 			</div>
