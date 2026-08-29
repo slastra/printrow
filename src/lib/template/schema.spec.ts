@@ -38,10 +38,70 @@ describe('TemplateSchema', () => {
 		const el = ElementSchema.parse({ id: 'a', type: 'text', x: 0, y: 0, w: 100, h: 40, text: '' });
 		if (el.type !== 'text') throw new Error('wrong branch');
 		expect(el.fontSize).toBe(32);
-		expect(el.autoFit).toBe(true);
+		expect(el.sizing).toBe('shrink');
 		expect(el.rotation).toBe(0);
 		expect(el.lineHeight).toBe(1.15);
 		expect(el.letterSpacing).toBe(0);
+	});
+
+	test('text sizing migrates off the old autoFit boolean', () => {
+		// Every template saved before this field existed carries autoFit. If the
+		// schema rejected it, TemplateSchema.safeParse would fail and load()
+		// would discard the WHOLE template — silent, total data loss. These are
+		// the assertions standing between that and a user's saved work.
+		const box = { id: 'a', type: 'text', x: 0, y: 0, w: 100, h: 40, text: '' };
+		const sizingOf = (extra: object) => {
+			const el = ElementSchema.parse({ ...box, ...extra });
+			if (el.type !== 'text') throw new Error('wrong branch');
+			return el;
+		};
+		expect(sizingOf({ autoFit: true }).sizing).toBe('shrink');
+		expect(sizingOf({ autoFit: false }).sizing).toBe('fixed');
+		// absent, i.e. a template older still — matches the old default of true
+		expect(sizingOf({}).sizing).toBe('shrink');
+		// the new field wins, so re-parsing migrated data is stable
+		expect(sizingOf({ sizing: 'fill', autoFit: false }).sizing).toBe('fill');
+		// and the legacy key must not survive into what gets saved again
+		expect('autoFit' in sizingOf({ autoFit: true })).toBe(false);
+		expect(ElementSchema.safeParse({ ...box, sizing: 'enormous' }).success).toBe(false);
+	});
+
+	test('re-parsing an element is idempotent, which updateById relies on', () => {
+		// every mutation runs ElementSchema.safeParse({ ...el, ...patch }) over
+		// already-parsed output, so the migration has to be a no-op second time
+		const once = ElementSchema.parse({
+			id: 'a',
+			type: 'text',
+			x: 0,
+			y: 0,
+			w: 100,
+			h: 40,
+			text: '',
+			autoFit: false
+		});
+		expect(ElementSchema.parse(once)).toEqual(once);
+	});
+
+	test('a whole legacy template still loads rather than being discarded', () => {
+		// the failure this guards is at the TEMPLATE level: one unparseable
+		// element takes the entire document with it
+		const legacy = {
+			id: 'x',
+			version: 1,
+			name: 'Old',
+			width: 400,
+			height: 240,
+			elements: [
+				{ id: 'a', type: 'text', x: 0, y: 0, w: 100, h: 40, text: 'hi', autoFit: false },
+				{ id: 'b', type: 'text', x: 0, y: 0, w: 100, h: 40, text: 'yo', autoFit: true }
+			]
+		};
+		const parsed = TemplateSchema.safeParse(legacy);
+		expect(parsed.success).toBe(true);
+		expect(parsed.data?.elements.map((e) => (e.type === 'text' ? e.sizing : null))).toEqual([
+			'fixed',
+			'shrink'
+		]);
 	});
 
 	test('line height defaults to the value the renderer used to hardcode', () => {

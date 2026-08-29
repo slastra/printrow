@@ -18,6 +18,7 @@
 		BORDER_STYLES,
 		FONTS,
 		type FontKey,
+		type TextSizing,
 		STOCK_COLORS,
 		DOTS_PER_MM,
 		type BorderStyle,
@@ -302,6 +303,7 @@
 						min={MIN_FONT_SIZE}
 						max={MAX_FONT_SIZE}
 						value={el.fontSize}
+						disabled={el.sizing === 'fill'}
 						oninput={(e) => editor.update({ fontSize: int(e.currentTarget.value, el.fontSize) })}
 					/>
 				</div>
@@ -312,6 +314,7 @@
 					min={MIN_FONT_SIZE}
 					max={MAX_FONT_SIZE}
 					step={1}
+					disabled={el.sizing === 'fill'}
 				/>
 			</div>
 			<div class="space-y-1.5">
@@ -400,13 +403,30 @@
 					step={1}
 				/>
 			</div>
-			<div class="flex items-center justify-between">
-				<Label for="autofit">Shrink to fit</Label>
-				<Switch
-					id="autofit"
-					checked={el.autoFit}
-					onCheckedChange={(v) => editor.update({ autoFit: v })}
-				/>
+			<div class="space-y-1.5">
+				<Label>Text sizing</Label>
+				<ToggleGroup.Root
+					type="single"
+					variant="outline"
+					size="sm"
+					class="w-full"
+					value={el.sizing}
+					onValueChange={(v) => v && editor.update({ sizing: v as TextSizing })}
+				>
+					<ToggleGroup.Item value="fixed" class="flex-1 text-xs">Fixed</ToggleGroup.Item>
+					<ToggleGroup.Item value="shrink" class="flex-1 text-xs">Shrink</ToggleGroup.Item>
+					<ToggleGroup.Item value="fill" class="flex-1 text-xs">Fill</ToggleGroup.Item>
+				</ToggleGroup.Root>
+				<p class="text-xs text-muted-foreground">
+					{#if el.sizing === 'fill'}
+						The box sets the size, growing as well as shrinking. A field bound to a column sizes
+						itself to whatever is on screen, so turn preview on to size it against real data.
+					{:else if el.sizing === 'shrink'}
+						Only ever comes down from the size above, so a long value still lands inside the box.
+					{:else}
+						Keeps the size above, and anything past the box is cut off.
+					{/if}
+				</p>
 			</div>
 		{:else if el.type === 'barcode'}
 			<div class="space-y-1.5">

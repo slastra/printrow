@@ -105,6 +105,18 @@ export const PRINTER_IDS = ['y50p', 'b1'] as const satisfies readonly PrinterId[
 export const PRINT_DIRECTIONS = ['top', 'left'] as const;
 
 /**
+ * How a text element decides its type size.
+ *
+ *  - `fixed`  — use the stored fontSize; Konva truncates at the box edge.
+ *  - `shrink` — come DOWN from the stored size until the text fits. The stored
+ *               size is a ceiling, so a long CSV value still lands inside.
+ *  - `fill`   — size to the box in BOTH directions, so the box sets the size
+ *               and the stored fontSize is inert.
+ */
+export const TEXT_SIZING = ['fixed', 'shrink', 'fill'] as const;
+export type TextSizing = (typeof TEXT_SIZING)[number];
+
+/**
  * Bundled faces, so every machine rasterizes text identically — a system font
  * would make the same template print differently per device. Chosen to stay
  * legible once thresholded to 1-bit at 8 dots/mm: no hairline weights, and a
@@ -165,32 +177,47 @@ const base = {
 	ink: z.enum(INKS).default('black')
 };
 
-export const TextElementSchema = z.object({
-	...base,
-	type: z.literal('text'),
-	// May contain {{var}} placeholders resolved from a CSV row at print time.
-	text: z.string(),
-	fontSize: z.number().int().min(MIN_FONT_SIZE).max(MAX_FONT_SIZE).default(32),
-	font: z.enum(FONT_KEYS).default('inter'),
-	bold: z.boolean().default(true),
-	italic: z.boolean().default(false),
-	underline: z.boolean().default(false),
-	align: z.enum(['left', 'center', 'right']).default('left'),
-	// Where the wrapped block sits inside the box. Only visible once the text
-	// is shorter than its box, which is the usual case for a fixed-height
-	// field fed from a CSV column.
-	verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
-	// Shrink until the wrapped text fits the box — essential when a CSV value
-	// runs longer than the sample the template was designed around.
-	autoFit: z.boolean().default(true),
-	// Leading, as a multiple of the font size. Tightening it is often what lets
-	// a two-line field fit its box instead of autoFit shrinking the type.
-	lineHeight: z.number().min(MIN_LINE_HEIGHT).max(MAX_LINE_HEIGHT).default(DEFAULT_LINE_HEIGHT),
-	// Tracking, in dots. Whole dots only: a fractional advance moves nothing but
-	// antialiasing, which the 1-bit pass then throws away. Condensed faces need
-	// this most — their stems sit close enough to bridge under a hard threshold.
-	letterSpacing: z.number().int().min(MIN_LETTER_SPACING).max(MAX_LETTER_SPACING).default(0)
-});
+export const TextElementSchema = z
+	.object({
+		...base,
+		type: z.literal('text'),
+		// May contain {{var}} placeholders resolved from a CSV row at print time.
+		text: z.string(),
+		fontSize: z.number().int().min(MIN_FONT_SIZE).max(MAX_FONT_SIZE).default(32),
+		font: z.enum(FONT_KEYS).default('inter'),
+		bold: z.boolean().default(true),
+		italic: z.boolean().default(false),
+		underline: z.boolean().default(false),
+		align: z.enum(['left', 'center', 'right']).default('left'),
+		// Where the wrapped block sits inside the box. Only visible once the text
+		// is shorter than its box, which is the usual case for a fixed-height
+		// field fed from a CSV column.
+		verticalAlign: z.enum(['top', 'middle', 'bottom']).default('top'),
+		// See TEXT_SIZING. Optional so the transform below can tell "absent" from
+		// "chosen" — the default lives there, not here.
+		sizing: z.enum(TEXT_SIZING).optional(),
+		/**
+		 * @deprecated Superseded by `sizing`; read only by the migration below and
+		 * stripped from the output, so it never reaches a saved template again.
+		 */
+		autoFit: z.boolean().optional(),
+		// Leading, as a multiple of the font size. Tightening it is often what lets
+		// a two-line field fit its box instead of the type shrinking.
+		lineHeight: z.number().min(MIN_LINE_HEIGHT).max(MAX_LINE_HEIGHT).default(DEFAULT_LINE_HEIGHT),
+		// Tracking, in dots. Whole dots only: a fractional advance moves nothing but
+		// antialiasing, which the 1-bit pass then throws away. Condensed faces need
+		// this most — their stems sit close enough to bridge under a hard threshold.
+		letterSpacing: z.number().int().min(MIN_LETTER_SPACING).max(MAX_LETTER_SPACING).default(0)
+	})
+	.transform(({ autoFit, ...el }) => ({
+		// Migrate the pre-`sizing` boolean and drop it, so a saved template never
+		// carries both. This lives in the schema rather than at the autosave, so it
+		// covers every path in — the loader, undo's re-parse, and the mutation
+		// funnel alike. It has to be `.transform()` specifically: zod accepts that
+		// as a discriminated-union member, but rejects `z.preprocess`.
+		...el,
+		sizing: el.sizing ?? (autoFit === false ? 'fixed' : 'shrink')
+	}));
 
 export const BarcodeElementSchema = z.object({
 	...base,

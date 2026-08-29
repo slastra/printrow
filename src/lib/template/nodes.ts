@@ -2,6 +2,7 @@ import type Konva from 'konva';
 import {
 	fontStack,
 	MIN_FONT_SIZE,
+	MAX_FONT_SIZE,
 	type AnyElement,
 	type BarcodeElement,
 	type IconElement,
@@ -288,11 +289,11 @@ export async function buildNode(
 				fontFamily: family,
 				align: el.align,
 				// takes effect only once height is pinned below; during the
-				// autoFit measurement height is unset, so this cannot skew it
+				// fitting measurement height is unset, so this cannot skew it
 				verticalAlign: el.verticalAlign,
 				wrap: 'word',
 				// Both metrics must be set HERE, in the config, not after the
-				// autoFit search below: the search measures node.height(), which
+				// fitting search below: the search measures node.height(), which
 				// is fontSize x line count x lineHeight, and letterSpacing widens
 				// each measured run and so decides where the text wraps. Set
 				// afterwards, the fit would be computed against stale metrics.
@@ -300,30 +301,49 @@ export async function buildNode(
 				letterSpacing: el.letterSpacing,
 				fill: '#000'
 			});
-			if (el.autoFit) {
+			if (el.sizing !== 'fixed') {
 				// While height is unset, node.height() measures the wrapped content.
 				// Binary search — each fontSize() call re-runs Konva's wrapping, so
 				// a linear walk from 200 would cost ~190 layout passes per rebuild.
 				// +1 absorbs the rounding between a transform gesture's stored box
 				// height and the re-rendered text height — without it, resizing can
 				// nudge the font down a step it doesn't need.
+				//
+				// The second term is what makes the search safe in the GROWING
+				// direction. When a single glyph is wider than the box, Konva
+				// stops wrapping and emits no line at all for that paragraph, so
+				// the measured height FALLS — an absurdly large size reports as
+				// fitting. Checking node.textWidth does not catch it either: that
+				// is left at its 0 initialiser on exactly the path that drops the
+				// text. Counting the glyphs that survived wrapping does.
+				const inked = (s: string) => s.replace(/\s+/g, '').length;
+				const want = inked(node.text());
 				const fits = (size: number) => {
 					node.fontSize(size);
-					return node.height() <= el.h + 1;
+					if (node.height() > el.h + 1) return false;
+					return node.textArr.reduce((n, line) => n + inked(line.text), 0) >= want;
 				};
-				if (!fits(el.fontSize)) {
-					let lo = MIN_FONT_SIZE,
-						hi = el.fontSize;
+				/** The largest size in [lo, hi] that fits, or lo if none does. */
+				const search = (lo: number, hi: number) => {
 					while (lo < hi) {
 						const mid = Math.ceil((lo + hi) / 2);
 						if (fits(mid)) lo = mid;
 						else hi = mid - 1;
 					}
 					node.fontSize(lo);
+				};
+				if (el.sizing === 'fill') {
+					// The box decides, not the stored size — which the inspector
+					// disables in this mode, so capping by it would make fill
+					// refuse to fill for a reason the user cannot see.
+					search(MIN_FONT_SIZE, MAX_FONT_SIZE);
+				} else if (!fits(el.fontSize)) {
+					// shrink: the stored size is a ceiling, so only ever come down
+					search(MIN_FONT_SIZE, el.fontSize);
 				}
 			}
 			// Then pin the box to the model: the transformer frames the box the
-			// user drew, and with autoFit off Konva truncates overflow at the box
+			// user drew, and with sizing 'fixed' Konva truncates overflow at the box
 			// edge instead of spilling past it.
 			node.height(el.h);
 			return rasterizeAtDots(node);

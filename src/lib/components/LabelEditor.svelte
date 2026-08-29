@@ -405,6 +405,11 @@
 			// smaller than its content.
 			if (
 				el?.type === 'text' &&
+				// fill sizes the type from the box, so a written fontSize would
+				// never be rendered — it would just drift under a control the
+				// inspector disables in that mode. The geometry write below
+				// already carries the whole intent of the drag.
+				el.sizing !== 'fill' &&
 				ELEMENT_META.text.cornerScalesFont &&
 				scaleX !== 1 &&
 				scaleY !== 1
