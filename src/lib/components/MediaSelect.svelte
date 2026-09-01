@@ -7,6 +7,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { fitsPrinter, printableWidthMm } from '$lib/printer/models';
+	import { MEDIA_MAX_W_MM } from '$lib/template/schema';
 	import { clamp } from '$lib/utils';
 	import RulerIcon from '@lucide/svelte/icons/ruler';
 
@@ -39,9 +40,15 @@
 	);
 	const isPreset = $derived(MEDIA_PRESETS.some((p) => `${p.wMm}×${p.hMm}` === current));
 	const currentLabel = $derived(
-		MEDIA_PRESETS.find((p) => `${p.wMm}×${p.hMm}` === current)?.label ??
-			`${current.replace('×', ' × ')} mm`
+		editor.isRound
+			? `\u2300 ${editor.diameterMm} mm round`
+			: (MEDIA_PRESETS.find((p) => `${p.wMm}×${p.hMm}` === current)?.label ??
+					`${current.replace('×', ' × ')} mm`)
 	);
+	// Round stock has one dimension, not two: offering width and height would
+	// let the dialog produce an ellipse, which no die cuts.
+	const round = $derived(editor.isRound);
+	const maxDiameter = $derived(Math.min(MEDIA_MAX_W_MM, headMm));
 
 	let customOpen = $state(false);
 	let wMm = $state(50);
@@ -59,6 +66,11 @@
 	}
 
 	function applyCustom() {
+		if (round) {
+			editor.setDiameter(Number(wMm) || 0);
+			customOpen = false;
+			return;
+		}
 		// setMedia clamps to the SCHEMA's bounds, which span every model; the
 		// selected printer's own, narrower head is enforced here so the dialog
 		// cannot accept a size it just said was illegal

@@ -213,13 +213,13 @@
 				<span class="text-xs text-muted-foreground tabular-nums">
 					{editor.template.stockRadius === 0
 						? 'square'
-						: editor.template.stockRadius === 50
-							? // at full rounding the short axis is used up entirely, which is a
-								// circle only when the label is square and a stadium otherwise
-								editor.template.width === editor.template.height
-								? 'round'
-								: 'pill'
-							: `${editor.template.stockRadius}%`}
+						: editor.isRound
+							? `\u2300 ${editor.diameterMm} mm`
+							: editor.template.stockRadius === 50
+								? // full rounding uses the short axis up entirely: a circle on
+									// square stock, a stadium on anything else
+									'pill'
+								: `${editor.template.stockRadius}%`}
 				</span>
 			</div>
 			<Slider
@@ -231,7 +231,7 @@
 				step={1}
 			/>
 			<div class="flex gap-1">
-				{#each [{ label: 'Square', pct: 0 }, { label: 'Rounded', pct: 8 }, { label: 'Round', pct: 50 }] as preset (preset.pct)}
+				{#each [{ label: 'Square', pct: 0 }, { label: 'Rounded', pct: 8 }] as preset (preset.pct)}
 					<Button
 						variant={editor.template.stockRadius === preset.pct ? 'secondary' : 'ghost'}
 						size="sm"
@@ -241,7 +241,26 @@
 						{preset.label}
 					</Button>
 				{/each}
+				<!-- Round squares the media as well as maxing the rounding: at 50% a
+				     non-square label is a stadium, so the shape has to change with it -->
+				<Button
+					variant={editor.isRound ? 'secondary' : 'ghost'}
+					size="sm"
+					class="flex-1 text-xs"
+					onclick={() => editor.makeRound()}
+				>
+					Round
+				</Button>
 			</div>
+			{#if editor.isRound}
+				<p class="text-xs text-muted-foreground">
+					Squared to a {editor.diameterMm} mm circle, centred across the head. Round stock is sold by
+					its carrier, so a 50 mm round label is a circle cut inside a 50 mm square — and only {printableWidthMm(
+						editor.model
+					)} mm of that crosses the {editor.model.name}'s head. Set the exact cut diameter under
+					Size if it is smaller.
+				</p>
+			{/if}
 		</div>
 
 		<p class="text-xs text-muted-foreground">

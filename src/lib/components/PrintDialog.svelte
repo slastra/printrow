@@ -5,6 +5,7 @@
 	import { printer } from '$lib/printer/ble.svelte';
 	import { buildPrintCanvas } from '$lib/template/raster';
 	import { MODELS } from '$lib/printer/models';
+	import type { RfidInfo } from '@slastra/nblib';
 	import { parseRowSpec, describeRows } from '$lib/template/rows';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Button } from '$lib/components/ui/button';
@@ -18,6 +19,7 @@
 	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import LayersIcon from '@lucide/svelte/icons/layers';
+	import RadioIcon from '@lucide/svelte/icons/radio';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 
 	let { open = $bindable(false) }: { open?: boolean } = $props();
@@ -40,6 +42,34 @@
 		density = model.defaultDensity;
 		labelType = model.defaultLabelType;
 	});
+
+	// The tag read is a diagnostic, not a setting: it changes nothing about the
+	// job, it just reports what the printer says is loaded. Held here rather
+	// than in printer state because nothing outside this dialog wants it.
+	let rfid = $state<RfidInfo | null | undefined>(undefined);
+	let reading = $state(false);
+	$effect(() => {
+		// a new connection is a new roll as far as anyone knows
+		void printer.deviceName;
+		rfid = undefined;
+	});
+
+	async function readTag() {
+		reading = true;
+		try {
+			const info = await printer.readRfid();
+			rfid = info;
+			// the parse is reconstructed rather than specified, so the raw bytes go
+			// to the console where they can be read back and checked
+			console.log('[printrow] RFID', info ?? 'no tag');
+			if (!info) toast.info('No tag on this roll');
+		} catch (e) {
+			rfid = undefined;
+			toast.error(e instanceof Error ? e.message : 'tag read failed');
+		} finally {
+			reading = false;
+		}
+	}
 
 	async function connect() {
 		if (!printer.supported) {
@@ -207,6 +237,35 @@
 									</Select.Content>
 								</Select.Root>
 							</div>
+						{/if}
+					</div>
+				{/if}
+
+				{#if printer.canReadRfid}
+					<div class="space-y-1.5">
+						<Button
+							variant="outline"
+							size="sm"
+							class="h-8 w-full text-xs"
+							disabled={reading || printer.busy}
+							onclick={readTag}
+						>
+							<RadioIcon class="size-3.5" />
+							{reading ? 'Reading…' : 'Read roll tag'}
+						</Button>
+						{#if rfid}
+							<dl
+								class="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 rounded-md bg-muted/50 p-2 text-xs"
+							>
+								{#each [['Barcode', rfid.barcode], ['Serial', rfid.serial], ['Labels', rfid.total === undefined ? undefined : `${rfid.used ?? 0} of ${rfid.total} used`], ['UUID', rfid.uuid]] as [k, v] (k)}
+									{#if v}
+										<dt class="text-muted-foreground">{k}</dt>
+										<dd class="truncate font-mono">{v}</dd>
+									{/if}
+								{/each}
+								<dt class="text-muted-foreground">Raw</dt>
+								<dd class="font-mono break-all text-muted-foreground">{rfid.raw}</dd>
+							</dl>
 						{/if}
 					</div>
 				{/if}

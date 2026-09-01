@@ -10,7 +10,9 @@ import {
 	describeHeartbeat,
 	imageDataToRows as nbRows,
 	printJob as nbPrint,
-	readHeartbeat
+	readHeartbeat,
+	readRfidInfo,
+	type RfidInfo
 } from '@slastra/nblib';
 import {
 	connect as nbConnect,
@@ -52,6 +54,12 @@ export interface PrinterLink {
 	 * rasterize a thousand labels up front.
 	 */
 	print(builds: (() => Promise<HTMLCanvasElement>)[], options: PrintRunOptions): Promise<number>;
+	/**
+	 * Read the tag in the loaded roll, where the printer has a reader at all.
+	 * Absent on models that do not, so a caller can offer the control only
+	 * where it means something rather than showing one that always fails.
+	 */
+	readRfid?(): Promise<RfidInfo | null>;
 }
 
 export interface PrinterDriver {
@@ -125,12 +133,17 @@ const b1: PrinterDriver = {
 						const cv = await build();
 						return buildPage(nbRows(imageData(cv)), {
 							direction,
-							printheadPixels: MODELS.b1.printheadDots
+							printheadPixels: MODELS.b1.printheadDots,
+							// A design narrower than the head would otherwise print hard
+							// against one edge: the printer starts every row at dot 0
+							// and has no notion of a margin.
+							align: 'center'
 						});
 					}),
 					{ density, labelType, onProgress, signal }
 				);
-			}
+			},
+			readRfid: () => readRfidInfo(link)
 		};
 	}
 };

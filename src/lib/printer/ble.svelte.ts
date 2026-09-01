@@ -1,4 +1,5 @@
 import { DRIVERS, type PrinterDriver, type PrinterLink, type PrinterStatus } from './drivers';
+import type { RfidInfo } from '@slastra/nblib';
 import { MODELS, type PrinterId, type PrintDirection } from './models';
 
 /**
@@ -73,6 +74,19 @@ class PrinterState {
 
 	disconnect() {
 		this.link?.disconnect();
+	}
+
+	/** Whether the connected printer can read the tag in its roll. */
+	get canReadRfid(): boolean {
+		return Boolean(this.link?.readRfid);
+	}
+
+	/**
+	 * Read the loaded roll's RFID tag. Null covers both "no reader" and "no
+	 * tag" — from the caller's side those are the same answer.
+	 */
+	async readRfid(): Promise<RfidInfo | null> {
+		return (await this.link?.readRfid?.()) ?? null;
 	}
 
 	async readStatus(): Promise<PrinterStatus | null> {

@@ -33,6 +33,20 @@ import {
 	type PrinterModel
 } from '$lib/printer/models';
 import { loadImage } from './nodes';
+import {
+	deleteTemplate,
+	fileNameFor,
+	fromJson,
+	getTemplate,
+	hasLibrary,
+	listTemplates,
+	migrateLegacyAutosave,
+	putTemplate,
+	readCurrentId,
+	toJson,
+	writeCurrentId,
+	type LibraryEntry
+} from './library';
 import { clamp } from '$lib/utils';
 
 const STORAGE_KEY = 'printrow:template:v1';
@@ -64,6 +78,11 @@ class EditorState {
 	editRequest = $state<{ id: string } | null>(null);
 	/** The label itself is selectable, like a bottom layer. */
 	labelSelected = $state(false);
+	/**
+	 * Every saved template, newest first. Kept in state so the menu re-renders
+	 * on a save or a delete without anyone having to remember to refresh it.
+	 */
+	library = $state<LibraryEntry[]>([]);
 
 	private saveTimer: ReturnType<typeof setTimeout> | undefined;
 	private past = $state<string[]>([]);
@@ -114,7 +133,38 @@ class EditorState {
 		return this.template.elements.find((e) => e.id === id);
 	}
 
-	load() {
+	/**
+	 * Open whatever was being edited last.
+	 *
+	 * Three sources in priority order: the library entry the pointer names, the
+	 * pre-library autosave (migrated in on first run of this build), and
+	 * finally a blank template. Every failure path falls through to the next
+	 * rather than throwing — an unreadable save must not wedge the editor.
+	 */
+	async load() {
+		if (!hasLibrary()) return this.loadLegacyOnly();
+		try {
+			const migrated = await migrateLegacyAutosave();
+			const id = readCurrentId();
+			const saved = id ? await getTemplate(id) : null;
+			const open = saved ?? migrated ?? (await this.firstInLibrary());
+			if (open) this.adopt(open);
+			await this.refreshLibrary();
+		} catch {
+			// storage unavailable (private mode, disabled, blocked upgrade) — the
+			// editor still works, it just cannot remember anything
+			this.loadLegacyOnly();
+		}
+	}
+
+	/** The most recently touched template, for a pointer that names nothing. */
+	private async firstInLibrary(): Promise<Template | null> {
+		const [newest] = await listTemplates();
+		return newest ? await getTemplate(newest.id) : null;
+	}
+
+	/** The old single-slot autosave, for a browser with no IndexedDB at all. */
+	private loadLegacyOnly() {
 		try {
 			const raw = localStorage.getItem(STORAGE_KEY);
 			if (!raw) return;
@@ -123,6 +173,98 @@ class EditorState {
 		} catch {
 			// unreadable autosave — start fresh rather than wedge the editor
 		}
+	}
+
+	/**
+	 * Make `t` the template being edited. History does not carry across: undo
+	 * must never reach back into a different template and paste its contents
+	 * over this one.
+	 */
+	private adopt(t: Template) {
+		this.template = t;
+		this.selectedIds = [];
+		this.labelSelected = false;
+		this.past = [];
+		this.future = [];
+		this.lastSavedJson = JSON.stringify(t);
+		writeCurrentId(t.id);
+	}
+
+	async refreshLibrary() {
+		if (!hasLibrary()) return;
+		try {
+			this.library = await listTemplates();
+		} catch {
+			this.library = [];
+		}
+	}
+
+	// --- the library ---------------------------------------------------------
+
+	/** Open a saved template by id. Silently no-ops if it has been deleted. */
+	async open(id: string) {
+		if (id === this.template.id) return;
+		const t = await getTemplate(id);
+		if (t) this.adopt(t);
+	}
+
+	/** Start an empty label, saved and opened straight away. */
+	async createNew() {
+		const t = blankTemplate();
+		this.adopt(t);
+		await this.persist();
+	}
+
+	/**
+	 * Fork the current template under a new name, leaving the original as it
+	 * was on disk and switching to the copy.
+	 */
+	async saveAs(name: string) {
+		const t = { ...structuredClone($state.snapshot(this.template)), id: crypto.randomUUID(), name };
+		this.adopt(t);
+		await this.persist();
+	}
+
+	rename(name: string) {
+		const trimmed = name.trim();
+		if (!trimmed || trimmed === this.template.name) return;
+		this.commit(() => (this.template.name = trimmed));
+	}
+
+	/**
+	 * Delete a saved template. Deleting the one being edited opens the next
+	 * most recent instead, or a blank label when the library empties — the
+	 * editor is never left showing a template that no longer exists.
+	 */
+	async deleteSaved(id: string) {
+		await deleteTemplate(id);
+		await this.refreshLibrary();
+		if (id !== this.template.id) return;
+		const next = await this.firstInLibrary();
+		if (next) this.adopt(next);
+		else await this.createNew();
+	}
+
+	// --- files ---------------------------------------------------------------
+
+	/** The current template as a downloadable file. */
+	exportFile(): { name: string; json: string } {
+		return { name: fileNameFor(this.template), json: toJson(this.template) };
+	}
+
+	/** Add a template from a file's text and open it. Throws on a bad file. */
+	async importFile(text: string) {
+		this.adopt(fromJson(text));
+		await this.persist();
+	}
+
+	/** Write the current template out now, rather than on the save timer. */
+	private async persist() {
+		if (!hasLibrary()) return;
+		const json = JSON.stringify(this.template);
+		await putTemplate(structuredClone($state.snapshot(this.template)));
+		this.lastSavedJson = json;
+		await this.refreshLibrary();
 	}
 
 	// --- history -------------------------------------------------------------
@@ -300,6 +442,53 @@ class EditorState {
 	/** Die-cut corner rounding, 0–50% of the label. Preview only. */
 	setStockRadius(pct: number) {
 		this.commit(() => (this.template.stockRadius = clamp(Math.round(pct), 0, 50)));
+	}
+
+	/**
+	 * True when the stock is a circle rather than a rounded rectangle.
+	 *
+	 * Derived rather than stored: full rounding uses the short axis up
+	 * entirely, so it draws a circle on square stock and a stadium on anything
+	 * else. A separate `round` flag could disagree with the dimensions, and
+	 * then two fields would claim to describe one shape.
+	 */
+	get isRound(): boolean {
+		return this.template.stockRadius === 50 && this.template.width === this.template.height;
+	}
+
+	/** The circle's diameter in mm, meaningful only while `isRound`. */
+	get diameterMm(): number {
+		return this.template.width / DOTS_PER_MM;
+	}
+
+	/**
+	 * Make the stock a true circle of `mm` across.
+	 *
+	 * Capped at the head as well as at the schema's bounds, because round
+	 * stock is sold by the carrier: a 50 mm round label is a circle cut inside
+	 * a 50 mm square, and 50 mm does not cross a 48 mm head. Squaring to the
+	 * printable width is what lets that roll be used at all.
+	 *
+	 * One commit, so undo restores both dimensions and the rounding together
+	 * rather than leaving a half-round label behind.
+	 */
+	setDiameter(mm: number) {
+		const max = Math.min(MEDIA_MAX_W_MM, printableWidthMm(this.model));
+		const d = clamp(Math.round(mm), MEDIA_MIN_MM, max) * DOTS_PER_MM;
+		this.commit(() => {
+			this.template.width = d;
+			this.template.height = d;
+			this.template.stockRadius = 50;
+			for (const el of this.template.elements) {
+				el.x = this.clampX(el.x, el.w);
+				el.y = this.clampY(el.y, el.h);
+			}
+		});
+	}
+
+	/** Square the current label into the largest circle it can hold. */
+	makeRound() {
+		this.setDiameter(Math.min(this.template.width, this.template.height) / DOTS_PER_MM);
 	}
 
 	// --- printer -------------------------------------------------------------
@@ -600,10 +789,30 @@ class EditorState {
 		clearTimeout(this.saveTimer);
 		this.saveTimer = setTimeout(() => {
 			const json = JSON.stringify(this.template);
-			if (json !== this.lastSavedJson) {
-				localStorage.setItem(STORAGE_KEY, json);
-				this.lastSavedJson = json;
+			if (json === this.lastSavedJson) return;
+			this.lastSavedJson = json;
+			if (!hasLibrary()) {
+				try {
+					localStorage.setItem(STORAGE_KEY, json);
+				} catch {
+					// out of quota with no IndexedDB to fall back on; nothing useful
+					// to do here, and throwing out of a timer helps no one
+				}
+				return;
 			}
+			writeCurrentId(this.template.id);
+			// The snapshot is taken here rather than inside putTemplate: structured
+			// cloning a $state proxy throws, and the await means the template could
+			// be mutated again before the write reads it.
+			const row = structuredClone($state.snapshot(this.template));
+			void putTemplate(row).then(
+				() => this.refreshLibrary(),
+				() => {
+					// a failed write must not look like a successful one, or the next
+					// change would be skipped as "already saved"
+					this.lastSavedJson = null;
+				}
+			);
 		}, 400);
 	}
 }
