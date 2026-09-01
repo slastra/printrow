@@ -1,0 +1,36 @@
+[   28570ms] TypeError: Cannot read properties of undefined (reading 'call')
+
+	in <unknown>
+
+
+	in <unknown>
+	in button.svelte
+	in floating-layer-anchor.svelte
+	in menu-trigger.svelte
+	in dropdown-menu-trigger.svelte
+	in floating-layer.svelte
+	in menu.svelte
+	in dropdown-menu.svelte
+	in TemplateMenu.svelte
+	in sidebar-header.svelte
+	in sidebar.svelte
+	in tooltip-provider.svelte
+	in tooltip-provider.svelte
+	in sidebar-provider.svelte
+	in +page.svelte
+	in tooltip-provider.svelte
+	in tooltip-provider.svelte
+	in +layout.svelte
+	in root.svelte
+	in undefined
+
+    at get_next_sibling (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4121:29)
+    at remove_effect_dom (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4620:52)
+    at destroy_effect (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4596:3)
+    at create_effect (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4330:4)
+    at branch (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4537:9)
+    at http://localhost:5173/node_modules/.vite/deps/client-CyYA762t.js?v=26d4cc0b:696:13
+    at update_reaction (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4907:16)
+    at update_effect (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:5012:18)
+    at create_effect (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4328:4)
+    at block (http://localhost:5173/node_modules/.vite/deps/runtime-CC8UJW-O.js?v=26d4cc0b:4520:15)

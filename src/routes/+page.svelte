@@ -141,8 +141,15 @@
 			<!-- which template is open, top right. Desktop only: the phone reaches
 			     the same menu from the sidebar sheet, where it started. -->
 			<div class="absolute top-3 right-3 z-10 hidden float-in-down float-step-1 lg:block">
+				<!-- The canvas idiom, not a form control's: the tool surface, muted
+				     glyphs, and only the text brightening on hover — the ghost
+				     variant would otherwise swap the fill, which no other tool here
+				     does. Height matches the context toolbar beside it in the same
+				     row (p-1 around size-8 controls), rather than the 36 px of the
+				     icon-only tools. -->
 				<TemplateMenu
-					class="w-48 border-border bg-(--surface-tool) shadow-(--shadow-tool) backdrop-blur-[10px]"
+					variant="ghost"
+					class="h-[42px] w-48 rounded-lg border border-border bg-(--surface-tool) text-muted-foreground shadow-(--shadow-tool) backdrop-blur-[10px] transition-colors hover:bg-(--surface-tool) hover:text-foreground"
 				/>
 			</div>
 

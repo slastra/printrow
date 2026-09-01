@@ -8,7 +8,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
-	import FileIcon from '@lucide/svelte/icons/file';
+	import LayoutTemplateIcon from '@lucide/svelte/icons/layout-template';
 	import FilePlusIcon from '@lucide/svelte/icons/file-plus';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
@@ -20,9 +20,13 @@
 	/**
 	 * Trigger styling is the caller's, because this renders in two places that
 	 * look nothing alike: a full-width sidebar row on a phone, and a floating
-	 * tool button over the canvas on a desktop.
+	 * tool over the canvas on a desktop, which wears the same surface as the
+	 * sidebar trigger and the label shortcut rather than a form control's.
 	 */
-	let { class: className = 'w-full' }: { class?: string } = $props();
+	let {
+		class: className = 'w-full',
+		variant = 'outline'
+	}: { class?: string; variant?: 'outline' | 'ghost' } = $props();
 
 	/** Which naming dialog is open, and what it will do with the name. */
 	let naming = $state<'saveAs' | 'rename' | null>(null);
@@ -75,12 +79,12 @@
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
-			<Button {...props} variant="outline" size="sm" class="justify-between gap-2 {className}">
+			<Button {...props} {variant} size="sm" class="justify-between gap-2 {className}">
 				<span class="flex min-w-0 items-center gap-2">
-					<FileIcon class="size-4 shrink-0" />
-					<span class="truncate">{editor.template.name}</span>
+					<LayoutTemplateIcon class="size-4 shrink-0" />
+					<span class="truncate text-foreground">{editor.template.name}</span>
 				</span>
-				<ChevronDownIcon class="size-4 shrink-0 opacity-60" />
+				<ChevronDownIcon class="size-4 shrink-0" />
 			</Button>
 		{/snippet}
 	</DropdownMenu.Trigger>
