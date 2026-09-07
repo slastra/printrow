@@ -13,7 +13,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as Select from '$lib/components/ui/select';
 	import { Slider } from '$lib/components/ui/slider';
-	import { cn } from '$lib/utils';
+	import { clamp, cn } from '$lib/utils';
 	import BluetoothIcon from '@lucide/svelte/icons/bluetooth';
 	import BluetoothOffIcon from '@lucide/svelte/icons/bluetooth-off';
 	import PrinterIcon from '@lucide/svelte/icons/printer';
@@ -112,6 +112,24 @@
 
 	/** Print row N always uses the row's real values, whatever the preview toggle. */
 	const printOne = () => run([build(data.previewRow)]);
+
+	// --- copies ----------------------------------------------------------------
+	//
+	// Only offered without a CSV: with one loaded, "how many" is answered by the
+	// rows, and a copies count on top would multiply a batch nobody asked for.
+
+	const MAX_COPIES = 100;
+	let copies = $state(1);
+	const copyCount = $derived(clamp(Math.round(Number(copies) || 1), 1, MAX_COPIES));
+
+	const printCopies = () => {
+		// one render shared by every copy: the label has no row to vary by, so
+		// rasterizing it per copy would spend the whole batch drawing the same
+		// thing
+		const once = build(undefined);
+		let canvas: Promise<HTMLCanvasElement> | undefined;
+		run(Array.from({ length: copyCount }, () => () => (canvas ??= once())));
+	};
 
 	const printBatch = () => run(data.rows.map((row) => build(row)));
 
@@ -306,11 +324,11 @@
 					</div>
 				{:else}
 					<div class="space-y-2">
-						<Button class="w-full" disabled={printer.busy || blocked} onclick={printOne}>
-							<PrinterIcon />
-							{data.loaded ? `Print row ${data.previewIndex + 1}` : 'Print label'}
-						</Button>
 						{#if data.loaded}
+							<Button class="w-full" disabled={printer.busy || blocked} onclick={printOne}>
+								<PrinterIcon />
+								Print row {data.previewIndex + 1}
+							</Button>
 							<Button
 								variant="secondary"
 								class="w-full"
@@ -356,6 +374,25 @@
 										Type row numbers to print only those, in document order.
 									{/if}
 								</p>
+							</div>
+						{:else}
+							<div class="flex gap-2">
+								<Input
+									type="number"
+									min={1}
+									max={MAX_COPIES}
+									step={1}
+									bind:value={copies}
+									aria-label="Copies"
+									class="w-20 text-xs tabular-nums"
+									onkeydown={(e) => {
+										if (e.key === 'Enter' && !printer.busy && !blocked) printCopies();
+									}}
+								/>
+								<Button class="flex-1" disabled={printer.busy || blocked} onclick={printCopies}>
+									<PrinterIcon />
+									Print {copyCount === 1 ? 'label' : `${copyCount} labels`}
+								</Button>
 							</div>
 						{/if}
 					</div>
