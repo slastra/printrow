@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import {
-	MAX_PRINTHEAD_DOTS,
+	MAX_STOCK_DOTS,
 	MODELS,
 	MODEL_LIST,
 	acrossHeadDots,
 	fitsPrinter,
-	printableWidthMm
+	printableWidthMm,
+	stockWidthMm
 } from './models';
 import { MEDIA_PRESETS, DOTS_PER_MM, TemplateSchema } from '$lib/template/schema';
 
@@ -20,6 +21,14 @@ describe('print head widths', () => {
 		expect(printableWidthMm(MODELS.b1)).toBe(48);
 	});
 
+	test('but it takes 50 mm stock, so 50 mm designs are allowed', () => {
+		expect(stockWidthMm(MODELS.b1)).toBe(50);
+	});
+
+	test('no head is wider than its stock', () => {
+		for (const m of MODEL_LIST) expect(m.printheadDots).toBeLessThanOrEqual(m.stockDots);
+	});
+
 	test('the Y50P is 50 mm', () => {
 		expect(printableWidthMm(MODELS.y50p)).toBe(50);
 	});
@@ -27,7 +36,7 @@ describe('print head widths', () => {
 	test('the schema bound covers every model, so no model can outgrow it', () => {
 		// If this fails, a template valid for the new printer would be rejected
 		// by TemplateSchema on load and the whole design discarded.
-		for (const m of MODEL_LIST) expect(m.printheadDots).toBeLessThanOrEqual(MAX_PRINTHEAD_DOTS);
+		for (const m of MODEL_LIST) expect(m.stockDots).toBeLessThanOrEqual(MAX_STOCK_DOTS);
 	});
 });
 
@@ -42,15 +51,16 @@ describe('which dimension crosses the head', () => {
 });
 
 describe('fitsPrinter', () => {
-	test("printrow's 50 mm default does not fit the B1", () => {
+	test("printrow's 50 mm default fits the B1, at the width of its stock", () => {
 		const fit = fitsPrinter(dots(50, 30), 'top', MODELS.b1);
-		expect(fit.fits).toBe(false);
+		expect(fit.fits).toBe(true);
 		expect(fit.across).toBe(400);
-		expect(fit.reason).toBe('50 mm across the head, and the NIIMBOT B1 prints 48 mm');
 	});
 
-	test('48 mm does', () => {
-		expect(fitsPrinter(dots(48, 30), 'top', MODELS.b1).fits).toBe(true);
+	test('wider than the stock does not', () => {
+		const fit = fitsPrinter(dots(51, 30), 'top', MODELS.b1);
+		expect(fit.fits).toBe(false);
+		expect(fit.reason).toBe('51 mm across the head, and the NIIMBOT B1 takes 50 mm stock');
 	});
 
 	test('rotating the same label makes it fit, because 30 mm crosses instead', () => {
@@ -76,8 +86,7 @@ describe('media presets', () => {
 	});
 
 	test('no preset is wider than the widest head', () => {
-		for (const p of MEDIA_PRESETS)
-			expect(p.wMm * DOTS_PER_MM).toBeLessThanOrEqual(MAX_PRINTHEAD_DOTS);
+		for (const p of MEDIA_PRESETS) expect(p.wMm * DOTS_PER_MM).toBeLessThanOrEqual(MAX_STOCK_DOTS);
 	});
 });
 

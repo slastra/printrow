@@ -33,6 +33,14 @@ export interface PrinterModel {
 	readonly dotsPerMm: number;
 	/** Dots across the print head. */
 	readonly printheadDots: number;
+	/**
+	 * Dots across the widest stock the printer takes, which is what a design
+	 * is allowed to be. Where this is wider than the head, the overhang is
+	 * trimmed evenly off both edges at print time: the outer strip of a
+	 * label is bleed on every roll sold for it, and cropping keeps text and
+	 * barcodes at the size they were drawn where scaling would not.
+	 */
+	readonly stockDots: number;
 	readonly maxHeightMm: number;
 	/** Which controls this model exposes. */
 	readonly features: { direction: boolean; density: boolean; labelType: boolean };
@@ -49,6 +57,7 @@ export const MODELS: Record<PrinterId, PrinterModel> = {
 		blurb: '50 mm wide, 203 dpi. Also the FlashToy U8 and its white-label siblings.',
 		dotsPerMm: 8,
 		printheadDots: 400,
+		stockDots: 400,
 		maxHeightMm: 200,
 		// The YPL protocol has no notion of print direction, density or stock
 		// type: the raster is sent top-first and the printer decides the rest.
@@ -63,9 +72,10 @@ export const MODELS: Record<PrinterId, PrinterModel> = {
 		name: 'NIIMBOT B1',
 		blurb: '48 mm printable, 203 dpi. Takes gap, black-mark or transparent stock.',
 		dotsPerMm: 8,
-		// 384 dots is 48 mm, NOT the 50 mm the stock is: a 50 mm design does not
-		// fit across this head.
+		// 384 dots is 48 mm, NOT the 50 mm the stock is sold as. A 50 mm design
+		// is still accepted; the driver trims 1 mm off each edge to fit the head.
 		printheadDots: 384,
+		stockDots: 400,
 		maxHeightMm: 200,
 		features: { direction: true, density: true, labelType: true },
 		densityRange: [1, 5],
@@ -83,12 +93,17 @@ export const MODELS: Record<PrinterId, PrinterModel> = {
 
 export const MODEL_LIST: PrinterModel[] = [MODELS.y50p, MODELS.b1];
 
-/** The widest head of any supported model, which is what bounds the schema. */
-export const MAX_PRINTHEAD_DOTS = Math.max(...MODEL_LIST.map((m) => m.printheadDots));
+/** The widest stock of any supported model, which is what bounds the schema. */
+export const MAX_STOCK_DOTS = Math.max(...MODEL_LIST.map((m) => m.stockDots));
 
-/** Dots across the head, in millimetres — the printable width. */
+/** Dots across the head, in millimetres — the width that actually burns. */
 export function printableWidthMm(model: PrinterModel): number {
 	return model.printheadDots / model.dotsPerMm;
+}
+
+/** The widest stock the model takes, in millimetres — the width a design may be. */
+export function stockWidthMm(model: PrinterModel): number {
+	return model.stockDots / model.dotsPerMm;
 }
 
 /**
@@ -105,18 +120,22 @@ export function acrossHeadDots(
 	return direction === 'left' ? size.height : size.width;
 }
 
-/** Whether a label fits this printer, and why not when it does not. */
+/**
+ * Whether a label fits this printer, and why not when it does not. The bound
+ * is the stock, not the head: a design as wide as the roll is fine, and the
+ * driver quietly drops whatever the head cannot reach.
+ */
 export function fitsPrinter(
 	size: { width: number; height: number },
 	direction: PrintDirection,
 	model: PrinterModel
 ): { fits: boolean; across: number; reason?: string } {
 	const across = acrossHeadDots(size, direction);
-	if (across <= model.printheadDots) return { fits: true, across };
+	if (across <= model.stockDots) return { fits: true, across };
 	const mm = (d: number) => Math.round((d / model.dotsPerMm) * 10) / 10;
 	return {
 		fits: false,
 		across,
-		reason: `${mm(across)} mm across the head, and the ${model.name} prints ${mm(model.printheadDots)} mm`
+		reason: `${mm(across)} mm across the head, and the ${model.name} takes ${mm(model.stockDots)} mm stock`
 	};
 }

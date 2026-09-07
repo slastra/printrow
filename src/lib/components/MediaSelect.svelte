@@ -6,18 +6,18 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { fitsPrinter, printableWidthMm } from '$lib/printer/models';
+	import { fitsPrinter, stockWidthMm } from '$lib/printer/models';
 	import { MEDIA_MAX_W_MM } from '$lib/template/schema';
 	import { clamp } from '$lib/utils';
 	import RulerIcon from '@lucide/svelte/icons/ruler';
 
 	const model = $derived(editor.model);
-	const headMm = $derived(printableWidthMm(model));
+	const stockMm = $derived(stockWidthMm(model));
 	// `left` feeds the label's left edge first, so it is the HEIGHT that has to
 	// cross the head. Everything below keys off this rather than assuming width.
 	const acrossIsHeight = $derived(editor.template.printDirection === 'left');
-	const maxWmm = $derived(acrossIsHeight ? MEDIA_MAX_H_MM : headMm);
-	const maxHmm = $derived(acrossIsHeight ? headMm : MEDIA_MAX_H_MM);
+	const maxWmm = $derived(acrossIsHeight ? MEDIA_MAX_H_MM : stockMm);
+	const maxHmm = $derived(acrossIsHeight ? stockMm : MEDIA_MAX_H_MM);
 
 	/**
 	 * Presets are listed whole, with the ones this printer cannot take marked
@@ -48,7 +48,7 @@
 	// Round stock has one dimension, not two: offering width and height would
 	// let the dialog produce an ellipse, which no die cuts.
 	const round = $derived(editor.isRound);
-	const maxDiameter = $derived(Math.min(MEDIA_MAX_W_MM, headMm));
+	const maxDiameter = $derived(Math.min(MEDIA_MAX_W_MM, stockMm));
 
 	let customOpen = $state(false);
 	let wMm = $state(50);
@@ -128,9 +128,9 @@
 				</div>
 			</div>
 			<p class="text-xs text-muted-foreground">
-				The {model.name} prints {headMm} mm across the head, so that is the limit on
+				The {model.name} takes {stockMm} mm stock, so that is the limit on
 				{editor.template.printDirection === 'left' ? 'height' : 'width'} — whichever dimension feeds across
-				it. The other is free: the printer takes rows until the raster ends.
+				the head. The other is free: the printer takes rows until the raster ends.
 			</p>
 			<Dialog.Footer>
 				<Button type="button" variant="outline" onclick={() => (customOpen = false)}>Cancel</Button>

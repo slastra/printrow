@@ -1,15 +1,15 @@
 import { z } from 'zod';
 import { HEIGHT, THRESHOLD } from '@slastra/yplib';
-import { MAX_PRINTHEAD_DOTS, MODELS, type PrinterId } from '$lib/printer/models';
+import { MAX_STOCK_DOTS, MODELS, type PrinterId } from '$lib/printer/models';
 
 // All geometry is in printer dots — the editor stage, print renderer, and wire
 // format share one coordinate space, with zoom applied only at display time.
 // Both supported printers run at 8 dots/mm, so one grid serves both.
 //
-// The SCHEMA's width bound is the widest head of any supported model; the
-// selected printer's own, narrower bound is enforced by the media picker and
-// again at print time. Storing the looser bound means switching a template
-// from the 50 mm printer to the 48 mm one flags it rather than discarding it.
+// The SCHEMA's width bound is the widest stock of any supported model; the
+// selected printer's own bound is enforced by the media picker and again at
+// print time. Storing the looser bound means a template for a wider printer
+// added later is flagged on switch rather than discarded on load.
 export const DOTS_PER_MM = 8;
 export const LABEL_W = MODELS.y50p.printheadDots;
 export const LABEL_H = HEIGHT;
@@ -30,7 +30,7 @@ export type BorderStyle = (typeof BORDER_STYLES)[number];
 // Media bounds in mm, derived from the print heads so one model change
 // propagates to the picker, the schema, and the clamps.
 export const MEDIA_MIN_MM = 10;
-export const MEDIA_MAX_W_MM = MAX_PRINTHEAD_DOTS / DOTS_PER_MM;
+export const MEDIA_MAX_W_MM = MAX_STOCK_DOTS / DOTS_PER_MM;
 export const MEDIA_MAX_H_MM = 200;
 
 /**
@@ -340,7 +340,7 @@ export const TemplateSchema = z.object({
 	id: z.string(),
 	name: z.string().min(1).default('Untitled label'),
 	// dots; width is capped by the 50 mm print head
-	width: z.number().int().min(MIN_SIZE).max(MAX_PRINTHEAD_DOTS).default(LABEL_W),
+	width: z.number().int().min(MIN_SIZE).max(MAX_STOCK_DOTS).default(LABEL_W),
 	height: z
 		.number()
 		.int()

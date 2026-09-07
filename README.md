@@ -28,7 +28,7 @@ Both printers speak proprietary framed binary protocols — the Y50P through [yp
 
 Both wire formats are unforgiving in the same specific way, worth knowing if you fork this: a raster row that isn't the width the printer was told to expect shifts everything after it and can hang the firmware. Both libraries refuse to encode one rather than transmit it.
 
-**The two heads are not the same width.** The Y50P prints 50 mm (400 dots); the B1 prints **48 mm (384 dots)**, despite taking 50 mm stock. The label panel caps the media picker to the selected printer and refuses to print a design that cannot fit, so a 50 mm template is simply not printable on a B1.
+**The two heads are not the same width.** The Y50P prints 50 mm (400 dots); the B1 prints **48 mm (384 dots)**, despite taking stock sold as 50 mm. A 50 mm design is accepted on the B1 anyway: the driver trims 1 mm off each edge at print time, since that strip is bleed on every roll sold for it, and cropping keeps text and barcodes at their drawn size where scaling would not. Keep anything that matters a millimetre in from the long edges.
 
 **Print direction is a property of the label**, not of the printer. It says which edge feeds first, which decides which of the design's two dimensions has to fit across the head; `left` rotates the raster a quarter turn. Pick the wrong one and the label prints sideways — invisible on square stock, obvious on anything else. Only the B1 exposes it; YPL always feeds top-first.
 
@@ -79,7 +79,7 @@ This hardware is white-labelled, so the printer on your desk may carry a differe
 
 ### NIIMBOT B1
 
-203 dpi with a **384-dot (48 mm) head** — narrower than the 50 mm stock it takes, which is the thing that catches people out. Gap, black-mark and transparent stock, density 1–5.
+203 dpi with a **384-dot (48 mm) head** — narrower than the 50 mm stock it takes, which is the thing that catches people out. Designs up to 50 mm are accepted and the outer millimetre on each side is dropped. Gap, black-mark and transparent stock, density 1–5. Black-mark stock starts the page 4 mm early, so the driver leads it with that much blank feed.
 
 **Stock without an RFID tag prints blank.** The job is accepted and the label feeds, but the firmware drops density to near zero when it reads no tag, so the paper comes out unmarked. This is the printer, not a bug here: the print dialog warns when the heartbeat reports paper with no tag, and shows the firmware and hardware revision so you know which image fits if you go looking for a patched one. The no-flash workaround is to close the lid with a genuine tag held against the underside of the case, then take it away.
 

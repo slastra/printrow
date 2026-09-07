@@ -29,7 +29,7 @@
 	import { rafThrottle, cn } from '$lib/utils';
 	import {
 		MODEL_LIST,
-		printableWidthMm,
+		stockWidthMm,
 		type PrintDirection,
 		type PrinterId
 	} from '$lib/printer/models';
@@ -166,7 +166,7 @@
 				</ToggleGroup.Root>
 				<p class="text-xs text-muted-foreground">
 					Which edge of the label leaves the printer first, so it decides which side has to fit
-					across the {printableWidthMm(editor.model)} mm head — currently the {editor.template
+					across the {stockWidthMm(editor.model)} mm head — currently the {editor.template
 						.printDirection === 'left'
 						? 'height'
 						: 'width'}. Get it wrong and the label prints a quarter turn off.
@@ -186,7 +186,7 @@
 					class="w-full text-xs"
 					onclick={() => editor.fitToPrinter()}
 				>
-					Resize to {printableWidthMm(editor.model)} mm
+					Resize to {stockWidthMm(editor.model)} mm
 				</Button>
 			</div>
 		{/if}
@@ -255,7 +255,7 @@
 			{#if editor.isRound}
 				<p class="text-xs text-muted-foreground">
 					Squared to a {editor.diameterMm} mm circle, centred across the head. Round stock is sold by
-					its carrier, so a 50 mm round label is a circle cut inside a 50 mm square — and only {printableWidthMm(
+					its carrier, so a 50 mm round label is a circle cut inside a 50 mm square — and only {stockWidthMm(
 						editor.model
 					)} mm of that crosses the {editor.model.name}'s head. Set the exact cut diameter under
 					Size if it is smaller.

@@ -21,7 +21,7 @@ import {
 	hasBluetooth as nbHasBluetooth,
 	isSecureContext as nbIsSecure
 } from '@slastra/nblib/web-bluetooth';
-import { leadFeed } from './feed';
+import { leadFeed, trimAcross } from './feed';
 import { MODELS, type PrintDirection, type PrinterId, type PrinterModel } from './models';
 
 /** What the status dot and its caption say. */
@@ -160,7 +160,11 @@ const b1: PrinterDriver = {
 					link,
 					builds.map((build) => async () => {
 						const cv = await build();
-						return buildPage(leadFeed(nbRows(imageData(cv)), lead, direction), {
+						// Stock is sold as 50 mm and the head is 48, so a full-width
+						// design loses 1 mm of bleed off each edge here rather than
+						// being refused or shrunk.
+						const rows = trimAcross(nbRows(imageData(cv)), MODELS.b1.printheadDots, direction);
+						return buildPage(leadFeed(rows, lead, direction), {
 							direction,
 							printheadPixels: MODELS.b1.printheadDots,
 							// A design narrower than the head would otherwise print hard

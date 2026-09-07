@@ -27,3 +27,28 @@ export function leadFeed(
 		return out;
 	});
 }
+
+/**
+ * Drop whatever of a raster overhangs the head, evenly from both edges, so a
+ * design as wide as the stock prints at its drawn size minus the bleed.
+ *
+ * Like `leadFeed`, this sees the raster in design orientation: it is the
+ * WIDTH that crosses the head when the top edge feeds first, and the HEIGHT
+ * when the left edge does.
+ */
+export function trimAcross(
+	rows: Uint8Array[],
+	maxDots: number,
+	direction: PrintDirection
+): Uint8Array[] {
+	if (!rows.length) return rows;
+	if (direction === 'top') {
+		const width = rows[0].length;
+		if (width <= maxDots) return rows;
+		const from = Math.floor((width - maxDots) / 2);
+		return rows.map((row) => row.subarray(from, from + maxDots));
+	}
+	if (rows.length <= maxDots) return rows;
+	const from = Math.floor((rows.length - maxDots) / 2);
+	return rows.slice(from, from + maxDots);
+}

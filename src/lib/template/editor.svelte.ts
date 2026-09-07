@@ -27,7 +27,7 @@ import { ELEMENT_META, type ElementKind } from './elements';
 import {
 	MODELS,
 	fitsPrinter,
-	printableWidthMm,
+	stockWidthMm,
 	type PrintDirection,
 	type PrinterId,
 	type PrinterModel
@@ -464,16 +464,16 @@ class EditorState {
 	/**
 	 * Make the stock a true circle of `mm` across.
 	 *
-	 * Capped at the head as well as at the schema's bounds, because round
+	 * Capped at the stock as well as at the schema's bounds, because round
 	 * stock is sold by the carrier: a 50 mm round label is a circle cut inside
-	 * a 50 mm square, and 50 mm does not cross a 48 mm head. Squaring to the
-	 * printable width is what lets that roll be used at all.
+	 * a 50 mm square. On a head narrower than the stock the driver trims the
+	 * overhang, which on a circle only ever touches the bleed.
 	 *
 	 * One commit, so undo restores both dimensions and the rounding together
 	 * rather than leaving a half-round label behind.
 	 */
 	setDiameter(mm: number) {
-		const max = Math.min(MEDIA_MAX_W_MM, printableWidthMm(this.model));
+		const max = Math.min(MEDIA_MAX_W_MM, stockWidthMm(this.model));
 		const d = clamp(Math.round(mm), MEDIA_MIN_MM, max) * DOTS_PER_MM;
 		this.commit(() => {
 			this.template.width = d;
@@ -527,13 +527,13 @@ class EditorState {
 	}
 
 	/**
-	 * Shrink whichever dimension crosses the head down to what the printer can
-	 * actually burn, leaving the other alone. Elements keep their positions and
+	 * Shrink whichever dimension crosses the head down to the widest stock the
+	 * printer takes, leaving the other alone. Elements keep their positions and
 	 * are re-clamped, so nothing is lost — it just may need nudging back in.
 	 */
 	fitToPrinter() {
 		if (this.fit.fits) return;
-		const mm = printableWidthMm(this.model);
+		const mm = stockWidthMm(this.model);
 		const { width, height } = this.template;
 		if (this.template.printDirection === 'left') {
 			this.setMedia(width / DOTS_PER_MM, mm);
