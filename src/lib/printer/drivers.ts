@@ -21,6 +21,7 @@ import {
 	hasBluetooth as nbHasBluetooth,
 	isSecureContext as nbIsSecure
 } from '@slastra/nblib/web-bluetooth';
+import { leadFeed } from './feed';
 import { MODELS, type PrintDirection, type PrinterId, type PrinterModel } from './models';
 
 /** What the status dot and its caption say. */
@@ -150,11 +151,16 @@ const b1: PrinterDriver = {
 				}
 			},
 			print(builds, { density, labelType, direction, onProgress, signal }) {
+				// Some stock starts the page short of the label edge; the lead is
+				// blank feed before the design, which buildPage collapses into a
+				// single packet so it costs nothing on the wire.
+				const offsetMm = MODELS.b1.labelTypes.find((t) => t.value === labelType)?.feedOffsetMm ?? 0;
+				const lead = Math.round(offsetMm * MODELS.b1.dotsPerMm);
 				return nbPrint(
 					link,
 					builds.map((build) => async () => {
 						const cv = await build();
-						return buildPage(nbRows(imageData(cv)), {
+						return buildPage(leadFeed(nbRows(imageData(cv)), lead, direction), {
 							direction,
 							printheadPixels: MODELS.b1.printheadDots,
 							// A design narrower than the head would otherwise print hard
@@ -166,7 +172,16 @@ const b1: PrinterDriver = {
 					{ density, labelType, onProgress, signal }
 				);
 			},
-			readRfid: () => readRfidInfo(link)
+			readRfid: () => readRfidInfo(link),
+			async readVersions() {
+				// PrinterInfoType.SoftwareVersion = 9, HardwareVersion = 12. Each
+				// answers two bytes, major then minor: 0x0514 is "5.20".
+				const read = async (type: number) => {
+					const { data } = await exchange(link, Cmd.PrinterInfo, [type]);
+					return `${data[0] ?? 0}.${String(data[1] ?? 0).padStart(2, '0')}`;
+				};
+				return { firmware: await read(9), hardware: await read(12) };
+			}
 		};
 	}
 };

@@ -7,6 +7,12 @@ export type PrinterId = 'y50p' | 'b1';
 export interface LabelTypeOption {
 	value: number;
 	label: string;
+	/**
+	 * How far past the page start the design should begin, along the feed.
+	 * On some stock the sensor that starts the page is not level with the
+	 * head, so the print lands short of the label edge by a fixed amount.
+	 */
+	feedOffsetMm?: number;
 }
 
 /**
@@ -66,7 +72,9 @@ export const MODELS: Record<PrinterId, PrinterModel> = {
 		defaultDensity: 3,
 		labelTypes: [
 			{ value: LabelType.WithGaps, label: 'Gap' },
-			{ value: LabelType.Black, label: 'Black mark' },
+			// The mark sensor trips 4 mm before the label edge reaches the head,
+			// so without a lead the print sits 4 mm high. Measured on real stock.
+			{ value: LabelType.Black, label: 'Black mark', feedOffsetMm: 4 },
 			{ value: LabelType.Transparent, label: 'Transparent' }
 		],
 		defaultLabelType: LabelType.WithGaps
