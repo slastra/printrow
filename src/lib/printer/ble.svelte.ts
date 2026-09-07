@@ -1,4 +1,10 @@
-import { DRIVERS, type PrinterDriver, type PrinterLink, type PrinterStatus } from './drivers';
+import {
+	DRIVERS,
+	type PrinterDriver,
+	type PrinterLink,
+	type PrinterStatus,
+	type PrinterVersions
+} from './drivers';
 import type { RfidInfo } from '@slastra/nblib';
 import { MODELS, type PrinterId, type PrintDirection } from './models';
 
@@ -18,6 +24,8 @@ class PrinterState {
 	progress = $state<{ done: number; total: number } | null>(null);
 	/** Which model the open connection is to, or null when there isn't one. */
 	connectedTo = $state<PrinterId | null>(null);
+	/** Firmware and hardware revisions, or null when the printer has no way to say. */
+	versions = $state<PrinterVersions | null>(null);
 
 	private link: PrinterLink | null = null;
 	private aborter: AbortController | null = null;
@@ -64,12 +72,24 @@ class PrinterState {
 			this.connected = false;
 			this.status = null;
 			this.connectedTo = null;
+			this.versions = null;
 			this.link = null;
 		});
 		this.deviceName = this.link.deviceName;
 		this.connected = true;
 		this.connectedTo = id;
 		await this.readStatus();
+		// informational only: a printer that will not say is still one that prints
+		this.versions = (await this.link.readVersions?.().catch(() => null)) ?? null;
+	}
+
+	/**
+	 * True when the printer says there is paper but no tag on it. The B1
+	 * prints such stock blank, so the dialog warns before the job rather than
+	 * after a silent empty label.
+	 */
+	get untagged(): boolean {
+		return this.connected && this.status?.tagRead === false;
 	}
 
 	disconnect() {

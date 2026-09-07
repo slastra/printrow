@@ -6,8 +6,10 @@ import {
 } from '@slastra/yplib';
 import { connect as ypConnect } from '@slastra/yplib/web-bluetooth';
 import {
+	Cmd,
 	buildPage,
 	describeHeartbeat,
+	exchange,
 	imageDataToRows as nbRows,
 	printJob as nbPrint,
 	readHeartbeat,
@@ -26,6 +28,19 @@ export interface PrinterStatus {
 	/** null when the printer did not answer — unknown is not the same as faulted. */
 	ready: boolean | null;
 	text: string;
+	/**
+	 * Whether the printer read a tag in the loaded roll. Only models with a
+	 * reader report it, and only while paper is present. False is worth a
+	 * warning on its own: the B1 still accepts a job on untagged stock, but
+	 * burns it at near-zero density so the label comes out blank.
+	 */
+	tagRead?: boolean;
+}
+
+/** Firmware and hardware revisions as the printer reports them, "5.20" style. */
+export interface PrinterVersions {
+	firmware: string;
+	hardware: string;
 }
 
 export interface PrintRunOptions {
@@ -60,6 +75,11 @@ export interface PrinterLink {
 	 * where it means something rather than showing one that always fails.
 	 */
 	readRfid?(): Promise<RfidInfo | null>;
+	/**
+	 * Firmware and hardware versions, where the protocol exposes them. Shown
+	 * so a user chasing a firmware image knows which one fits their unit.
+	 */
+	readVersions?(): Promise<PrinterVersions>;
 }
 
 export interface PrinterDriver {
@@ -119,7 +139,10 @@ const b1: PrinterDriver = {
 				try {
 					const hb = await readHeartbeat(link);
 					const text = describeHeartbeat(hb);
-					return { ready: text === 'ready', text };
+					// the tag flag means nothing with no roll to read, so it is only
+					// reported while paper is in
+					const tagRead = hb.paperInserted === true ? hb.paperRfidSuccess : undefined;
+					return { ready: text === 'ready', text, tagRead };
 				} catch {
 					// a printer mid-job answers its heartbeat late; unknown beats a lie,
 					// and it must not read as a fault either

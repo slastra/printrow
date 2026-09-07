@@ -157,7 +157,13 @@
 					<span class={cn('size-2 shrink-0 rounded-full', printer.statusColor)}></span>
 					<span class="min-w-0 flex-1">
 						<span class="block truncate font-mono text-xs">{printer.deviceName}</span>
-						<span class="block text-xs text-muted-foreground">{printer.statusText}</span>
+						<span class="block text-xs text-muted-foreground">
+							{printer.statusText}{#if printer.versions}
+								<span class="tabular-nums">
+									· FW {printer.versions.firmware} · HW {printer.versions.hardware}
+								</span>
+							{/if}
+						</span>
 					</span>
 					<Button
 						variant="ghost"
@@ -176,6 +182,16 @@
 						<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
 						<span>
 							Bad variable {unknown.length > 1 ? 'names' : 'name'}: {unknown.join(', ')}
+						</span>
+					</p>
+				{/if}
+
+				{#if printer.untagged}
+					<p class="flex items-start gap-1.5 text-xs text-amber-600 dark:text-amber-500">
+						<TriangleAlertIcon class="mt-px size-3.5 shrink-0" />
+						<span>
+							No tag read on this roll. The printer burns untagged stock at near-zero density, so
+							labels will come out blank.
 						</span>
 					</p>
 				{/if}

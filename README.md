@@ -81,6 +81,8 @@ This hardware is white-labelled, so the printer on your desk may carry a differe
 
 203 dpi with a **384-dot (48 mm) head** — narrower than the 50 mm stock it takes, which is the thing that catches people out. Gap, black-mark and transparent stock, density 1–5.
 
+**Stock without an RFID tag prints blank.** The job is accepted and the label feeds, but the firmware drops density to near zero when it reads no tag, so the paper comes out unmarked. This is the printer, not a bug here: the print dialog warns when the heartbeat reports paper with no tag, and shows the firmware and hardware revision so you know which image fits if you go looking for a patched one. The no-flash workaround is to close the lid with a genuine tag held against the underside of the case, then take it away.
+
 Confirmed printing with the top-edge feed direction. The `left` direction, and the full range of stock types and densities, follow the protocol but have not each been run on real hardware.
 
 **Have a different NIIMBOT?** Only the B1 is supported here. For the rest of the family use [niimblue](https://github.com/MultiMote/niimblue), a browser label designer built on [niimbluelib](https://github.com/MultiMote/niimbluelib).
