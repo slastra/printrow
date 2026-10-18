@@ -63,7 +63,7 @@ const INTERN_PREFIX = '@interned:';
  * Every mutation goes through commit(), which owns the history/autosave
  * bookkeeping — mutators never call pushHistory/scheduleSave by hand.
  */
-class EditorState {
+export class EditorState {
 	template = $state<Template>(blankTemplate());
 	selectedIds = $state<string[]>([]);
 	/**

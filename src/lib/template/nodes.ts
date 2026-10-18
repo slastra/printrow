@@ -9,7 +9,7 @@ import {
 	type ImageElement
 } from './schema';
 import { THRESHOLD, lumaOverWhite } from '@slastra/yplib';
-import { barcodeCanvas } from './barcode';
+import { barcodeCanvas, barcodePlacement } from './barcode';
 import { iconSvg, loadIcons, svgDataUrl } from './icons';
 import { interpolate } from './vars';
 
@@ -216,14 +216,10 @@ async function iconSource(el: IconElement): Promise<CanvasImageSource> {
 	return cv;
 }
 
-const TWO_D = new Set<string>(['qrcode', 'datamatrix']);
-
 /**
  * Fit a scale-1 bwip render into the element's box with the module grid on an
- * integer dot multiple, centered in quiet-zone padding. Fractional module
- * widths are what make scaled barcodes both blurry on screen and marginal
- * under a scanner; snapping to whole dots fixes both. Bars of a 1D code are
- * uniform down each column, so stretching those to the box height is exact.
+ * integer dot multiple, centered in quiet-zone padding. The sizing is
+ * barcodePlacement's; this only draws it.
  */
 export function fitBarcode(base: HTMLCanvasElement, el: BarcodeElement): HTMLCanvasElement {
 	const cv = document.createElement('canvas');
@@ -233,17 +229,8 @@ export function fitBarcode(base: HTMLCanvasElement, el: BarcodeElement): HTMLCan
 	if (!ctx) return base;
 	// no white plate: the stock colour shows through the quiet zone
 	ctx.imageSmoothingEnabled = false;
-	const sx = Math.max(1, Math.floor(el.w / base.width));
-	if (TWO_D.has(el.bcid)) {
-		// uniform integer scale — 2D modules must stay square
-		const s = Math.max(1, Math.min(sx, Math.floor(el.h / base.height)));
-		const w = base.width * s,
-			h = base.height * s;
-		ctx.drawImage(base, Math.floor((el.w - w) / 2), Math.floor((el.h - h) / 2), w, h);
-	} else {
-		const w = base.width * sx;
-		ctx.drawImage(base, Math.floor((el.w - w) / 2), 0, w, el.h);
-	}
+	const { x, y, w, h } = barcodePlacement(base, el);
+	ctx.drawImage(base, x, y, w, h);
 	return thresholdCanvas(cv);
 }
 

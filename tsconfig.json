@@ -9,5 +9,5 @@
 		"customConditions": ["browser"],
 		"types": ["$app/types", "bun", "vite/client", "web-bluetooth"]
 	},
-	"include": ["src", "vite.config.ts"]
+	"include": ["src", "test", "vite.config.ts"]
 }

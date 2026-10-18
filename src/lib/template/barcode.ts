@@ -28,3 +28,39 @@ export async function barcodeCanvas(
 	});
 	return cv;
 }
+
+const TWO_D = new Set<string>(['qrcode', 'datamatrix']);
+
+/** Where a scale-1 render lands in the element's box, in whole dots. */
+export interface BarcodePlacement {
+	x: number;
+	y: number;
+	w: number;
+	h: number;
+}
+
+/**
+ * Size a scale-1 render to the box at a whole-number scale, so every module is
+ * an exact number of printer dots. Fractional module widths are what make
+ * scaled barcodes both blurry on screen and marginal under a scanner. What
+ * the scale leaves over becomes quiet zone, split evenly.
+ *
+ * 2D codes scale uniformly, since their modules must stay square. The bars of
+ * a 1D code are uniform down each column, so stretching those to the box
+ * height is exact. Never below scale 1: a box too small for the code
+ * overhangs rather than dropping modules.
+ */
+export function barcodePlacement(
+	base: { width: number; height: number },
+	el: Pick<BarcodeElement, 'bcid' | 'w' | 'h'>
+): BarcodePlacement {
+	const sx = Math.max(1, Math.floor(el.w / base.width));
+	if (TWO_D.has(el.bcid)) {
+		const s = Math.max(1, Math.min(sx, Math.floor(el.h / base.height)));
+		const w = base.width * s;
+		const h = base.height * s;
+		return { x: Math.floor((el.w - w) / 2), y: Math.floor((el.h - h) / 2), w, h };
+	}
+	const w = base.width * sx;
+	return { x: Math.floor((el.w - w) / 2), y: 0, w, h: el.h };
+}

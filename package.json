@@ -27,6 +27,7 @@
 		"@types/web-bluetooth": "^0.0.22",
 		"bits-ui": "^2.20.2",
 		"clsx": "^2.1.1",
+		"fake-indexeddb": "^6.2.6",
 		"mode-watcher": "^1.1.0",
 		"prettier": "^3.9.10",
 		"prettier-plugin-svelte": "^4.1.1",
