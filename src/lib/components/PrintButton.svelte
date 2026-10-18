@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { printer } from '$lib/printer/ble.svelte';
-	import { cn } from '$lib/utils';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { printer } from '#lib/printer/ble.svelte.js';
+	import { cn } from '#lib/utils.js';
 	import PrinterIcon from '@lucide/svelte/icons/printer';
 	import PrintDialog from './PrintDialog.svelte';
 

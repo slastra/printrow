@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { editor } from '$lib/template/editor.svelte';
-	import { data } from '$lib/template/data.svelte';
-	import { formatValue } from '$lib/template/vars';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { data } from '#lib/template/data.svelte.js';
+	import { formatValue } from '#lib/template/vars.js';
 	import VarChip from './VarChip.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 
 	let {

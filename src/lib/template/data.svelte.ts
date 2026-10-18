@@ -1,4 +1,4 @@
-import { parseCsv } from '$lib/csv';
+import { parseCsv } from '#lib/csv.js';
 import { editor } from './editor.svelte';
 import { extractVars, formatValue } from './vars';
 

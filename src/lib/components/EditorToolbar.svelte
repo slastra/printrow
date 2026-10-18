@@ -1,11 +1,11 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { editor } from '$lib/template/editor.svelte';
-	import type { AlignKind } from '$lib/template/geometry';
-	import { Separator } from '$lib/components/ui/separator';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { cn } from '$lib/utils';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import type { AlignKind } from '#lib/template/geometry.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import { cn } from '#lib/utils.js';
 	import ToolButton from './ToolButton.svelte';
 	import Undo2Icon from '@lucide/svelte/icons/undo-2';
 	import Redo2Icon from '@lucide/svelte/icons/redo-2';

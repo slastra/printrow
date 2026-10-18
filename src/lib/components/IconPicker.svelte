@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import * as Popover from '$lib/components/ui/popover';
-	import * as Command from '$lib/components/ui/command';
-	import { loadIcons, searchIcons, iconSvg, type IconEntry } from '$lib/template/icons';
+	import * as Popover from '#lib/components/ui/popover/index.js';
+	import * as Command from '#lib/components/ui/command/index.js';
+	import { loadIcons, searchIcons, iconSvg, type IconEntry } from '#lib/template/icons.js';
 
 	let {
 		onselect,

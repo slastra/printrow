@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
-	import { data } from '$lib/template/data.svelte';
-	import { DEFAULT_FORMAT, formatValue } from '$lib/template/vars';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { data } from '#lib/template/data.svelte.js';
+	import { DEFAULT_FORMAT, formatValue } from '#lib/template/vars.js';
 	import {
 		CURRENCIES,
 		DATE_PATTERNS,
@@ -9,15 +9,15 @@
 		type ColumnFormat,
 		type Currency,
 		type DatePattern
-	} from '$lib/template/schema';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Select from '$lib/components/ui/select';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
-	import { Separator } from '$lib/components/ui/separator';
+	} from '#lib/template/schema.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
 	import TypeIcon from '@lucide/svelte/icons/type';
 	import HashIcon from '@lucide/svelte/icons/hash';

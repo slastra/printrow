@@ -1,14 +1,19 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
-	import { DOTS_PER_MM, MEDIA_PRESETS, MEDIA_MIN_MM, MEDIA_MAX_H_MM } from '$lib/template/schema';
-	import * as Select from '$lib/components/ui/select';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { fitsPrinter, stockWidthMm } from '$lib/printer/models';
-	import { MEDIA_MAX_W_MM } from '$lib/template/schema';
-	import { clamp } from '$lib/utils';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import {
+		DOTS_PER_MM,
+		MEDIA_PRESETS,
+		MEDIA_MIN_MM,
+		MEDIA_MAX_H_MM
+	} from '#lib/template/schema.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { fitsPrinter, stockWidthMm } from '#lib/printer/models.js';
+	import { MEDIA_MAX_W_MM } from '#lib/template/schema.js';
+	import { clamp } from '#lib/utils.js';
 	import RulerIcon from '@lucide/svelte/icons/ruler';
 
 	const model = $derived(editor.model);

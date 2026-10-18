@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
-	import { useSidebar } from '$lib/components/ui/sidebar';
-	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { useSidebar } from '#lib/components/ui/sidebar/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
 	import FileIcon from '@lucide/svelte/icons/file';
 
 	// must run inside Sidebar.Provider, hence a child component rather than

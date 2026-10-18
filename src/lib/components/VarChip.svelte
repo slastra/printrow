@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import { badgeVariants } from '$lib/components/ui/badge';
-	import { cn } from '$lib/utils';
-	import type { VarStatus } from '$lib/template/data.svelte';
+	import { badgeVariants } from '#lib/components/ui/badge/index.js';
+	import { cn } from '#lib/utils.js';
+	import type { VarStatus } from '#lib/template/data.svelte.js';
 
 	/**
 	 * The one variable chip: a badge with a status dot. Used inline in layer

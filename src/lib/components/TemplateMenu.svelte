@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { editor } from '$lib/template/editor.svelte';
-	import { TEMPLATE_EXT } from '$lib/template/library';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { TEMPLATE_EXT } from '#lib/template/library.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import LayoutTemplateIcon from '@lucide/svelte/icons/layout-template';
 	import FilePlusIcon from '@lucide/svelte/icons/file-plus';

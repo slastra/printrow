@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { data } from '$lib/template/data.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { pickFile } from '$lib/utils';
+	import { data } from '#lib/template/data.svelte.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { pickFile } from '#lib/utils.js';
 	import UploadIcon from '@lucide/svelte/icons/upload';
 
 	async function onImport() {

@@ -1,20 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type Konva from 'konva';
-	import { editor } from '$lib/template/editor.svelte';
-	import { data } from '$lib/template/data.svelte';
-	import { buildNode, fitBarcode, type KonvaNS } from '$lib/template/nodes';
-	import { ELEMENT_META } from '$lib/template/elements';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { data } from '#lib/template/data.svelte.js';
+	import { buildNode, fitBarcode, type KonvaNS } from '#lib/template/nodes.js';
+	import { ELEMENT_META } from '#lib/template/elements.js';
 	import {
 		DOTS_PER_MM,
 		MIN_SIZE,
 		MIN_FONT_SIZE,
 		MAX_FONT_SIZE,
 		type AnyElement
-	} from '$lib/template/schema';
-	import { clamp, isToggleEvent } from '$lib/utils';
-	import { useSidebar } from '$lib/components/ui/sidebar';
-	import { Button } from '$lib/components/ui/button';
+	} from '#lib/template/schema.js';
+	import { clamp, isToggleEvent } from '#lib/utils.js';
+	import { useSidebar } from '#lib/components/ui/sidebar/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
 	import MinusIcon from '@lucide/svelte/icons/minus';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import ScanIcon from '@lucide/svelte/icons/scan';

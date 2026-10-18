@@ -1,4 +1,4 @@
-import { fitsPrinter, MODELS } from '$lib/printer/models';
+import { fitsPrinter, MODELS } from '#lib/printer/models.js';
 import type { Template } from './schema';
 import { buildNode } from './nodes';
 

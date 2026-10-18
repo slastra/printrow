@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { printer } from '$lib/printer/ble.svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import { Button } from '$lib/components/ui/button';
-	import { Separator } from '$lib/components/ui/separator';
+	import { printer } from '#lib/printer/ble.svelte.js';
+	import * as Dialog from '#lib/components/ui/dialog/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Separator } from '#lib/components/ui/separator/index.js';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import XIcon from '@lucide/svelte/icons/x';
 	import InfoIcon from '@lucide/svelte/icons/info';
-	import printerImage from '$lib/assets/printer.png';
+	import printerImage from '#lib/assets/printer.png';
 
 	let open = $state(false);
 

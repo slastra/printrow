@@ -31,7 +31,7 @@ import {
 	type PrintDirection,
 	type PrinterId,
 	type PrinterModel
-} from '$lib/printer/models';
+} from '#lib/printer/models.js';
 import { loadImage } from './nodes';
 import {
 	deleteTemplate,
@@ -47,7 +47,7 @@ import {
 	writeCurrentId,
 	type LibraryEntry
 } from './library';
-import { clamp } from '$lib/utils';
+import { clamp } from '#lib/utils.js';
 
 const STORAGE_KEY = 'printrow:template:v1';
 const HISTORY_LIMIT = 100;

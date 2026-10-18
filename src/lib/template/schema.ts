@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { HEIGHT, THRESHOLD } from '@slastra/yplib';
-import { MAX_STOCK_DOTS, MODELS, type PrinterId } from '$lib/printer/models';
+import { MAX_STOCK_DOTS, MODELS, type PrinterId } from '#lib/printer/models.js';
 
 // All geometry is in printer dots — the editor stage, print renderer, and wire
 // format share one coordinate space, with zoom applied only at display time.

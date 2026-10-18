@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { dndzone, type DndEvent } from 'svelte-dnd-action';
 	import { flip } from 'svelte/animate';
-	import { editor } from '$lib/template/editor.svelte';
-	import { ELEMENT_META } from '$lib/template/elements';
-	import { splitVars } from '$lib/template/vars';
-	import { data } from '$lib/template/data.svelte';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { ELEMENT_META } from '#lib/template/elements.js';
+	import { splitVars } from '#lib/template/vars.js';
+	import { data } from '#lib/template/data.svelte.js';
 	import VarChip from './VarChip.svelte';
-	import { cn } from '$lib/utils';
-	import type { AnyElement } from '$lib/template/schema';
+	import { cn } from '#lib/utils.js';
+	import type { AnyElement } from '#lib/template/schema.js';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
 	import GroupIcon from '@lucide/svelte/icons/group';
 

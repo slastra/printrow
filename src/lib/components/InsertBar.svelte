@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
-	import { ELEMENT_META, type ElementKind } from '$lib/template/elements';
-	import { pickFile, cn } from '$lib/utils';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { ELEMENT_META, type ElementKind } from '#lib/template/elements.js';
+	import { pickFile, cn } from '#lib/utils.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
 	import IconPicker from './IconPicker.svelte';
 	import InsertFieldMenu from './InsertFieldMenu.svelte';
-	import { data } from '$lib/template/data.svelte';
+	import { data } from '#lib/template/data.svelte.js';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 	import ToolButton from './ToolButton.svelte';
 

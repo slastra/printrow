@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { editor } from '$lib/template/editor.svelte';
-	import { data } from '$lib/template/data.svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
-	import { cn } from '$lib/utils';
+	import { editor } from '#lib/template/editor.svelte.js';
+	import { data } from '#lib/template/data.svelte.js';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import * as DropdownMenu from '#lib/components/ui/dropdown-menu/index.js';
+	import { cn } from '#lib/utils.js';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
 
 	let {

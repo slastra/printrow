@@ -1,8 +1,8 @@
 <script lang="ts">
 	import type { Component } from 'svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import * as Tooltip from '$lib/components/ui/tooltip';
-	import { cn } from '$lib/utils';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
+	import { cn } from '#lib/utils.js';
 
 	let {
 		label,

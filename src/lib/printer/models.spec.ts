@@ -8,7 +8,7 @@ import {
 	printableWidthMm,
 	stockWidthMm
 } from './models';
-import { MEDIA_PRESETS, DOTS_PER_MM, TemplateSchema } from '$lib/template/schema';
+import { MEDIA_PRESETS, DOTS_PER_MM, TemplateSchema } from '#lib/template/schema.js';
 
 const dots = (wMm: number, hMm: number) => ({
 	width: wMm * DOTS_PER_MM,

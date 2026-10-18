@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { data } from '$lib/template/data.svelte';
+	import { data } from '#lib/template/data.svelte.js';
 	import ColumnRow from './ColumnRow.svelte';
 	import FormatDialog from './FormatDialog.svelte';
-	import { Button } from '$lib/components/ui/button';
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
 	import XIcon from '@lucide/svelte/icons/x';
 	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';

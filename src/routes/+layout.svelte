@@ -1,9 +1,9 @@
 <script lang="ts">
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
+	import favicon from '#lib/assets/favicon.svg';
 	import { ModeWatcher } from 'mode-watcher';
-	import { Toaster } from '$lib/components/ui/sonner';
-	import * as Tooltip from '$lib/components/ui/tooltip';
+	import { Toaster } from '#lib/components/ui/sonner/index.js';
+	import * as Tooltip from '#lib/components/ui/tooltip/index.js';
 
 	let { children } = $props();
 </script>

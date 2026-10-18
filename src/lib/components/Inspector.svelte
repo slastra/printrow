@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { editor } from '$lib/template/editor.svelte';
+	import { editor } from '#lib/template/editor.svelte.js';
 	import {
 		BARCODE_TYPES,
 		MIN_FONT_SIZE,
@@ -24,26 +24,26 @@
 		type BorderStyle,
 		type BarcodeType,
 		type Ink
-	} from '$lib/template/schema';
-	import { THRESHOLD } from '$lib/template/nodes';
-	import { rafThrottle, cn } from '$lib/utils';
+	} from '#lib/template/schema.js';
+	import { THRESHOLD } from '#lib/template/nodes.js';
+	import { rafThrottle, cn } from '#lib/utils.js';
 	import {
 		MODEL_LIST,
 		stockWidthMm,
 		type PrintDirection,
 		type PrinterId
-	} from '$lib/printer/models';
+	} from '#lib/printer/models.js';
 	import IconPicker from './IconPicker.svelte';
 	import MediaSelect from './MediaSelect.svelte';
-	import { buttonVariants } from '$lib/components/ui/button';
-	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
-	import { Label } from '$lib/components/ui/label';
-	import { Switch } from '$lib/components/ui/switch';
-	import { Textarea } from '$lib/components/ui/textarea';
-	import { Slider } from '$lib/components/ui/slider';
-	import * as Select from '$lib/components/ui/select';
-	import * as ToggleGroup from '$lib/components/ui/toggle-group';
+	import { buttonVariants } from '#lib/components/ui/button/index.js';
+	import { Button } from '#lib/components/ui/button/index.js';
+	import { Input } from '#lib/components/ui/input/index.js';
+	import { Label } from '#lib/components/ui/label/index.js';
+	import { Switch } from '#lib/components/ui/switch/index.js';
+	import { Textarea } from '#lib/components/ui/textarea/index.js';
+	import { Slider } from '#lib/components/ui/slider/index.js';
+	import * as Select from '#lib/components/ui/select/index.js';
+	import * as ToggleGroup from '#lib/components/ui/toggle-group/index.js';
 	import BoldIcon from '@lucide/svelte/icons/bold';
 	import ItalicIcon from '@lucide/svelte/icons/italic';
 	import UnderlineIcon from '@lucide/svelte/icons/underline';
