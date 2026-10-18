@@ -34,14 +34,14 @@ Both wire formats are unforgiving in the same specific way, worth knowing if you
 
 ## Stack
 
-SvelteKit 2 · Svelte 5 runes · Tailwind 4 · shadcn-svelte · Konva · zod · bwip-js · lucide · yplib · nblib · bun
+SvelteKit 3 · Svelte 5 runes · Tailwind 4 · shadcn-svelte · Konva · zod · bwip-js · lucide · yplib · nblib · bun
 
 ## Development
 
 ```bash
 bun install
 bun run dev        # http://localhost:5173
-bun test src       # CSV parsing, geometry, formatting, row ranges, icon search, printer fit
+bun test src       # editor undo history, template library, print feed and trim, barcode sizing, CSV, geometry
 bun run check      # svelte-check
 ```
 
@@ -53,7 +53,7 @@ bun run check      # svelte-check
 bun install --frozen-lockfile  →  bun run build  →  node build
 ```
 
-There is no database and nothing to persist server-side (templates live in the browser's localStorage, and the printer is reached from the browser), so the server only serves assets and the SSR shell. It listens on `PORT` (the adapter defaults to 3000 on 0.0.0.0). Pushes to `main` redeploy automatically.
+There is no database and nothing to persist server-side (templates live in the browser's IndexedDB, and the printer is reached from the browser), so the server only serves assets and the SSR shell. It listens on `PORT` (the adapter defaults to 3000 on 0.0.0.0). Pushes to `main` redeploy automatically.
 
 **Serve it over HTTPS.** Web Bluetooth only works in a secure context, so on a plain-http origin the Connect button cannot do anything at all.
 
