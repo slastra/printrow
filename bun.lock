@@ -17,7 +17,7 @@
         "@fontsource/ibm-plex-mono": "^5.3.0",
         "@fontsource/pacifico": "^5.3.0",
         "@slastra/nblib": "^0.3.0",
-        "@slastra/yplib": "^0.1.0",
+        "@slastra/yplib": "^0.1.1",
         "bwip-js": "^4.11.4",
         "konva": "^10.9.0",
         "lucide-static": "^1.61.0",
@@ -137,7 +137,7 @@
 
     "@slastra/nblib": ["@slastra/nblib@0.3.0", "", {}, "sha512-mqPVZmFfMn8P9f6VGX1pTedhXUjSjgtJGaUpaA9OXxOqAOtHfhKjZcG+r2QOFPVmbAfc24xGVJkTQJoiQf8bLw=="],
 
-    "@slastra/yplib": ["@slastra/yplib@0.1.0", "", {}, "sha512-oImIsu+QkRTJGCBIIPw5hv/n1pCzRk+QSaXSsh0CbRlbJ0hOmo3vH8XlXTqe7svHfknmjkPietkNoXM+EGKpEw=="],
+    "@slastra/yplib": ["@slastra/yplib@0.1.1", "", {}, "sha512-AeQ3hbq2v8RYwtdOYRdQM8rmv4XlI8Wh4Ef30s2Gush1M8e0iJ+qUArr7D5ichLmnUJ6ppvTEPG5e64AOmmsew=="],
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
